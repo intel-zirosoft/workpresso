@@ -1,2 +1,2 @@
-# 바이브 코더 키우기 (Vibe Coder Tycoon)
+# 워크프레소 (Workpresso)
 작성예정
