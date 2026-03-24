@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Soft & Trustworthy Workpresso Palette */
+    --background: 34 29% 98%;   /* #FDFBF7 (Warm Off-white) */
+    --foreground: 216 26% 23%;  /* #2C394B (Deep Navy) */
+    
+    --card: 0 0% 100%;          /* #FFFFFF */
+    --card-foreground: 216 26% 23%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 216 26% 23%;
+    
+    --primary: 210 38% 63%;     /* #7FA1C3 (Dusty Blue) */
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 32 83% 75%;    /* #F2C18D (Warm Peach) */
+    --secondary-foreground: 216 26% 23%;
+    
+    --muted: 214 12% 69%;       /* #A5AEBA (Soft Slate) */
+    --muted-foreground: 216 26% 23%;
+    
+    --accent: 32 83% 75%;
+    --accent-foreground: 216 26% 23%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214 12% 69%;
+    --input: 214 12% 69%;
+    --ring: 210 38% 63%;
+    
+    --radius: 24px;
+  }
+
+  * {
+    @apply border-transparent; /* 대부분의 디자인이 테두리 대신 그림자/대비 사용 */
+  }
+  
+  body {
+    @apply bg-background text-foreground font-body;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-headings;
+  }
+}
+
+@layer components {
+  .soft-card {
+    @apply bg-surface rounded-md shadow-soft hover:shadow-float transition-shadow duration-300;
+  }
+  
+  .pill-button {
+    @apply rounded-pill px-spacing-sm py-spacing-xs font-bold transition-all;
+  }
+}
