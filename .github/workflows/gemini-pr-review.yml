@@ -1,1 +1,21 @@
+on: pull_request
 
+jobs:
+  review:
+    steps:
+      # 2. 무엇을? -> 변경된 코드를 가져와서
+      
+name: Get code changes
+      run: ...
+
+      # 3. 어떻게? -> Gemini API를 사용해 리뷰 (프롬프트 포함)
+      
+name: Request Gemini Review
+      env:
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      run: |"Gemini야, 이 코드에서 버그를 찾아줘"
+
+      # 4. 어디에? -> PR 댓글에 남기기
+      
+name: Post comment
+      run: ...
