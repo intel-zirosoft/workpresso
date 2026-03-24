@@ -1,21 +1,94 @@
-on: pull_request
+name: Gemini AI PR Reviewer
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   review:
+    runs-on: ubuntu-latest
     steps:
-      # 2. 무엇을? -> 변경된 코드를 가져와서
-      
-name: Get code changes
-      run: ...
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # 3. 어떻게? -> Gemini API를 사용해 리뷰 (프롬프트 포함)
-      
-name: Request Gemini Review
-      env:
-        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      run: |"Gemini야, 이 코드에서 버그를 찾아줘"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-      # 4. 어디에? -> PR 댓글에 남기기
-      
-name: Post comment
-      run: ...
+      - name: Install Dependencies
+        run: |
+          pip install -q google-generativeai
+
+      - name: Get PR Diff
+        id: get_diff
+        run: |
+          git diff origin/${{ github.base_ref }} HEAD > pr_diff.txt
+          # Diff 파일이 비어있는지 확인
+          if [ -s pr_diff.txt ]; then
+            echo "has_diff=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_diff=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate Review with Gemini
+        if: steps.get_diff.outputs.has_diff == 'true'
+        id: gemini_review
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        shell: python
+        run: |
+          import os
+          import google.generativeai as genai
+
+          api_key = os.environ.get("GEMINI_API_KEY")
+          if not api_key:
+              with open('review_result.md', 'w') as f:
+                  f.write("⚠️ GEMINI_API_KEY가 GitHub Secrets에 설정되지 않았습니다.")
+              exit(0)
+
+          genai.configure(api_key=api_key)
+          model = genai.GenerativeModel('gemini-1.5-flash') # 속도를 위해 flash 사용
+
+          with open('pr_diff.txt', 'r') as f:
+              diff_content = f.read()
+
+          prompt = f"""
+          당신은 WorkPresso 프로젝트의 시니어 풀스택 개발자입니다. 
+          제시된 코드 변경사항(diff)을 리뷰하고 개선안을 한국어로 제안해주세요.
+
+          **프로젝트 맥락:**
+          - 테마: 부드럽고 신뢰할 수 있는 (Soft & Trustworthy), 파스텔 톤, 둥근 UI.
+          - 기술 스택: Next.js, Tailwind CSS, Supabase.
+
+          **리뷰 원칙:**
+          1. 친절하고 격려하는 말투를 사용하세요.
+          2. 데이터베이스 스키마와의 일관성, Tailwind 디자인 시스템 준수 여부를 중점적으로 보세요.
+          3. 성능 개선이나 버그 가능성이 있다면 구체적인 코드 예시와 함께 제안하세요.
+
+          **변경 사항 (Git Diff):**
+          {diff_content}
+          """
+
+          try:
+              response = model.generate_content(prompt)
+              review_text = response.text
+          except Exception as e:
+              review_text = f"리뷰 생성 중 오류가 발생했습니다: {str(e)}"
+          
+          with open('review_result.md', 'w') as f:
+              f.write("### 🤖 Gemini AI Code Review\n\n")
+              f.write(review_text)
+
+      - name: Post Comment to PR
+        if: steps.get_diff.outputs.has_diff == 'true'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: 'review_result.md'
