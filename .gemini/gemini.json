@@ -1,0 +1,20 @@
+{
+    "skills": [
+      {
+        "name": "Pod-A-Docs",
+        "location": "docs/Pod-A-Documents-SKILL.md"
+      },
+      {
+        "name": "Pod-B-Schedules",
+        "location": "docs/Pod-B-Schedules-SKILL.md"
+      },
+      {
+        "name": "Pod-C-AI-Agent",
+        "location": "docs/Pod-C-AI-Knowledge-SKILL.md"
+      },
+      {
+        "name": "Pod-D-MeetingLogs",
+        "location": "docs/Pod-D-MeetingLogs-SKILL.md"
+      }
+   ]
+}
