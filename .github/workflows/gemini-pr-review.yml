@@ -33,11 +33,9 @@ jobs:
         id: extract_diff
         run: |
           if [ "${{ github.event_name }}" == "pull_request" ]; then
-            # PR 상황: 베이스 브랜치와 현재 헤드 사이의 차이점 추출
             git fetch origin ${{ github.base_ref }}
             git diff origin/${{ github.base_ref }}...HEAD > changes.diff
           else
-            # Push 상황 (develop 병합 등): 현재 커밋과 이전 커밋 사이의 차이점 추출
             git diff HEAD^ HEAD > changes.diff
           fi
           
@@ -64,12 +62,31 @@ jobs:
               exit(0)
 
           genai.configure(api_key=api_key)
-          model = genai.GenerativeModel('gemini-1.5-flash-latest')
+
+          # 사용 가능한 모델 목록 출력 (디버깅용)
+          print("--- Available Models ---")
+          available_models = []
+          try:
+              for m in genai.list_models():
+                  if 'generateContent' in m.supported_generation_methods:
+                      print(f"- {m.name}")
+                      available_models.append(m.name)
+          except Exception as e:
+              print(f"Error listing models: {e}")
+
+          # 최적의 모델 선택 (1.5-flash -> 1.5-pro -> 1.0-pro 순)
+          model_name = "gemini-1.5-flash" # Default
+          for target in ["models/gemini-1.5-flash", "models/gemini-1.5-pro", "models/gemini-1.0-pro"]:
+              if target in available_models:
+                  model_name = target.replace("models/", "")
+                  break
+          
+          print(f"Selected Model: {model_name}")
+          model = genai.GenerativeModel(model_name)
 
           with open('changes.diff', 'r') as f:
               diff_content = f.read()
 
-          # 너무 큰 diff는 잘라내기 (API 제한 방지)
           if len(diff_content) > 30000:
               diff_content = diff_content[:30000] + "\n\n... (너무 길어서 생략됨)"
 
@@ -79,8 +96,8 @@ jobs:
 
           **리뷰 원칙:**
           1. 친절하고 격려하는 말투를 사용하세요.
-          2. **로직 정확성 검증**: 구현된 로직이 의도한 대로 동작하는지, 예외 상황(입력값 부재, 에러 응답 등)에 대한 처리가 누락되지 않았는지 꼼꼼히 확인하세요.
-          3. **버그 및 취약점 탐지**: 잠재적인 버그(Null 참조, 무한 루프, 비동기 처리 누락 등)나 보안 취약점이 있다면 구체적인 코드 예시와 함께 지적해주세요.
+          2. **로직 정확성 검증**: 구현된 로직이 의도한 대로 동작하는지, 예외 상황에 대한 처리가 누락되지 않았는지 확인하세요.
+          3. **버그 및 취약점 탐지**: 잠재적인 버그나 보안 취약점이 있다면 구체적인 코드 예시와 함께 지적해주세요.
           4. 데이터베이스 스키마와의 일관성, Tailwind 디자인 시스템 준수 여부를 중점적으로 보세요.
           5. 성능 개선이 가능하다면 최적화 방안을 제안하세요.
 
@@ -92,7 +109,7 @@ jobs:
               response = model.generate_content(prompt)
               review_text = response.text
           except Exception as e:
-              review_text = f"리뷰 생성 중 오류가 발생했습니다: {str(e)}"
+              review_text = f"리뷰 생성 중 오류가 발생했습니다: {str(e)}\n사용 시도 모델: {model_name}"
           
           with open('review_result.md', 'w') as f:
               f.write("### 🤖 Gemini AI Code Review\n\n")
