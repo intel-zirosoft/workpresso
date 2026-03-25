@@ -119,55 +119,7 @@ $$;
 CREATE INDEX IF NOT EXISTS idx_knowledge_vectors_embedding ON knowledge_vectors 
 USING hnsw (embedding vector_cosine_ops);
 
--- 7. RLS 설정 (Pod A - documents)
--- Supabase Auth 사용자 UUID와 public.users.id가 동일하다는 전제하에 정책을 적용한다.
-ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
-ALTER TABLE documents FORCE ROW LEVEL SECURITY;
-
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1
-        FROM pg_policies
-        WHERE schemaname = 'public'
-          AND tablename = 'documents'
-          AND policyname = 'documents_select_own'
-    ) THEN
-        CREATE POLICY documents_select_own
-        ON documents
-        FOR SELECT
-        USING (auth.uid() = author_id AND deleted_at IS NULL);
-    END IF;
-
-    IF NOT EXISTS (
-        SELECT 1
-        FROM pg_policies
-        WHERE schemaname = 'public'
-          AND tablename = 'documents'
-          AND policyname = 'documents_insert_own'
-    ) THEN
-        CREATE POLICY documents_insert_own
-        ON documents
-        FOR INSERT
-        WITH CHECK (auth.uid() = author_id);
-    END IF;
-
-    IF NOT EXISTS (
-        SELECT 1
-        FROM pg_policies
-        WHERE schemaname = 'public'
-          AND tablename = 'documents'
-          AND policyname = 'documents_update_own'
-    ) THEN
-        CREATE POLICY documents_update_own
-        ON documents
-        FOR UPDATE
-        USING (auth.uid() = author_id AND deleted_at IS NULL)
-        WITH CHECK (auth.uid() = author_id);
-    END IF;
-END $$;
-
--- 8. 벡터 검색 함수 정의 (pgvector 활용)
+-- 7. 벡터 검색 함수 정의 (pgvector 활용)
 CREATE OR REPLACE FUNCTION match_knowledge (
   query_embedding vector(1536),
   match_threshold float,

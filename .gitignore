@@ -25,7 +25,3 @@ Thumbs.db
 
 # Custom
 /plan_docs
-supabase/
-
-# AI Agents
-.codex/
