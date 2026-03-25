@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Fredoka, Nunito } from 'next/font/google'
+import { ReactNode } from 'react'
 import '@/styles/globals.css'
 import { Providers } from '@/providers'
 import { Sidebar } from '@/components/shared/sidebar'
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: ReactNode
 }) {
   return (
     <html lang="ko" suppressHydrationWarning className={`${fredoka.variable} ${nunito.variable}`}>
