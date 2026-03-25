@@ -4,8 +4,10 @@ import {
   createDocumentInputSchema,
   createDocumentResponseSchema,
   documentListResponseSchema,
+  documentStatusSchema,
   normalizeDocumentRow,
 } from "@/features/pod-a/services/document-schema";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const documentSelectColumns =
@@ -18,8 +20,9 @@ function unauthorizedResponse() {
   );
 }
 
-export async function GET() {
-  const supabase = createClient();
+export async function GET(request: Request) {
+  const supabase = await createClient();
+  const adminSupabase = createAdminClient();
   const {
     data: { user },
     error: authError,
@@ -29,12 +32,32 @@ export async function GET() {
     return unauthorizedResponse();
   }
 
-  const { data, error } = await supabase
+  const requestUrl = new URL(request.url);
+  const statusParam = requestUrl.searchParams.get("status");
+
+  if (statusParam) {
+    const parsedStatus = documentStatusSchema.safeParse(statusParam);
+
+    if (!parsedStatus.success) {
+      return NextResponse.json(
+        { message: "유효한 문서 상태값이 필요합니다." },
+        { status: 400 }
+      );
+    }
+  }
+
+  let query = adminSupabase
     .from("documents")
     .select(documentSelectColumns)
     .eq("author_id", user.id)
     .is("deleted_at", null)
     .order("updated_at", { ascending: false });
+
+  if (statusParam) {
+    query = query.eq("status", statusParam);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return NextResponse.json(
@@ -64,7 +87,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
+  const adminSupabase = createAdminClient();
   const {
     data: { user },
     error: authError,
@@ -81,7 +105,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await adminSupabase
     .from("documents")
     .insert({
       author_id: user.id,

@@ -18,9 +18,9 @@
 
 **목표:** 작성된 문서의 결재 상태 변경 및 승인 이후의 후속 처리 로직 구축
 
-- [ ] **DB/Schema**: 문서의 결재 상태(Draft, Pending, Approved, Rejected 등) 변경에 대한 상태값(Enum 등) 정의
-- [ ] **Backend (API)**: 결재 상태 업데이트를 위한 PATCH API 엔드포인트 구현
-- [ ] **Frontend (UI)**: 결재함(Inbox) 목록 UI 및 상태 변경 버튼 구현 (파스텔 톤, `rounded-pill` 스타일 적용)
-- [ ] **Frontend (State)**: TanStack Query를 활용한 결재 상태 낙관적 업데이트(Optimistic Update) 구현
-- [ ] **Integration (Edge Function)**: 문서가 '승인(APPROVED)' 상태로 변경 시 트리거되는 Supabase Edge Function 작성
-- [ ] **Integration (Pod C)**: 위 Edge Function에서 Pod C(AI 지식 벡터)의 RAG 인덱싱 프로세스를 호출하도록 연동
+- [x] **DB/Schema**: 문서의 결재 상태(Draft, Pending, Approved, Rejected 등) 변경에 대한 상태값(Enum 등) 정의
+- [x] **Backend (API)**: 결재 상태 업데이트를 위한 PATCH API 엔드포인트 구현
+- [x] **Frontend (UI)**: 결재함(Inbox) 목록 UI 및 상태 변경 버튼 구현 (파스텔 톤, `rounded-pill` 스타일 적용)
+- [x] **Frontend (State)**: TanStack Query를 활용한 결재 상태 낙관적 업데이트(Optimistic Update) 구현
+- [x] **Integration (Edge Function)**: 문서가 '승인(APPROVED)' 상태로 변경 시 트리거되는 Supabase Edge Function 작성
+- [x] **Integration (Pod C)**: 위 Edge Function에서 Pod C(AI 지식 벡터)의 RAG 인덱싱 프로세스를 호출하도록 연동

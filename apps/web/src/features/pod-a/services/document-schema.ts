@@ -45,6 +45,10 @@ export const updateDocumentInputSchema = z.object({
     ),
 });
 
+export const updateDocumentStatusInputSchema = z.object({
+  status: documentStatusSchema,
+});
+
 const rawDocumentSchema = z.object({
   id: z.string().uuid(),
   author_id: z.string().uuid(),
@@ -90,4 +94,8 @@ export function normalizeDocumentRow(row: unknown) {
 
 export type CreateDocumentInput = z.infer<typeof createDocumentInputSchema>;
 export type UpdateDocumentInput = z.infer<typeof updateDocumentInputSchema>;
+export type UpdateDocumentStatusInput = z.infer<
+  typeof updateDocumentStatusInputSchema
+>;
 export type DocumentRecord = z.infer<typeof documentSchema>;
+export type DocumentStatus = z.infer<typeof documentStatusSchema>;

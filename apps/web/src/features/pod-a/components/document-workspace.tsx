@@ -3,12 +3,16 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  CheckCheck,
   FileText,
+  Inbox,
   Loader2,
   PencilLine,
   Plus,
   RefreshCw,
+  Send,
   ShieldCheck,
+  XCircle,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
@@ -28,14 +32,57 @@ import {
   DocumentApiError,
   fetchDocuments,
   updateDocument,
+  updateDocumentStatus,
 } from "@/features/pod-a/services/document-api";
 import {
   DOCUMENT_CONTENT_MAX_LENGTH,
   DOCUMENT_TITLE_MAX_LENGTH,
   type DocumentRecord,
+  type DocumentStatus,
 } from "@/features/pod-a/services/document-schema";
 
 type EditorMode = "create" | "edit";
+type InboxFilter = "ALL" | DocumentStatus;
+
+const statusLabelMap: Record<DocumentStatus, string> = {
+  DRAFT: "초안",
+  PENDING: "결재 대기",
+  APPROVED: "승인 완료",
+  REJECTED: "반려",
+};
+
+const statusBadgeClassMap: Record<DocumentStatus, string> = {
+  DRAFT: "bg-secondary/70 text-text",
+  PENDING: "bg-amber-100 text-amber-700",
+  APPROVED: "bg-emerald-100 text-emerald-700",
+  REJECTED: "bg-rose-100 text-rose-700",
+};
+
+const inboxFilters: Array<{ value: InboxFilter; label: string }> = [
+  { value: "ALL", label: "전체" },
+  { value: "PENDING", label: "결재 대기" },
+  { value: "DRAFT", label: "초안" },
+  { value: "APPROVED", label: "승인" },
+  { value: "REJECTED", label: "반려" },
+];
+
+function getStatusActions(status: DocumentStatus) {
+  switch (status) {
+    case "DRAFT":
+      return [{ nextStatus: "PENDING" as const, label: "결재 요청", icon: Send }];
+    case "PENDING":
+      return [
+        { nextStatus: "APPROVED" as const, label: "승인", icon: CheckCheck },
+        { nextStatus: "REJECTED" as const, label: "반려", icon: XCircle },
+      ];
+    case "REJECTED":
+      return [
+        { nextStatus: "PENDING" as const, label: "재결재 요청", icon: Send },
+      ];
+    default:
+      return [];
+  }
+}
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("ko-KR", {
@@ -52,6 +99,7 @@ export function DocumentWorkspace() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [editorMode, setEditorMode] = useState<EditorMode>("create");
+  const [inboxFilter, setInboxFilter] = useState<InboxFilter>("PENDING");
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
     null
   );
@@ -90,7 +138,7 @@ export function DocumentWorkspace() {
 
   const documentsQuery = useQuery({
     queryKey: ["documents", authorId],
-    queryFn: fetchDocuments,
+    queryFn: () => fetchDocuments(),
     enabled: Boolean(authorId),
   });
 
@@ -133,6 +181,56 @@ export function DocumentWorkspace() {
     },
   });
 
+  const updateDocumentStatusMutation = useMutation({
+    mutationFn: ({
+      documentId,
+      nextStatus,
+    }: {
+      documentId: string;
+      nextStatus: DocumentStatus;
+    }) => updateDocumentStatus(documentId, nextStatus),
+    onMutate: async ({ documentId, nextStatus }) => {
+      await queryClient.cancelQueries({ queryKey: ["documents", authorId] });
+
+      const previousDocuments =
+        queryClient.getQueryData<DocumentRecord[]>(["documents", authorId]) ?? [];
+
+      queryClient.setQueryData<DocumentRecord[]>(
+        ["documents", authorId],
+        previousDocuments.map((document) =>
+          document.id === documentId
+            ? {
+                ...document,
+                status: nextStatus,
+                updatedAt: new Date().toISOString(),
+              }
+            : document
+        )
+      );
+
+      return { previousDocuments };
+    },
+    onError: (_error, _variables, context) => {
+      if (!context) {
+        return;
+      }
+
+      queryClient.setQueryData(["documents", authorId], context.previousDocuments);
+    },
+    onSuccess: (updatedDocument) => {
+      queryClient.setQueryData<DocumentRecord[]>(
+        ["documents", authorId],
+        (currentDocuments = []) =>
+          currentDocuments.map((document) =>
+            document.id === updatedDocument.id ? updatedDocument : document
+          )
+      );
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["documents", authorId] });
+    },
+  });
+
   useEffect(() => {
     if (selectedDocumentId || !documentsQuery.data?.length) {
       return;
@@ -144,6 +242,12 @@ export function DocumentWorkspace() {
   const selectedDocument =
     documentsQuery.data?.find((document) => document.id === selectedDocumentId) ??
     null;
+  const filteredDocuments =
+    inboxFilter === "ALL"
+      ? documentsQuery.data ?? []
+      : (documentsQuery.data ?? []).filter(
+          (document) => document.status === inboxFilter
+        );
 
   const isSubmitting =
     createDocumentMutation.isPending || updateDocumentMutation.isPending;
@@ -153,6 +257,8 @@ export function DocumentWorkspace() {
       ? createDocumentMutation.error
       : updateDocumentMutation.error instanceof DocumentApiError
         ? updateDocumentMutation.error
+        : updateDocumentStatusMutation.error instanceof DocumentApiError
+          ? updateDocumentStatusMutation.error
         : null;
 
   const canSubmit =
@@ -173,6 +279,10 @@ export function DocumentWorkspace() {
     setEditorMode("edit");
     setTitle(document.title);
     setContent(document.content);
+  }
+
+  function handleStatusChange(documentId: string, nextStatus: DocumentStatus) {
+    updateDocumentStatusMutation.mutate({ documentId, nextStatus });
   }
 
   function handleSubmitDocument(event: React.FormEvent<HTMLFormElement>) {
@@ -204,15 +314,15 @@ export function DocumentWorkspace() {
         <div className="space-y-3">
           <div className="inline-flex items-center gap-2 rounded-pill bg-primary/10 px-4 py-2 text-sm font-headings font-medium text-primary">
             <FileText className="h-4 w-4" />
-            Pod A Part 1
+            Pod A Part 2
           </div>
           <div className="space-y-2">
             <h1 className="text-4xl font-headings font-semibold tracking-tight text-text">
-              문서를 부드럽게 작성하고 바로 확인하세요.
+              결재 상태를 바꾸고 승인 흐름까지 이어가세요.
             </h1>
             <p className="max-w-3xl text-base leading-7 text-text/80">
-              Markdown 에디터, 문서 생성·수정 API, 실시간 미리보기를 한 화면에
-              연결했습니다.
+              문서 작성, 상태 변경 API, 결재 인박스, 승인 후 지식 인덱싱 연결까지
+              한 화면에서 관리할 수 있습니다.
             </p>
           </div>
         </div>
@@ -380,11 +490,11 @@ export function DocumentWorkspace() {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <CardTitle className="text-2xl font-headings text-text">
-                    내 문서 목록
+                    결재 인박스
                   </CardTitle>
                   <CardDescription className="font-body text-text/70">
-                    GET API와 TanStack Query로 최신 문서를 불러오고 편집 대상을
-                    선택합니다.
+                    상태별 문서를 모아 보고, 버튼으로 바로 결재 흐름을 진행할 수
+                    있습니다.
                   </CardDescription>
                 </div>
                 <Button
@@ -405,6 +515,38 @@ export function DocumentWorkspace() {
             </CardHeader>
 
             <CardContent className="p-4">
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                {inboxFilters.map((filter) => {
+                  const count =
+                    filter.value === "ALL"
+                      ? documentsQuery.data?.length ?? 0
+                      : documentsQuery.data?.filter(
+                          (document) => document.status === filter.value
+                        ).length ?? 0;
+                  const isActive = inboxFilter === filter.value;
+
+                  return (
+                    <Button
+                      key={filter.value}
+                      type="button"
+                      variant={isActive ? "default" : "ghost"}
+                      className="rounded-pill"
+                      onClick={() => setInboxFilter(filter.value)}
+                    >
+                      <Inbox className="h-4 w-4" />
+                      {filter.label}
+                      <span
+                        className={`rounded-pill px-2 py-0.5 text-xs ${
+                          isActive ? "bg-white/20 text-white" : "bg-primary/10 text-primary"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    </Button>
+                  );
+                })}
+              </div>
+
               {isAuthLoading ? (
                 <div className="flex items-center justify-center gap-2 py-10 text-sm text-text/60">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -430,61 +572,113 @@ export function DocumentWorkspace() {
               {!isAuthLoading &&
               !documentsQuery.isLoading &&
               !documentsQuery.isError &&
-              documentsQuery.data?.length === 0 ? (
+              filteredDocuments.length === 0 ? (
                 <div className="rounded-md bg-background/60 px-5 py-8 text-center text-sm leading-6 text-text/60">
-                  아직 생성된 문서가 없습니다. 왼쪽 에디터에서 첫 문서를 작성해
-                  보세요.
+                  현재 필터에 해당하는 문서가 없습니다. 왼쪽 에디터에서 초안을
+                  만들거나 다른 상태 탭을 확인해 보세요.
                 </div>
               ) : null}
 
               <div className="space-y-3">
-                {documentsQuery.data?.map((document) => {
+                {filteredDocuments.map((document) => {
                   const isSelected = document.id === selectedDocumentId;
+                  const statusActions = getStatusActions(document.status);
+                  const isStatusUpdating =
+                    updateDocumentStatusMutation.isPending &&
+                    updateDocumentStatusMutation.variables?.documentId ===
+                      document.id;
 
                   return (
-                    <button
+                    <div
                       key={document.id}
-                      type="button"
-                      onClick={() => startEditingDocument(document)}
                       className={`w-full rounded-md px-4 py-4 text-left transition-all ${
                         isSelected
                           ? "bg-primary text-white shadow-soft"
                           : "bg-background/70 text-text hover:bg-background"
                       }`}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate font-headings text-base font-semibold">
-                            {document.title}
-                          </p>
-                          <p
-                            className={`mt-1 text-xs ${
-                              isSelected ? "text-white/80" : "text-text/55"
+                      <button
+                        type="button"
+                        onClick={() => startEditingDocument(document)}
+                        className="w-full text-left"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate font-headings text-base font-semibold">
+                              {document.title}
+                            </p>
+                            <p
+                              className={`mt-1 text-xs ${
+                                isSelected ? "text-white/80" : "text-text/55"
+                              }`}
+                            >
+                              {formatDate(document.updatedAt)}
+                            </p>
+                          </div>
+                          <span
+                            className={`rounded-pill px-3 py-1 text-xs font-semibold ${
+                              isSelected
+                                ? "bg-white/20 text-white"
+                                : statusBadgeClassMap[document.status]
                             }`}
                           >
-                            {formatDate(document.updatedAt)}
-                          </p>
+                            {statusLabelMap[document.status]}
+                          </span>
                         </div>
-                        <span
-                          className={`rounded-pill px-3 py-1 text-xs font-semibold ${
+                        <div className="mt-3 flex justify-end">
+                          <span
+                            className={`text-xs font-medium ${
+                              isSelected ? "text-white/85" : "text-text/55"
+                            }`}
+                          >
+                            클릭하여 상세 보기
+                          </span>
+                        </div>
+                      </button>
+
+                      {statusActions.length ? (
+                        <div
+                          className={`mt-3 flex flex-wrap gap-2 border-t pt-3 ${
                             isSelected
-                              ? "bg-white/20 text-white"
-                              : "bg-primary/10 text-primary"
+                              ? "border-white/20"
+                              : "border-background/70"
                           }`}
                         >
-                          {document.status}
-                        </span>
-                      </div>
-                      <div className="mt-3 flex justify-end">
-                        <span
-                          className={`text-xs font-medium ${
-                            isSelected ? "text-white/85" : "text-text/55"
-                          }`}
-                        >
-                          클릭하여 상세 보기
-                        </span>
-                      </div>
-                    </button>
+                          {statusActions.map((action) => {
+                            const ActionIcon = action.icon;
+
+                            return (
+                              <Button
+                                key={action.nextStatus}
+                                type="button"
+                                variant={
+                                  action.nextStatus === "REJECTED"
+                                    ? "destructive"
+                                    : isSelected
+                                      ? "secondary"
+                                      : "outline"
+                                }
+                                className="rounded-pill"
+                                disabled={isStatusUpdating}
+                                onClick={() =>
+                                  handleStatusChange(
+                                    document.id,
+                                    action.nextStatus
+                                  )
+                                }
+                              >
+                                {isStatusUpdating ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <ActionIcon className="h-4 w-4" />
+                                )}
+                                {action.label}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                    </div>
                   );
                 })}
               </div>
@@ -497,7 +691,7 @@ export function DocumentWorkspace() {
                 선택한 문서
               </CardTitle>
               <CardDescription className="font-body text-text/70">
-                저장된 문서를 `prose` 스타일로 렌더링합니다.
+                저장된 문서를 확인하고 현재 상태에 맞는 다음 액션을 수행합니다.
               </CardDescription>
             </CardHeader>
 
@@ -505,8 +699,10 @@ export function DocumentWorkspace() {
               {selectedDocument ? (
                 <article className="prose prose-slate max-w-none font-body prose-headings:font-headings prose-headings:text-text prose-p:text-text prose-li:text-text prose-strong:text-text">
                   <div className="mb-6 flex flex-wrap items-center gap-2">
-                    <span className="rounded-pill bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                      {selectedDocument.status}
+                    <span
+                      className={`rounded-pill px-3 py-1 text-xs font-semibold ${statusBadgeClassMap[selectedDocument.status]}`}
+                    >
+                      {statusLabelMap[selectedDocument.status]}
                     </span>
                     <span className="text-xs text-text/55">
                       생성 {formatDate(selectedDocument.createdAt)}
@@ -521,6 +717,44 @@ export function DocumentWorkspace() {
                       이 문서 편집
                     </Button>
                   </div>
+                  {getStatusActions(selectedDocument.status).length ? (
+                    <div className="mb-6 flex flex-wrap gap-2">
+                      {getStatusActions(selectedDocument.status).map((action) => {
+                        const ActionIcon = action.icon;
+                        const isStatusUpdating =
+                          updateDocumentStatusMutation.isPending &&
+                          updateDocumentStatusMutation.variables?.documentId ===
+                            selectedDocument.id;
+
+                        return (
+                          <Button
+                            key={action.nextStatus}
+                            type="button"
+                            variant={
+                              action.nextStatus === "REJECTED"
+                                ? "destructive"
+                                : "outline"
+                            }
+                            className="rounded-pill"
+                            disabled={isStatusUpdating}
+                            onClick={() =>
+                              handleStatusChange(
+                                selectedDocument.id,
+                                action.nextStatus
+                              )
+                            }
+                          >
+                            {isStatusUpdating ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <ActionIcon className="h-4 w-4" />
+                            )}
+                            {action.label}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
                   <h1>{selectedDocument.title}</h1>
                   <ReactMarkdown>
                     {selectedDocument.content || "_본문이 비어 있습니다._"}

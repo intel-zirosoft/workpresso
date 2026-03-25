@@ -5,6 +5,7 @@ import {
   normalizeDocumentRow,
   updateDocumentInputSchema,
 } from "@/features/pod-a/services/document-schema";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const documentSelectColumns =
@@ -34,7 +35,8 @@ export async function PATCH(
     );
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
+  const adminSupabase = createAdminClient();
   const {
     data: { user },
     error: authError,
@@ -44,7 +46,7 @@ export async function PATCH(
     return unauthorizedResponse();
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await adminSupabase
     .from("documents")
     .update({
       title: parsedInput.data.title,
