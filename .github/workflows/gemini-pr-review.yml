@@ -1,8 +1,11 @@
-name: Gemini AI PR Reviewer
+name: Gemini AI Code Reviewer
 
 on:
   pull_request:
     types: [opened, synchronize]
+  push:
+    branches:
+      - develop
 
 permissions:
   contents: read
@@ -24,21 +27,28 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install -q google-generativeai
+          pip install -U google-generativeai
 
-      - name: Get PR Diff
-        id: get_diff
+      - name: Extract Diff
+        id: extract_diff
         run: |
-          git diff origin/${{ github.base_ref }} HEAD > pr_diff.txt
-          # Diff 파일이 비어있는지 확인
-          if [ -s pr_diff.txt ]; then
-            echo "has_diff=true" >> $GITHUB_OUTPUT
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            # PR 상황: 베이스 브랜치와 현재 헤드 사이의 차이점 추출
+            git fetch origin ${{ github.base_ref }}
+            git diff origin/${{ github.base_ref }}...HEAD > changes.diff
           else
-            echo "has_diff=false" >> $GITHUB_OUTPUT
+            # Push 상황 (develop 병합 등): 현재 커밋과 이전 커밋 사이의 차이점 추출
+            git diff HEAD^ HEAD > changes.diff
+          fi
+          
+          if [ -s changes.diff ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Generate Review with Gemini
-        if: steps.get_diff.outputs.has_diff == 'true'
+        if: steps.extract_diff.outputs.has_changes == 'true'
         id: gemini_review
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -50,27 +60,29 @@ jobs:
           api_key = os.environ.get("GEMINI_API_KEY")
           if not api_key:
               with open('review_result.md', 'w') as f:
-                  f.write("⚠️ GEMINI_API_KEY가 GitHub Secrets에 설정되지 않았습니다.")
+                  f.write("⚠️ GEMINI_API_KEY가 설정되지 않았습니다.")
               exit(0)
 
           genai.configure(api_key=api_key)
-          model = genai.GenerativeModel('gemini-1.5-flash-latest') # 최신 Flash 모델 사용
+          model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
-          with open('pr_diff.txt', 'r') as f:
+          with open('changes.diff', 'r') as f:
               diff_content = f.read()
+
+          # 너무 큰 diff는 잘라내기 (API 제한 방지)
+          if len(diff_content) > 30000:
+              diff_content = diff_content[:30000] + "\n\n... (너무 길어서 생략됨)"
 
           prompt = f"""
           당신은 WorkPresso 프로젝트의 시니어 풀스택 개발자입니다. 
           제시된 코드 변경사항(diff)을 리뷰하고 개선안을 한국어로 제안해주세요.
 
-          **프로젝트 맥락:**
-          - 테마: 부드럽고 신뢰할 수 있는 (Soft & Trustworthy), 파스텔 톤, 둥근 UI.
-          - 기술 스택: Next.js, Tailwind CSS, Supabase.
-
           **리뷰 원칙:**
           1. 친절하고 격려하는 말투를 사용하세요.
-          2. 데이터베이스 스키마와의 일관성, Tailwind 디자인 시스템 준수 여부를 중점적으로 보세요.
-          3. 성능 개선이나 버그 가능성이 있다면 구체적인 코드 예시와 함께 제안하세요.
+          2. **로직 정확성 검증**: 구현된 로직이 의도한 대로 동작하는지, 예외 상황(입력값 부재, 에러 응답 등)에 대한 처리가 누락되지 않았는지 꼼꼼히 확인하세요.
+          3. **버그 및 취약점 탐지**: 잠재적인 버그(Null 참조, 무한 루프, 비동기 처리 누락 등)나 보안 취약점이 있다면 구체적인 코드 예시와 함께 지적해주세요.
+          4. 데이터베이스 스키마와의 일관성, Tailwind 디자인 시스템 준수 여부를 중점적으로 보세요.
+          5. 성능 개선이 가능하다면 최적화 방안을 제안하세요.
 
           **변경 사항 (Git Diff):**
           {diff_content}
@@ -87,8 +99,14 @@ jobs:
               f.write(review_text)
 
       - name: Post Comment to PR
-        if: steps.get_diff.outputs.has_diff == 'true'
+        if: github.event_name == 'pull_request' && steps.extract_diff.outputs.has_changes == 'true'
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body-path: 'review_result.md'
+
+      - name: Output Review for Push (Logging)
+        if: github.event_name == 'push' && steps.extract_diff.outputs.has_changes == 'true'
+        run: |
+          cat review_result.md
+          echo "::notice ::Push 이벤트 리뷰가 완료되었습니다. 상세 내용은 로그를 확인하세요."
