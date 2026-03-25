@@ -138,7 +138,7 @@ export function DocumentWorkspace() {
       return;
     }
 
-    setSelectedDocumentId(documentsQuery.data[0].id);
+    startEditingDocument(documentsQuery.data[0]);
   }, [documentsQuery.data, selectedDocumentId]);
 
   const selectedDocument =
@@ -445,7 +445,7 @@ export function DocumentWorkspace() {
                     <button
                       key={document.id}
                       type="button"
-                      onClick={() => setSelectedDocumentId(document.id)}
+                      onClick={() => startEditingDocument(document)}
                       className={`w-full rounded-md px-4 py-4 text-left transition-all ${
                         isSelected
                           ? "bg-primary text-white shadow-soft"
