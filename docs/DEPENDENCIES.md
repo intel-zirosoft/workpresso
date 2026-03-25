@@ -9,6 +9,9 @@ This file tracks all libraries added during development to ensure team-wide sync
 | `lucide-react` | latest | Common | Shared icon set for UI consistency | 2024-03-23 |
 | `zod` | latest | Common | Full-stack schema validation | 2024-03-23 |
 | `react-markdown` | latest | Pod A | Markdown rendering for documents | 2024-03-23 |
+| `react-media-recorder` | ^1.6.6 | Pod D | Audio recording for meeting logs | 2026-03-25 |
+| `wavesurfer.js` | ^7.8.2 | Pod D | Audio waveform visualization | 2026-03-25 |
+| `class-variance-authority` | latest | Common | CSS-in-TS library for variants | 2026-03-25 |
 
 ---
 *Note: The Agent must update this table whenever `npm install` or `bun add` is executed.*

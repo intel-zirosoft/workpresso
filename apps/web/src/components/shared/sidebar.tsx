@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MessageSquare, Users, Layout, Settings, LogOut } from "lucide-react";
+import { Home, MessageSquare, Users, Layout, Mic, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
   { name: "Chatter", href: "/chatter", icon: MessageSquare },
   { name: "Teammates", href: "/teammates", icon: Users },
   { name: "Canvas", href: "/canvas", icon: Layout },
+  { name: "Voice", href: "/voice", icon: Mic },
 ];
 
 export function Sidebar() {

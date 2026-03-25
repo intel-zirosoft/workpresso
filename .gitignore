@@ -25,3 +25,8 @@ Thumbs.db
 
 # Custom
 /plan_docs
+
+# Supabase
+supabase/.temp/
+supabase/.branches/
+supabase/config.toml
