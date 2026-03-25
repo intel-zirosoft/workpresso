@@ -3,6 +3,7 @@ import { Fredoka, Nunito } from 'next/font/google'
 import '@/styles/globals.css'
 import { Providers } from '@/providers'
 import { Sidebar } from '@/components/shared/sidebar'
+import { Header } from '@/components/shared/header'
 
 const fredoka = Fredoka({ 
   subsets: ['latin'],
@@ -18,7 +19,7 @@ const nunito = Nunito({
 
 export const metadata: Metadata = {
   title: 'WorkPresso',
-  description: 'Soft & Trustworthy Collaborative Workspace',
+  description: '부드럽고 신뢰할 수 있는 협업 공간',
 }
 
 export default function RootLayout({
@@ -35,11 +36,14 @@ export default function RootLayout({
             <Sidebar />
             
             {/* Main Content Area */}
-            <main className="flex-1 bg-background overflow-y-auto">
-              <div className="container mx-auto p-8 max-w-[1400px]">
-                {children}
-              </div>
-            </main>
+            <div className="flex-1 flex flex-col min-h-screen bg-background">
+              <Header />
+              <main className="flex-1 overflow-y-auto">
+                <div className="container mx-auto p-8 max-w-[1400px]">
+                  {children}
+                </div>
+              </main>
+            </div>
           </div>
         </Providers>
       </body>

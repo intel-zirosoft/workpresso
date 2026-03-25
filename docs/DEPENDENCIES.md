@@ -12,6 +12,7 @@ This file tracks all libraries added during development to ensure team-wide sync
 | `react-media-recorder` | ^1.6.6 | Pod D | Audio recording for meeting logs | 2026-03-25 |
 | `wavesurfer.js` | ^7.8.2 | Pod D | Audio waveform visualization | 2026-03-25 |
 | `class-variance-authority` | latest | Common | CSS-in-TS library for variants | 2026-03-25 |
+| `@radix-ui/react-dropdown-menu` | latest | Common | UI Dropdown for Header Auth | 2026-03-25 |
 
 ---
 *Note: The Agent must update this table whenever `npm install` or `bun add` is executed.*
