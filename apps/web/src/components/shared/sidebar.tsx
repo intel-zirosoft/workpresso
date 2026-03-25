@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MessageSquare, Users, Layout, FileText, LogOut } from "lucide-react";
+import { Home, MessageSquare, Users, Layout, FileText, Bot, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { name: "Home", href: "/", icon: Home },
   { name: "Documents", href: "/documents", icon: FileText },
+  { name: "Work Assistant", href: "/chat", icon: Bot }, // Pod C: AI Agent
   { name: "Chatter", href: "/chatter", icon: MessageSquare },
   { name: "Teammates", href: "/teammates", icon: Users },
   { name: "Canvas", href: "/canvas", icon: Layout },
@@ -54,8 +55,8 @@ export function Sidebar() {
             <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-text truncate">User Name</p>
-            <p className="text-[11px] font-medium text-muted truncate">Product Designer</p>
+            <p className="text-sm font-bold text-text truncate">사용자 이름</p>
+            <p className="text-[11px] font-medium text-muted truncate">프로덕트 디자이너</p>
           </div>
           <button className="text-muted hover:text-destructive transition-colors">
             <LogOut size={18} />
