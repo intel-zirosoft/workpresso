@@ -74,9 +74,9 @@ jobs:
           except Exception as e:
               print(f"Error listing models: {e}")
 
-          # 최적의 모델 선택 (1.5-flash -> 1.5-pro -> 1.0-pro 순)
-          model_name = "gemini-1.5-flash" # Default
-          for target in ["models/gemini-1.5-flash", "models/gemini-1.5-pro", "models/gemini-1.0-pro"]:
+          # 최적의 모델 선택 (flash-latest -> pro-latest -> 1.0-pro 순)
+          model_name = "gemini-flash-latest" # Default
+          for target in ["models/gemini-flash-latest", "models/gemini-pro-latest", "models/gemini-1.0-pro"]:
               if target in available_models:
                   model_name = target.replace("models/", "")
                   break
