@@ -9,6 +9,7 @@ This file tracks all libraries added during development to ensure team-wide sync
 | `lucide-react` | latest | Common | Shared icon set for UI consistency | 2024-03-23 |
 | `zod` | latest | Common | Full-stack schema validation | 2024-03-23 |
 | `react-markdown` | latest | Pod A | Markdown rendering for documents | 2024-03-23 |
+| `@radix-ui/react-dropdown-menu` | latest | Common | UI Dropdown for Header Auth | 2026-03-25 |
 
 ---
 *Note: The Agent must update this table whenever `npm install` or `bun add` is executed.*
