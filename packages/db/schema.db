@@ -118,3 +118,33 @@ $$;
 -- 벡터 검색을 위한 인덱스 (ivfflat 또는 hnsw 추천)
 CREATE INDEX IF NOT EXISTS idx_knowledge_vectors_embedding ON knowledge_vectors 
 USING hnsw (embedding vector_cosine_ops);
+
+-- 7. 벡터 검색 함수 정의 (pgvector 활용)
+CREATE OR REPLACE FUNCTION match_knowledge (
+  query_embedding vector(1536),
+  match_threshold float,
+  match_count int
+)
+RETURNS TABLE (
+  id uuid,
+  source_type source_type,
+  source_id uuid,
+  metadata jsonb,
+  similarity float
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    kv.id,
+    kv.source_type,
+    kv.source_id,
+    kv.metadata,
+    1 - (kv.embedding <=> query_embedding) AS similarity
+  FROM knowledge_vectors kv
+  WHERE 1 - (kv.embedding <=> query_embedding) > match_threshold
+  ORDER BY similarity DESC
+  LIMIT match_count;
+END;
+$$;

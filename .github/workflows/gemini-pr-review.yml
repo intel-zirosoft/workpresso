@@ -54,7 +54,7 @@ jobs:
               exit(0)
 
           genai.configure(api_key=api_key)
-          model = genai.GenerativeModel('gemini-1.5-flash') # 속도를 위해 flash 사용
+          model = genai.GenerativeModel('gemini-1.5-flash-latest') # 최신 Flash 모델 사용
 
           with open('pr_diff.txt', 'r') as f:
               diff_content = f.read()
