@@ -6,13 +6,13 @@
 
 **목표:** 문서 작성 및 조회를 위한 핵심 인프라와 UI 구축
 
-- [ ] **DB/Schema**: `packages/db/schema.db`의 `documents` 테이블 스키마 확인 및 Zod 스키마 정의
-- [ ] **Backend (API)**: 새 문서 생성을 위한 POST API 엔드포인트 구현 (Supabase Insert)
-- [ ] **Backend (API)**: 작성된 문서를 조회하는 GET API 구현
-- [ ] **Frontend (UI)**: 마크다운 에디터 컴포넌트 구현 (`react-markdown`, `@tailwindcss/typography`의 `prose` 클래스 활용)
-- [ ] **Frontend (State)**: TanStack Query를 활용한 폼 상태 관리 및 API 연동
-- [ ] **Validation**: Zod를 활용한 마크다운 본문 크기 및 `author_id` 무결성 검증 로직 추가
-- [ ] **Security**: Supabase RLS를 적용하여 사용자가 본인의 문서만 조회/수정할 수 있도록 제한
+- [x] **DB/Schema**: `packages/db/schema.db`의 `documents` 테이블 스키마 확인 및 Zod 스키마 정의
+- [x] **Backend (API)**: 새 문서 생성을 위한 POST API 엔드포인트 구현 (Supabase Insert)
+- [x] **Backend (API)**: 작성된 문서를 조회하는 GET API 구현
+- [x] **Frontend (UI)**: 마크다운 에디터 컴포넌트 구현 (`react-markdown`, `@tailwindcss/typography`의 `prose` 클래스 활용)
+- [x] **Frontend (State)**: TanStack Query를 활용한 폼 상태 관리 및 API 연동
+- [x] **Validation**: Zod를 활용한 마크다운 본문 크기 및 `author_id` 무결성 검증 로직 추가
+- [x] **Security**: Supabase RLS를 적용하여 사용자가 본인의 문서만 조회/수정할 수 있도록 제한
 
 ## 🧑‍💻 Part 2: 결재 워크플로우 및 상태 관리
 
