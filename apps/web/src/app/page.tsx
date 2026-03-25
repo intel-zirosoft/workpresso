@@ -1,7 +1,7 @@
 "use client";
 
 import { Sparkles, Plus } from "lucide-react";
-import { CalendarView } from "@/components/schedules/calendar-view";
+import { CalendarView } from "@/app/(schedules)/_components/calendar-view";
 
 export default function HomePage() {
   return (
