@@ -10,6 +10,7 @@ This file tracks all libraries added during development to ensure team-wide sync
 | `zod` | latest | Common | Full-stack schema validation | 2024-03-23 |
 | `react-markdown` | latest | Pod A | Markdown rendering for documents | 2024-03-23 |
 | `@radix-ui/react-dropdown-menu` | latest | Common | UI Dropdown for Header Auth | 2026-03-25 |
+| `@ai-sdk/openai` | latest | Pod C | Official OpenAI provider for Vercel AI SDK v3 | 2026-03-25 |
 
 ---
 *Note: The Agent must update this table whenever `npm install` or `bun add` is executed.*
