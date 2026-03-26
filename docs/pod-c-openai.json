@@ -1,0 +1,58 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "WorkPresso Pod-C API",
+    "version": "1.0.0",
+    "description": "AI 에이전트 및 지식 베이스 관리 API"
+  },
+  "paths": {
+    "/api/chat": {
+      "post": {
+        "summary": "AI 에이전트 채팅 (Streaming)",
+        "description": "실시간 스트리밍 답변 및 일정 등록(Tool) 수행",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "messages": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "role": { "type": "string", "example": "user" },
+                        "content": { "type": "string", "example": "내일 오후 2시에 회의 잡아줘" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Streaming Text Response" }
+        }
+      }
+    },
+    "/api/admin/sync-knowledge": {
+      "post": {
+        "summary": "지식 베이스 동기화",
+        "description": "로컬 .md 파일을 벡터 DB로 업서트",
+        "responses": {
+          "200": { "description": "동기화 성공" }
+        }
+      }
+    },
+    "/api/debug/seed": {
+      "get": {
+        "summary": "테스트 데이터 생성",
+        "description": "초기 유저 및 지식 데이터 셋업",
+        "responses": {
+          "200": { "description": "생성 완료" }
+        }
+      }
+    }
+  }
+}
