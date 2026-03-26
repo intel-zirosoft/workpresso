@@ -16,10 +16,24 @@ import { User } from "@supabase/supabase-js";
 export function Header() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const [supabase] = useState(() => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!url || !anonKey) {
+      return null;
+    }
+
+    return createClient();
+  });
   const router = useRouter();
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
@@ -35,15 +49,19 @@ export function Header() {
     );
 
     return () => subscription.unsubscribe();
-  }, [supabase.auth]);
+  }, [supabase]);
 
   const handleSignOut = async () => {
+    if (!supabase) {
+      return;
+    }
+
     await supabase.auth.signOut();
     router.refresh();
   };
 
   return (
-    <header className="h-16 flex items-center justify-end px-8 sticky top-0 bg-background/80 backdrop-blur-md z-30">
+    <header className="h-16 flex items-center justify-end px-8 sticky top-0 bg-background/80 backdrop-blur-md z-50">
       <div className="flex items-center gap-4">
         {loading ? (
           <div className="w-8 h-8 rounded-full bg-secondary animate-pulse" />

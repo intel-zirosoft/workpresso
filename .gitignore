@@ -28,3 +28,15 @@ Thumbs.db
 *.txt
 *.tsbuildinfo
 next-env.d.ts
+
+# Supabase
+supabase/.temp/
+supabase/.branches/
+supabase/config.toml
+
+# 일지
+project_report_*.md
+docs/dev-logs/
+
+# AI Agents
+.codex/

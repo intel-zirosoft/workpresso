@@ -2,16 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MessageSquare, Users, Layout, Bot, Settings, LogOut, Calendar } from "lucide-react";
+import { Home, MessageSquare, Users, Layout, Bot, Settings, LogOut, Calendar, FileText, Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { name: "Home", href: "/", icon: Home },
+  { name: "Documents", href: "/documents", icon: FileText },
   { name: "Work Assistant", href: "/chat", icon: Bot }, // Pod C: AI Agent
   { name: "Chatter", href: "/chatter", icon: MessageSquare },
   { name: "Teammates", href: "/teammates", icon: Users },
   { name: "Canvas", href: "/canvas", icon: Layout },
   { name: "Schedules", href: "/schedules", icon: Calendar },
+  { name: "Voice", href: "/voice", icon: Mic }, // Pod D: Meeting Logs
 ];
 
 export function Sidebar() {
