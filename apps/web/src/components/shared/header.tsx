@@ -7,15 +7,23 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
+import { Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { THEME_LABELS, THEME_OPTIONS, type ThemePreference } from "@/lib/theme";
+import { useTheme } from "@/providers/theme-provider";
 
 export function Header() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const { themePreference, setThemePreference } = useTheme();
   const [supabase] = useState(() => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -60,6 +68,10 @@ export function Header() {
     router.refresh();
   };
 
+  const handleThemeChange = (nextTheme: ThemePreference) => {
+    setThemePreference(nextTheme);
+  };
+
   return (
     <header className="h-16 flex items-center justify-end px-8 sticky top-0 bg-background/80 backdrop-blur-md z-50">
       <div className="flex items-center gap-4">
@@ -82,12 +94,31 @@ export function Header() {
                 <p className="text-sm font-bold leading-none text-text">{user.user_metadata?.name || "User"}</p>
                 <p className="text-xs leading-none text-muted">{user.email}</p>
               </div>
-              <DropdownMenuItem className="cursor-pointer text-muted hover:text-text">
-                Theme
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer text-muted hover:text-text">
-                Profile Settings
-              </DropdownMenuItem>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="cursor-pointer text-muted focus:text-text data-[state=open]:text-text">
+                  <span>Theme</span>
+                  <span className="ml-auto mr-2 text-xs font-semibold text-text/60">
+                    {THEME_LABELS[themePreference]}
+                  </span>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-40">
+                  {THEME_OPTIONS.map((option) => (
+                    <DropdownMenuItem
+                      key={option}
+                      className="cursor-pointer text-muted focus:text-text"
+                      onClick={() => handleThemeChange(option)}
+                    >
+                      <span>{THEME_LABELS[option]}</span>
+                      <Check
+                        className={cn(
+                          "ml-auto h-4 w-4 transition-opacity",
+                          themePreference === option ? "opacity-100 text-primary" : "opacity-0"
+                        )}
+                      />
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
               <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive" onClick={handleSignOut}>
                 Log out
               </DropdownMenuItem>

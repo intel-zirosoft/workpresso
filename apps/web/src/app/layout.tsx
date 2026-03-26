@@ -4,6 +4,7 @@ import '@/styles/globals.css'
 import { Providers } from '@/providers'
 import { Sidebar } from '@/components/shared/sidebar'
 import { Header } from '@/components/shared/header'
+import { THEME_STORAGE_KEY } from '@/lib/theme'
 
 const fredoka = Fredoka({ 
   subsets: ['latin'],
@@ -22,6 +23,28 @@ export const metadata: Metadata = {
   description: '부드럽고 신뢰할 수 있는 협업 공간',
 }
 
+const themeInitScript = `
+  (function() {
+    try {
+      var stored = window.localStorage.getItem('${THEME_STORAGE_KEY}');
+      var preference =
+        stored === 'light' || stored === 'dark' || stored === 'default'
+          ? stored
+          : 'default';
+      var resolved =
+        preference === 'default'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : preference;
+
+      document.documentElement.dataset.theme = resolved;
+      document.documentElement.style.colorScheme = resolved;
+    } catch (error) {
+      document.documentElement.dataset.theme = 'light';
+      document.documentElement.style.colorScheme = 'light';
+    }
+  })();
+`;
+
 export default function RootLayout({
   children,
 }: {
@@ -30,6 +53,7 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning className={`${fredoka.variable} ${nunito.variable}`}>
       <body className="font-body bg-background text-text antialiased">
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <Providers>
           <div className="flex min-h-screen">
             {/* Left Sidebar - Fixed 260px */}

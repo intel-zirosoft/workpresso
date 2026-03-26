@@ -23,30 +23,30 @@ module.exports = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#7FA1C3", // Soft Dusty Blue
-          foreground: "#FFFFFF",
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
-          DEFAULT: "#F2C18D", // Warm Peach (Accent)
-          foreground: "#2C394B",
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
         },
-        surface: "#FFFFFF",
+        surface: "hsl(var(--surface))",
         text: {
-          DEFAULT: "#2C394B", // Deep Navy
-          muted: "#A5AEBA",   // Soft Slate
+          DEFAULT: "hsl(var(--text))",
+          muted: "hsl(var(--text-muted))",
         },
-        success: "#A1C398",   // Pastel Sage
+        success: "hsl(var(--success))",
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
         muted: {
-          DEFAULT: "#A5AEBA",
-          foreground: "#2C394B",
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: "#F2C18D",
-          foreground: "#2C394B",
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
         },
       },
       fontFamily: {
@@ -60,8 +60,8 @@ module.exports = {
         pill: "100px",
       },
       boxShadow: {
-        soft: "0 8px 24px rgba(127, 161, 195, 0.12)",
-        float: "0 16px 32px rgba(127, 161, 195, 0.16)",
+        soft: "var(--shadow-soft)",
+        float: "var(--shadow-float)",
       },
     },
   },

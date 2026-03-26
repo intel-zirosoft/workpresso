@@ -7,6 +7,9 @@
     /* Soft & Trustworthy Workpresso Palette */
     --background: 34 29% 98%;   /* #FDFBF7 (Warm Off-white) */
     --foreground: 216 26% 23%;  /* #2C394B (Deep Navy) */
+    --surface: 0 0% 100%;       /* #FFFFFF */
+    --text: 216 26% 23%;        /* #2C394B */
+    --text-muted: 214 12% 69%;  /* #A5AEBA */
     
     --card: 0 0% 100%;          /* #FFFFFF */
     --card-foreground: 216 26% 23%;
@@ -19,6 +22,8 @@
     
     --secondary: 32 83% 75%;    /* #F2C18D (Warm Peach) */
     --secondary-foreground: 216 26% 23%;
+
+    --success: 111 27% 68%;     /* #A1C398 */
     
     --muted: 214 12% 69%;       /* #A5AEBA (Soft Slate) */
     --muted-foreground: 216 26% 23%;
@@ -32,8 +37,50 @@
     --border: 214 12% 69%;
     --input: 214 12% 69%;
     --ring: 210 38% 63%;
+
+    --shadow-soft: 0 8px 24px rgba(127, 161, 195, 0.12);
+    --shadow-float: 0 16px 32px rgba(127, 161, 195, 0.16);
     
     --radius: 24px;
+  }
+
+  [data-theme="dark"] {
+    --background: 213 29% 13%;   /* #18212B */
+    --foreground: 206 43% 95%;   /* #EDF3F8 */
+    --surface: 210 28% 19%;      /* #22303D */
+    --text: 206 43% 95%;         /* #EDF3F8 */
+    --text-muted: 211 22% 69%;   /* #9EAFBF */
+
+    --card: 210 28% 19%;
+    --card-foreground: 206 43% 95%;
+
+    --popover: 210 28% 19%;
+    --popover-foreground: 206 43% 95%;
+
+    --primary: 210 42% 72%;      /* #9AB8D6 */
+    --primary-foreground: 213 29% 13%;
+
+    --secondary: 29 69% 69%;     /* #E7B07A */
+    --secondary-foreground: 213 29% 13%;
+
+    --success: 114 25% 64%;      /* #8FB78B */
+
+    --muted: 210 22% 32%;
+    --muted-foreground: 211 22% 69%;
+
+    --accent: 29 69% 69%;
+    --accent-foreground: 213 29% 13%;
+
+    --border: 210 22% 32%;
+    --input: 210 22% 32%;
+    --ring: 210 47% 82%;
+
+    --shadow-soft: 0 10px 30px rgba(7, 12, 18, 0.28);
+    --shadow-float: 0 18px 40px rgba(7, 12, 18, 0.34);
+  }
+
+  html {
+    background-color: hsl(var(--background));
   }
 
   * {
