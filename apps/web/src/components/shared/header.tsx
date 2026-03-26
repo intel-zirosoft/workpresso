@@ -43,7 +43,7 @@ export function Header() {
   };
 
   return (
-    <header className="h-16 flex items-center justify-end px-8 sticky top-0 bg-background/80 backdrop-blur-md z-30">
+    <header className="h-16 flex items-center justify-end px-8 sticky top-0 bg-background/80 backdrop-blur-md z-50">
       <div className="flex items-center gap-4">
         {loading ? (
           <div className="w-8 h-8 rounded-full bg-secondary animate-pulse" />
