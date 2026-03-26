@@ -34,3 +34,6 @@ supabase/config.toml
 # 일지
 project_report_*.md
 docs/dev-logs/
+
+# AI Agents
+.codex/

@@ -11,9 +11,10 @@ This file tracks all libraries added during development to ensure team-wide sync
 | `react-markdown` | latest | Pod A | Markdown rendering for documents | 2024-03-23 |
 | `react-media-recorder` | ^1.6.6 | Pod D | Audio recording for meeting logs | 2026-03-25 |
 | `wavesurfer.js` | ^7.8.2 | Pod D | Audio waveform visualization | 2026-03-25 |
-| `class-variance-authority` | latest | Common | CSS-in-TS library for variants | 2026-03-25 |
+| `class-variance-authority` | latest | Common | shadcn/ui variant typing for shared button and calendar components | 2026-03-25 |
+| `supabase` | ^2.84.0 | Common | Supabase CLI for local type generation and project management | 2026-03-25 |
 | `@radix-ui/react-dropdown-menu` | latest | Common | UI Dropdown for Header Auth | 2026-03-25 |
-| `@ai-sdk/openai` | latest | Pod C | Official OpenAI provider for Vercel AI SDK v3 | 2026-03-25 |
+| `vitest` | ^4.1.1 | Pod A | Pod A schema/API/route TDD runner for document workflows | 2026-03-26 |
 
 ---
 *Note: The Agent must update this table whenever `npm install` or `bun add` is executed.*
