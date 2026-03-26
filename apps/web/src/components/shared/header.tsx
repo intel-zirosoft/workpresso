@@ -83,6 +83,9 @@ export function Header() {
                 <p className="text-xs leading-none text-muted">{user.email}</p>
               </div>
               <DropdownMenuItem className="cursor-pointer text-muted hover:text-text">
+                Theme
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer text-muted hover:text-text">
                 Profile Settings
               </DropdownMenuItem>
               <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive" onClick={handleSignOut}>
