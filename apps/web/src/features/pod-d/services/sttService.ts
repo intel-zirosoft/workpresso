@@ -3,8 +3,8 @@
  * Gemini 1.5 모델은 오디오 파일을 직접 입력받아 텍스트로 변환할 수 있습니다.
  */
 
-const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
-const GEMINI_MODEL = 'gemini-1.5-flash';
+export const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+export const GEMINI_MODEL = 'gemini-2.5-flash';
 
 export const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
   if (!GEMINI_API_KEY) {
@@ -35,12 +35,12 @@ export const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
             parts: [
               {
                 inline_data: {
-                  mime_type: audioBlob.type || 'audio/wav',
+                  mime_type: (audioBlob.type || 'audio/wav').split(';')[0],
                   data: base64Audio,
                 },
               },
               {
-                text: '이 오디오의 내용을 한글로 정확하게 받아쓰기해줘. 다른 말은 하지 말고 받아쓰기 내용만 출력해줘.',
+                text: '이 오디오의 내용을 한글로 정확하게 받아쓰기(STT) 해. 아무런 부연 설명이나 요약 없이, 오로지 들리는 음성 그대로 텍스트만 출력해. 만약 음성이 전혀 들리지 않거나 잡음만 있다면 "음성이 인식되지 않았습니다."라고만 출력해.',
               },
             ],
           },

@@ -29,4 +29,16 @@
 - [x] **Frontend (UI)**: 최근 회의 기록 리스트(History List) 및 상세 보기(Detail View) 화면 구현
 - [x] **Service Layer**: 저장된 회의록 전체 목록 조회 로직 (`listMeetingLogs`) 구현
 - [x] **DevOps (Utility)**: 개발용 실시간 에러 로그 기록 및 분석 시스템 구축 (`/api/logs`)
-- [x] **Security (Test)**: 로그인 모듈 연동 전까지 테스트 가능한 익명(Anon) 접근 및 0000.. 가짜 ID 처리
+- [x] **Security**: 실제 로그인 세션 연동 및 `owner_id` 기반 데이터 격리 처리 (기존 0000.. 더미 ID 제거 완료)
+- [x] **Routing**: Next.js Route Group(`(voice)`) 내부 하위 경로(`voice/page.tsx`) 조정을 통한 URL 매핑 최적화
+- [x] **STT Engine**: Gemini 1.5에서 `gemini-2.5-flash`로 모델 업데이트 및 전사 프롬프트 최적화
+
+## 🧑‍💻 Part 4: AI 변환 및 연동 고도화 (Roadmap)
+
+**목표:** 단순 전사본을 넘어 AI를 활용한 구조화된 회의록 요약 및 액션 아이템 도출
+
+- [x] **DB/Schema**: `meeting_logs` 테이블 내 제목, 요약, 액션 아이템, 참여자 등 변환용 컬럼 확장 가이드 작성 및 타입 연동
+- [x] **Backend (AI)**: 원본 STT 텍스트를 LLM에 전달하여 회의록 요약 및 액션 아이템을 JSON으로 추출하는 `refineMeetingLog` 구현
+- [x] **Frontend (UI)**: AI 변환 상태(`is_refined`) 및 단계별 로딩 처리 UI (`UPLOADING`, `TRANSCRIBING`, `REFINING`, `INDEXING`) 구현
+- [x] **Frontend (UI)**: 변환된 회의록의 시각적 상세 뷰 고도화 및 **마크다운 다운로드** 기능 추가
+- [x] **Optimization**: Gemini 2.5 Flash 모델 전환 및 프롬프트 튜닝을 통한 변환 품질 개선

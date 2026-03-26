@@ -43,7 +43,11 @@ export const WaveformVisualizer: React.FC<WaveformVisualizerProps> = ({ audioUrl
     ws.on('finish', () => setIsPlaying(false));
 
     return () => {
-      ws.destroy();
+      try {
+        ws.destroy();
+      } catch (e) {
+        // Ignore AbortError when destroying during load
+      }
     };
   }, [audioUrl, blob]);
 
