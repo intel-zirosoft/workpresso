@@ -31,15 +31,17 @@ export default function RootLayout({
     <html lang="ko" suppressHydrationWarning className={`${fredoka.variable} ${nunito.variable}`}>
       <body className="font-body bg-background text-text antialiased">
         <Providers>
-          <div className="flex min-h-screen">
-            {/* Left Sidebar - Fixed 260px */}
-            <Sidebar />
+          <div className="flex min-h-screen relative overflow-x-hidden">
+            {/* Sidebar - Hidden on mobile, fixed width on desktop */}
+            <div className="hidden md:block w-[260px] shrink-0 border-r border-background/50">
+              <Sidebar />
+            </div>
             
-            {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-h-screen bg-background">
+            {/* Main Content Area - Full width on mobile, flexible on desktop */}
+            <div className="flex-1 flex flex-col min-h-screen bg-background w-full">
               <Header />
-              <main className="flex-1 overflow-y-auto">
-                <div className="container mx-auto p-8 max-w-[1400px]">
+              <main className="flex-1 overflow-y-auto w-full">
+                <div className="container mx-auto p-4 md:p-8 max-w-[1400px]">
                   {children}
                 </div>
               </main>
