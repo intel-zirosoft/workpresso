@@ -24,4 +24,3 @@
 - [ ] **Frontend (UI)**: **Teammates 섹션** 내 근태 상태 관리용 칸반(Kanban) 보드 구현
 - [ ] **Frontend (State)**: 칸반 보드 내 드래그 앤 드롭 또는 클릭을 통한 상태 변경 및 API 연동
 - [ ] **Integration (Pod C API)**: Pod C(AI 에이전트) 연동 및 권한 설정
-- [ ]
