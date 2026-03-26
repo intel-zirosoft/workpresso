@@ -14,7 +14,6 @@ import {
   ShieldCheck,
   XCircle,
 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { MarkdownContent } from "@/components/shared/markdown-content";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/client";
@@ -69,7 +69,9 @@ const inboxFilters: Array<{ value: InboxFilter; label: string }> = [
 function getStatusActions(status: DocumentStatus) {
   switch (status) {
     case "DRAFT":
-      return [{ nextStatus: "PENDING" as const, label: "결재 요청", icon: Send }];
+      return [
+        { nextStatus: "PENDING" as const, label: "결재 요청", icon: Send },
+      ];
     case "PENDING":
       return [
         { nextStatus: "APPROVED" as const, label: "승인", icon: CheckCheck },
@@ -101,7 +103,7 @@ export function DocumentWorkspace() {
   const [editorMode, setEditorMode] = useState<EditorMode>("create");
   const [inboxFilter, setInboxFilter] = useState<InboxFilter>("PENDING");
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
-    null
+    null,
   );
 
   useEffect(() => {
@@ -147,7 +149,7 @@ export function DocumentWorkspace() {
     onSuccess: (createdDocument) => {
       queryClient.setQueryData<DocumentRecord[]>(
         ["documents", authorId],
-        (currentDocuments = []) => [createdDocument, ...currentDocuments]
+        (currentDocuments = []) => [createdDocument, ...currentDocuments],
       );
       setSelectedDocumentId(createdDocument.id);
       setTitle(createdDocument.title);
@@ -165,14 +167,15 @@ export function DocumentWorkspace() {
       documentId: string;
       nextTitle: string;
       nextContent: string;
-    }) => updateDocument(documentId, { title: nextTitle, content: nextContent }),
+    }) =>
+      updateDocument(documentId, { title: nextTitle, content: nextContent }),
     onSuccess: (updatedDocument) => {
       queryClient.setQueryData<DocumentRecord[]>(
         ["documents", authorId],
         (currentDocuments = []) =>
           currentDocuments.map((document) =>
-            document.id === updatedDocument.id ? updatedDocument : document
-          )
+            document.id === updatedDocument.id ? updatedDocument : document,
+          ),
       );
       setSelectedDocumentId(updatedDocument.id);
       setTitle(updatedDocument.title);
@@ -193,7 +196,8 @@ export function DocumentWorkspace() {
       await queryClient.cancelQueries({ queryKey: ["documents", authorId] });
 
       const previousDocuments =
-        queryClient.getQueryData<DocumentRecord[]>(["documents", authorId]) ?? [];
+        queryClient.getQueryData<DocumentRecord[]>(["documents", authorId]) ??
+        [];
 
       queryClient.setQueryData<DocumentRecord[]>(
         ["documents", authorId],
@@ -204,8 +208,8 @@ export function DocumentWorkspace() {
                 status: nextStatus,
                 updatedAt: new Date().toISOString(),
               }
-            : document
-        )
+            : document,
+        ),
       );
 
       return { previousDocuments };
@@ -215,19 +219,24 @@ export function DocumentWorkspace() {
         return;
       }
 
-      queryClient.setQueryData(["documents", authorId], context.previousDocuments);
+      queryClient.setQueryData(
+        ["documents", authorId],
+        context.previousDocuments,
+      );
     },
     onSuccess: (updatedDocument) => {
       queryClient.setQueryData<DocumentRecord[]>(
         ["documents", authorId],
         (currentDocuments = []) =>
           currentDocuments.map((document) =>
-            document.id === updatedDocument.id ? updatedDocument : document
-          )
+            document.id === updatedDocument.id ? updatedDocument : document,
+          ),
       );
     },
     onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["documents", authorId] });
+      await queryClient.invalidateQueries({
+        queryKey: ["documents", authorId],
+      });
     },
   });
 
@@ -240,13 +249,14 @@ export function DocumentWorkspace() {
   }, [documentsQuery.data, selectedDocumentId]);
 
   const selectedDocument =
-    documentsQuery.data?.find((document) => document.id === selectedDocumentId) ??
-    null;
+    documentsQuery.data?.find(
+      (document) => document.id === selectedDocumentId,
+    ) ?? null;
   const filteredDocuments =
     inboxFilter === "ALL"
-      ? documentsQuery.data ?? []
+      ? (documentsQuery.data ?? [])
       : (documentsQuery.data ?? []).filter(
-          (document) => document.status === inboxFilter
+          (document) => document.status === inboxFilter,
         );
 
   const isSubmitting =
@@ -259,7 +269,7 @@ export function DocumentWorkspace() {
         ? updateDocumentMutation.error
         : updateDocumentStatusMutation.error instanceof DocumentApiError
           ? updateDocumentStatusMutation.error
-        : null;
+          : null;
 
   const canSubmit =
     Boolean(authorId) &&
@@ -321,8 +331,8 @@ export function DocumentWorkspace() {
               결재 상태를 바꾸고 승인 흐름까지 이어가세요.
             </h1>
             <p className="max-w-3xl text-base leading-7 text-text/80">
-              문서 작성, 상태 변경 API, 결재 인박스, 승인 후 지식 인덱싱 연결까지
-              한 화면에서 관리할 수 있습니다.
+              문서 작성, 상태 변경 API, 결재 인박스, 승인 후 지식 인덱싱
+              연결까지 한 화면에서 관리할 수 있습니다.
             </p>
           </div>
         </div>
@@ -365,8 +375,7 @@ export function DocumentWorkspace() {
                   onClick={resetEditor}
                   disabled={isSubmitting}
                 >
-                  <Plus className="h-4 w-4" />
-                  새 초안
+                  <Plus className="h-4 w-4" />새 초안
                 </Button>
               </div>
 
@@ -421,7 +430,8 @@ export function DocumentWorkspace() {
                     <div className="flex items-center justify-between text-xs text-text/55">
                       <span>Markdown 형식으로 작성됩니다.</span>
                       <span>
-                        {content.length}/{DOCUMENT_CONTENT_MAX_LENGTH.toLocaleString()}
+                        {content.length}/
+                        {DOCUMENT_CONTENT_MAX_LENGTH.toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -432,13 +442,14 @@ export function DocumentWorkspace() {
                     {title.trim() || content.trim() ? (
                       <article className="prose prose-slate max-w-none font-body prose-headings:font-headings prose-headings:text-text prose-p:text-text prose-li:text-text prose-strong:text-text">
                         {title.trim() ? <h1>{title.trim()}</h1> : null}
-                        <ReactMarkdown>
+                        <MarkdownContent>
                           {content || "_본문이 비어 있습니다._"}
-                        </ReactMarkdown>
+                        </MarkdownContent>
                       </article>
                     ) : (
                       <div className="flex min-h-[312px] items-center justify-center rounded-md border border-dashed border-primary/20 bg-surface/60 px-6 text-center text-sm leading-6 text-text/60">
-                        제목과 본문을 입력하면 이 영역에 문서 미리보기가 표시됩니다.
+                        제목과 본문을 입력하면 이 영역에 문서 미리보기가
+                        표시됩니다.
                       </div>
                     )}
                   </div>
@@ -519,10 +530,10 @@ export function DocumentWorkspace() {
                 {inboxFilters.map((filter) => {
                   const count =
                     filter.value === "ALL"
-                      ? documentsQuery.data?.length ?? 0
-                      : documentsQuery.data?.filter(
-                          (document) => document.status === filter.value
-                        ).length ?? 0;
+                      ? (documentsQuery.data?.length ?? 0)
+                      : (documentsQuery.data?.filter(
+                          (document) => document.status === filter.value,
+                        ).length ?? 0);
                   const isActive = inboxFilter === filter.value;
 
                   return (
@@ -537,7 +548,9 @@ export function DocumentWorkspace() {
                       {filter.label}
                       <span
                         className={`rounded-pill px-2 py-0.5 text-xs ${
-                          isActive ? "bg-white/20 text-white" : "bg-primary/10 text-primary"
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : "bg-primary/10 text-primary"
                         }`}
                       >
                         {count}
@@ -663,7 +676,7 @@ export function DocumentWorkspace() {
                                 onClick={() =>
                                   handleStatusChange(
                                     document.id,
-                                    action.nextStatus
+                                    action.nextStatus,
                                   )
                                 }
                               >
@@ -713,57 +726,58 @@ export function DocumentWorkspace() {
                       className="ml-auto rounded-pill"
                       onClick={() => startEditingDocument(selectedDocument)}
                     >
-                      <PencilLine className="h-4 w-4" />
-                      이 문서 편집
+                      <PencilLine className="h-4 w-4" />이 문서 편집
                     </Button>
                   </div>
                   {getStatusActions(selectedDocument.status).length ? (
                     <div className="mb-6 flex flex-wrap gap-2">
-                      {getStatusActions(selectedDocument.status).map((action) => {
-                        const ActionIcon = action.icon;
-                        const isStatusUpdating =
-                          updateDocumentStatusMutation.isPending &&
-                          updateDocumentStatusMutation.variables?.documentId ===
-                            selectedDocument.id;
+                      {getStatusActions(selectedDocument.status).map(
+                        (action) => {
+                          const ActionIcon = action.icon;
+                          const isStatusUpdating =
+                            updateDocumentStatusMutation.isPending &&
+                            updateDocumentStatusMutation.variables
+                              ?.documentId === selectedDocument.id;
 
-                        return (
-                          <Button
-                            key={action.nextStatus}
-                            type="button"
-                            variant={
-                              action.nextStatus === "REJECTED"
-                                ? "destructive"
-                                : "outline"
-                            }
-                            className="rounded-pill"
-                            disabled={isStatusUpdating}
-                            onClick={() =>
-                              handleStatusChange(
-                                selectedDocument.id,
-                                action.nextStatus
-                              )
-                            }
-                          >
-                            {isStatusUpdating ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <ActionIcon className="h-4 w-4" />
-                            )}
-                            {action.label}
-                          </Button>
-                        );
-                      })}
+                          return (
+                            <Button
+                              key={action.nextStatus}
+                              type="button"
+                              variant={
+                                action.nextStatus === "REJECTED"
+                                  ? "destructive"
+                                  : "outline"
+                              }
+                              className="rounded-pill"
+                              disabled={isStatusUpdating}
+                              onClick={() =>
+                                handleStatusChange(
+                                  selectedDocument.id,
+                                  action.nextStatus,
+                                )
+                              }
+                            >
+                              {isStatusUpdating ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <ActionIcon className="h-4 w-4" />
+                              )}
+                              {action.label}
+                            </Button>
+                          );
+                        },
+                      )}
                     </div>
                   ) : null}
                   <h1>{selectedDocument.title}</h1>
-                  <ReactMarkdown>
+                  <MarkdownContent>
                     {selectedDocument.content || "_본문이 비어 있습니다._"}
-                  </ReactMarkdown>
+                  </MarkdownContent>
                 </article>
               ) : (
                 <div className="rounded-md bg-background/60 px-5 py-8 text-center text-sm leading-6 text-text/60">
-                  오른쪽 목록에서 문서를 선택하면 저장된 Markdown 내용을 확인할 수
-                  있습니다.
+                  오른쪽 목록에서 문서를 선택하면 저장된 Markdown 내용을 확인할
+                  수 있습니다.
                 </div>
               )}
             </CardContent>

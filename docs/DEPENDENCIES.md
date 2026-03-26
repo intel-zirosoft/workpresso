@@ -12,6 +12,7 @@ This file tracks all libraries added during development to ensure team-wide sync
 | `class-variance-authority` | latest | Common | shadcn/ui variant typing for shared button and calendar components | 2026-03-25 |
 | `supabase` | ^2.84.0 | Common | Supabase CLI for local type generation and project management | 2026-03-25 |
 | `@radix-ui/react-dropdown-menu` | latest | Common | UI Dropdown for Header Auth | 2026-03-25 |
+| `vitest` | ^4.1.1 | Pod A | Pod A schema/API/route TDD runner for document workflows | 2026-03-26 |
 
 ---
 *Note: The Agent must update this table whenever `npm install` or `bun add` is executed.*

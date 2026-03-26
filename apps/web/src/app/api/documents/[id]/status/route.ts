@@ -11,6 +11,10 @@ import { createClient } from "@/lib/supabase/server";
 const documentSelectColumns =
   "id, author_id, title, content, status, created_at, updated_at, deleted_at";
 
+function isMissingDocumentError(error: { code?: string } | null) {
+  return error?.code === "PGRST116";
+}
+
 function unauthorizedResponse() {
   return NextResponse.json(
     { message: "문서 기능을 사용하려면 로그인이 필요합니다." },
@@ -95,6 +99,13 @@ export async function PATCH(
     .is("deleted_at", null)
     .select(documentSelectColumns)
     .single();
+
+  if (isMissingDocumentError(error)) {
+    return NextResponse.json(
+      { message: "상태를 변경할 문서를 찾지 못했습니다." },
+      { status: 404 }
+    );
+  }
 
   if (error) {
     return NextResponse.json(
