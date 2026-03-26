@@ -42,16 +42,14 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onComplete }) => {
       // 0. Get Current User Session
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       
-      // 개발 환경에서는 세션이 없어도 테스트를 위해 진행할 수 있도록 합니다.
-      const isDev = process.env.NODE_ENV === 'development';
-      const userId = user?.id || (isDev ? '00000000-0000-0000-0000-000000000000' : null);
+      // 개발 환경에서는 세션이 없어도 테스트를 위해 진행할 수 있도록 합니다. 수정: 이제 실제 로그인 연동을 위해 더미 아이디를 제거합니다.
+      const userId = user?.id;
 
-      if (!isMock && !userId) {
+      if (!userId) {
         throw new Error('로그인이 필요합니다. 실제 회의록을 저장하려면 로그인해 주세요.');
       }
 
-      // ... userId가 null이 아님을 보장 (isMock이거나 user가 있거나 dev fallback이 있거나)
-      const currentUserId = userId || '00000000-0000-0000-0000-000000000000';
+      const currentUserId = userId;
       
       let text = '';
       let filePath = 'mock_audio.wav';

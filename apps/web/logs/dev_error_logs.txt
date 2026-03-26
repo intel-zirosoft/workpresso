@@ -46,3 +46,11 @@ Details: {
   "hasAudioBlob": true
 }
 --------------------------------------------------
+[2026-03-25T10:37:59.810Z] [ERROR] Meeting processing failed
+Details: {
+  "error": "Failed to upload audio: new row violates row-level security policy",
+  "stack": "Error: Failed to upload audio: new row violates row-level security policy\n    at uploadAudio (webpack-internal:///(app-pages-browser)/./src/features/pod-d/services/audioStorage.ts:16:15)\n    at async handleUpload (webpack-internal:///(app-pages-browser)/./src/features/pod-d/components/AudioRecorder.tsx:81:28)",
+  "status": "stopped",
+  "hasAudioBlob": true
+}
+--------------------------------------------------

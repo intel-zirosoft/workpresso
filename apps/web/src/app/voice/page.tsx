@@ -22,22 +22,17 @@ export default function VoicePage() {
   const fetchLogs = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const userId = user?.id || '00000000-0000-0000-0000-000000000000';
+      
+      if (!user) {
+        window.location.href = '/login';
+        return;
+      }
+
+      const userId = user.id;
       const data = await listMeetingLogs(userId);
       
-      // 개발 환경에서 데이터가 없으면 샘플 데이터 추가
-      if (data.length === 0 && process.env.NODE_ENV === 'development') {
-        const sampleLog = {
-          id: 'sample-1',
-          created_at: new Date().toISOString(),
-          audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', // 공용 샘플 오디오
-          stt_text: '이것은 시스템에서 제공하는 샘플 회의록입니다. 실제 회의 데이터가 있으면 여기에 리스트가 나타납니다.',
-          owner_id: userId
-        };
-        setLogs([sampleLog]);
-      } else {
-        setLogs(data);
-      }
+      // Update logs list with real data
+      setLogs(data);
     } catch (error) {
       console.error('Failed to fetch logs:', error);
     } finally {
