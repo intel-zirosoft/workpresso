@@ -8,7 +8,7 @@ export default function HomePage() {
       {/* Greeting Header */}
       <header className="flex items-end justify-between">
         <div>
-          <p className="text-muted font-headings font-medium mb-1">Good morning, User!</p>
+          <p className="text-text-muted font-headings font-medium mb-1">Good morning, User!</p>
           <h1 className="text-4xl font-headings font-bold text-text tracking-tight">
             당신의 하루를 부드럽게 시작하세요.
           </h1>
@@ -29,7 +29,7 @@ export default function HomePage() {
           <section className="bg-surface rounded-lg p-10 shadow-soft border border-background/50 min-h-[300px] flex items-center justify-center">
             <div className="text-center space-y-4">
               <div className="text-4xl">☕️</div>
-              <p className="text-muted font-headings font-medium">최우선 순위 작업을 준비 중입니다.</p>
+              <p className="text-text-muted font-headings font-medium">최우선 순위 작업을 준비 중입니다.</p>
             </div>
           </section>
 
@@ -38,7 +38,7 @@ export default function HomePage() {
             <h3 className="text-xl font-headings font-bold text-text mb-6">오늘의 일정</h3>
             <div className="flex flex-col items-center justify-center h-[300px] text-muted space-y-4">
               <Sparkles size={32} className="opacity-20 text-primary" />
-              <p className="font-headings font-medium">일정 로직을 구현해 주세요.</p>
+              <p className="font-headings font-medium text-text-muted">일정 로직을 구현해 주세요.</p>
             </div>
           </section>
         </div>

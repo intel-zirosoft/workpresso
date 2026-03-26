@@ -723,14 +723,14 @@ export function DocumentWorkspace() {
                     <Button
                       type="button"
                       variant="ghost"
-                      className="ml-auto rounded-pill"
+                      className="ml-auto rounded-pill text-primary"
                       onClick={() => startEditingDocument(selectedDocument)}
                     >
                       <PencilLine className="h-4 w-4" />이 문서 편집
                     </Button>
                   </div>
                   {getStatusActions(selectedDocument.status).length ? (
-                    <div className="mb-6 flex flex-wrap gap-2">
+                    <div className="mb-6 flex flex-wrap gap-2 text-primary">
                       {getStatusActions(selectedDocument.status).map(
                         (action) => {
                           const ActionIcon = action.icon;
