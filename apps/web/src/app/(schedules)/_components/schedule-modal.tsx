@@ -10,13 +10,14 @@ interface ScheduleModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedDate?: Date;
-  onSave?: (data: { title: string; startTime: string; endTime: string }) => void;
+  onSave?: (data: { title: string; startTime: string; endTime: string; type: string }) => void;
   isPending?: boolean;
   initialData?: {
     id: string;
     title: string;
     start_time: string;
     end_time: string;
+    type?: string;
   } | null;
 }
 
@@ -31,6 +32,7 @@ export function ScheduleModal({
   const [title, setTitle] = useState("");
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
+  const [type, setType] = useState<string>("TASK");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,10 +41,12 @@ export function ScheduleModal({
         setTitle(initialData.title);
         setStartTime(new Date(initialData.start_time).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
         setEndTime(new Date(initialData.end_time).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
+        setType(initialData.type || "TASK");
       } else {
         setTitle("");
         setStartTime("09:00");
         setEndTime("10:00");
+        setType("TASK");
       }
       setError(null);
     }
@@ -58,7 +62,7 @@ export function ScheduleModal({
     }
 
     setError(null);
-    onSave?.({ title, startTime, endTime });
+    onSave?.({ title, startTime, endTime, type });
   };
 
   return (
@@ -117,6 +121,23 @@ export function ScheduleModal({
             </div>
           </div>
 
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="type" className="text-right text-muted font-headings font-medium">분류</label>
+            <select
+              id="type"
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              className="col-span-3 flex h-10 w-full rounded-pill border border-background bg-background px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-body"
+            >
+              <option value="TASK">일반 업무</option>
+              <option value="MEETING">회의</option>
+              <option value="VACATION">휴가</option>
+              <option value="HALF_DAY">반차</option>
+              <option value="WFH">재택근무</option>
+              <option value="OUTSIDE">외근</option>
+            </select>
+          </div>
+        
           {error && (
             <p className="text-sm font-headings font-semibold text-red-500 animate-pulse ml-1">
               {error}

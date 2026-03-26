@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { format, isSameDay, parse } from "date-fns";
 import { ko } from "date-fns/locale";
-import { Plus, Clock, Trash2, Loader2, Pencil } from "lucide-react";
+import { Plus, Clock, Trash2, Loader2, Pencil, Users } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { ScheduleModal } from "./schedule-modal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,7 +14,17 @@ interface Schedule {
   title: string;
   start_time: string;
   end_time: string;
+  type?: string;
 }
+
+const TYPE_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
+  TASK: { label: "업무", color: "bg-primary", icon: Clock },
+  MEETING: { label: "회의", color: "bg-amber-400", icon: Users },
+  VACATION: { label: "휴가", color: "bg-rose-400", icon: Clock },
+  HALF_DAY: { label: "반차", color: "bg-rose-300", icon: Clock },
+  WFH: { label: "재택", color: "bg-blue-400", icon: Clock },
+  OUTSIDE: { label: "외근", color: "bg-emerald-400", icon: Clock },
+};
 
 export function CalendarView() {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -85,7 +96,7 @@ export function CalendarView() {
     .filter((schedule) => date && isSameDay(new Date(schedule.start_time), date))
     .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
 
-  const handleSaveSchedule = (data: { title: string; startTime: string; endTime: string }) => {
+  const handleSaveSchedule = (data: { title: string; startTime: string; endTime: string; type: string }) => {
     if (!date) return;
     
     const startDateTime = parse(data.startTime, "HH:mm", date);
@@ -98,6 +109,7 @@ export function CalendarView() {
           title: data.title,
           start_time: startDateTime.toISOString(),
           end_time: endDateTime.toISOString(),
+          type: data.type,
         },
       });
     } else {
@@ -105,6 +117,7 @@ export function CalendarView() {
         title: data.title,
         start_time: startDateTime.toISOString(),
         end_time: endDateTime.toISOString(),
+        type: data.type,
       });
     }
   };
@@ -171,13 +184,23 @@ export function CalendarView() {
                 key={schedule.id}
                 className="flex flex-col p-4 rounded-xl bg-white border border-background shadow-sm hover:shadow-soft mb-2 transition-shadow relative overflow-hidden group"
               >
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-secondary rounded-l-xl" />
+                <div className={cn(
+                  "absolute left-0 top-0 bottom-0 w-1 rounded-l-xl",
+                  TYPE_CONFIG[schedule.type || "TASK"].color
+                )} />
                 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-primary font-headings font-medium text-sm mb-1">
                     <Clock size={14} className="opacity-70" />
                     <span>
                       {format(new Date(schedule.start_time), "HH:mm")} - {format(new Date(schedule.end_time), "HH:mm")}
+                    </span>
+                    <span className={cn(
+                      "text-[10px] px-2 py-0.5 rounded-full font-bold ml-1 uppercase",
+                      TYPE_CONFIG[schedule.type || "TASK"].color.replace('bg-', 'text-').replace('-400', '-500'),
+                      TYPE_CONFIG[schedule.type || "TASK"].color.replace('bg-', 'bg-') + "/10"
+                    )}>
+                      {TYPE_CONFIG[schedule.type || "TASK"].label}
                     </span>
                   </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

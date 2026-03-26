@@ -14,7 +14,6 @@ export async function GET() {
   const { data, error } = await supabase
     .from("schedules")
     .select("*")
-    .eq("user_id", user.id)
     .is("deleted_at", null) // 소프트 삭제되지 않은 항목만 가져옴
     .order("start_time", { ascending: true });
 
@@ -44,6 +43,7 @@ export async function POST(request: Request) {
         title: body.title,
         start_time: body.start_time,
         end_time: body.end_time,
+        type: body.type, // 추가된 타입 정보 저장
         user_id: user.id,
       })
       .select()
