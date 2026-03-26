@@ -322,10 +322,10 @@ export function DocumentWorkspace() {
     <div className="space-y-8">
       <section className="flex flex-col gap-4 rounded-md bg-surface px-8 py-7 shadow-soft lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-pill bg-primary/10 px-4 py-2 text-sm font-headings font-medium text-primary">
+          {/* <div className="inline-flex items-center gap-2 rounded-pill bg-primary/10 px-4 py-2 text-sm font-headings font-medium text-primary">
             <FileText className="h-4 w-4" />
             Pod A Part 2
-          </div>
+          </div> */}
           <div className="space-y-2">
             <h1 className="text-4xl font-headings font-semibold tracking-tight text-text">
               결재 상태를 바꾸고 승인 흐름까지 이어가세요.
