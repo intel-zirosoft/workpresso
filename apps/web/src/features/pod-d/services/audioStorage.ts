@@ -29,3 +29,11 @@ export const getSignedUrl = async (path: string) => {
 
   return data.signedUrl;
 };
+
+export const getPublicUrl = (path: string) => {
+  const { data } = supabase.storage
+    .from(BUCKET_NAME)
+    .getPublicUrl(path);
+
+  return data.publicUrl;
+};

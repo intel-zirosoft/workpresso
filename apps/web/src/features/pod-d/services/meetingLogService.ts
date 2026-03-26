@@ -23,6 +23,17 @@ export interface MeetingLogInsert {
   audio_url: string;
 }
 
+const transformLog = (log: any): MeetingLog => {
+  const transformed = {
+    ...log,
+    audio_url:
+      log.audio_url && !log.audio_url.startsWith("http")
+        ? `/api/audio/${log.audio_url}`
+        : log.audio_url,
+  };
+  return transformed;
+};
+
 export const createMeetingLog = async (log: MeetingLogInsert) => {
   const { data, error } = await supabase
     .from("meeting_logs")
@@ -34,7 +45,7 @@ export const createMeetingLog = async (log: MeetingLogInsert) => {
     throw new Error(`Failed to create meeting log: ${error.message}`);
   }
 
-  return data;
+  return transformLog(data);
 };
 
 export const updateMeetingLogSTT = async (id: string, sttText: string) => {
@@ -49,7 +60,7 @@ export const updateMeetingLogSTT = async (id: string, sttText: string) => {
     throw new Error(`Failed to update meeting log STT: ${error.message}`);
   }
 
-  return data;
+  return transformLog(data);
 };
 
 /**
@@ -64,9 +75,33 @@ export const refineMeetingLog = async (id: string, sttText: string) => {
     return null;
   }
 
+  // 1. 회의록 정보와 모든 사용자 명단 가져오기
+  const [{ data: logData }, { data: allUsers }] = await Promise.all([
+    supabase.from("meeting_logs").select("owner_id").eq("id", id).single(),
+    supabase.from("users").select("name").is("deleted_at", null),
+  ]);
+
+  if (!logData) throw new Error("Meeting log not found");
+
+  // 2. 작성자(Owner) 이름 가져오기
+  const { data: ownerData } = await supabase
+    .from("users")
+    .select("name")
+    .eq("id", logData.owner_id)
+    .single();
+
+  const ownerName = ownerData?.name || "회의 진행자";
+  const candidateNames = allUsers?.map((u) => u.name).join(", ") || "";
+
   const prompt = `
 당신은 최고의 비서입니다. 제공된 회의 STT(Speech-to-Text) 결과물을 바탕으로 회의록을 변환해 주세요.
 반드시 아래의 **JSON 형식**으로만 답변하세요. 다른 부연 설명은 하지 마세요.
+
+**특별 지침:**
+- 이번 회의의 작성자(진행자)는 **"${ownerName}"** 입니다. 이 이름을 최우선으로 'participants' 목록에 포함하세요.
+- 회의에 참여했을 가능성이 있는 팀원 명단은 다음과 같습니다: [${candidateNames}]
+- STT 내용에서 화자가 바뀌거나 호칭(예: "~님", "대리님" 등)이 등장하면 위 팀원 명단 중 가장 유사한 이름을 찾아 'participants' 목록에 매칭해 주세요.
+- 명단에 없는 이름이라도 대화 문맥상 명확한 참여자라면 목록에 추가하세요.
 
 JSON 구조:
 {
@@ -75,7 +110,7 @@ JSON 구조:
   "action_items": [
     {"task": "할 일 내용", "assignee": "담당자 이름(파악 안 되면 빈칸)", "due_date": "기한(파악 안 되면 빈칸)"}
   ],
-  "participants": ["회의에 참여한 사람들의 이름 목록"]
+  "participants": ["회의에 참여한 사람들의 이름 목록 (반드시 '${ownerName}' 포함)"]
 }
 
 회의 STT 내용:
@@ -123,11 +158,26 @@ JSON 구조:
       .single();
 
     if (error) throw error;
-    return data;
+    return transformLog(data);
   } catch (err) {
     console.error("Failed to parse Gemini response or update DB:", err);
     throw new Error("Failed to refine meeting log");
   }
+};
+
+export const updateMeetingLog = async (id: string, updates: Partial<MeetingLog>) => {
+  const { data, error } = await supabase
+    .from("meeting_logs")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to update meeting log: ${error.message}`);
+  }
+
+  return transformLog(data);
 };
 
 export const getMeetingLog = async (id: string) => {
@@ -141,7 +191,7 @@ export const getMeetingLog = async (id: string) => {
     throw new Error(`Failed to fetch meeting log: ${error.message}`);
   }
 
-  return data;
+  return transformLog(data);
 };
 
 export const listMeetingLogs = async (ownerId: string) => {
@@ -149,11 +199,34 @@ export const listMeetingLogs = async (ownerId: string) => {
     .from("meeting_logs")
     .select("*")
     .eq("owner_id", ownerId)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (error) {
     throw new Error(`Failed to list meeting logs: ${error.message}`);
   }
 
-  return data;
+  return (data ?? []).map(transformLog);
+};
+
+export const deleteMeetingLog = async (id: string) => {
+  const { error } = await supabase
+    .from("meeting_logs")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", id);
+
+  if (error) {
+    throw new Error(`Failed to delete meeting log: ${error.message}`);
+  }
+};
+
+export const deleteMeetingLogs = async (ids: string[]) => {
+  const { error } = await supabase
+    .from("meeting_logs")
+    .update({ deleted_at: new Date().toISOString() })
+    .in("id", ids);
+
+  if (error) {
+    throw new Error(`Failed to delete meeting logs: ${error.message}`);
+  }
 };

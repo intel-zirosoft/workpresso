@@ -1,7 +1,7 @@
 -- Create storage bucket for meeting logs
 INSERT INTO storage.buckets (id, name, public)
-VALUES ('meeting-logs', 'meeting-logs', false)
-ON CONFLICT (id) DO NOTHING;
+VALUES ('meeting-logs', 'meeting-logs', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
 
 -- RLS policies for meeting-logs bucket
 -- Drop existing policies

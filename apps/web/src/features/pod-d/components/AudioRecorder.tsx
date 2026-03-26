@@ -9,7 +9,6 @@ import {
   Trash2,
   Loader2,
   CheckCircle,
-  FileAudio,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -55,8 +54,8 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onComplete }) => {
     clearRecording,
   } = useAudioRecording();
 
-  const handleUpload = async (isMock: boolean = false) => {
-    if (!audioBlob && !isMock) return;
+  const handleUpload = async () => {
+    if (!audioBlob) return;
 
     try {
       setIsProcessing(true);
@@ -78,35 +77,9 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onComplete }) => {
       const currentUserId = userId;
 
       let text = "";
-      let filePath = "mock_audio.wav";
+      let filePath = "";
 
-      if (isMock) {
-        setProcessingStep("TRANSCRIBING");
-        // Mocking interaction
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        text =
-          "이것은 테스트용 더미 회의록입니다. 실제로 녹음하지 않고도 전체 프로세스(STT, 지식 인덱싱)가 정상적으로 동작하는지 확인할 수 있습니다.";
-
-        // Mock용 로그 기록 시 DB 저장을 건너뛰지 않고, 가능한 경우 시도 (FK 에러 발생 가능성 있음)
-        try {
-          const newLog = await createMeetingLog({
-            owner_id: currentUserId,
-            audio_url: filePath,
-          });
-
-          setProcessingStep("TRANSCRIBING");
-          await updateMeetingLogSTT(newLog.id, text);
-
-          setProcessingStep("REFINING");
-          await refineMeetingLog(newLog.id, text);
-
-          setProcessingStep("INDEXING");
-          await indexKnowledge(newLog.id, "MEETING_LOGS", text);
-        } catch (dbError) {
-          console.warn("DB 저장 실패 (테스트 모드):", dbError);
-          // 테스트 모드에서는 DB 저장 실패해도 결과 화면은 보여줌
-        }
-      } else if (audioBlob) {
+      if (audioBlob) {
         // 1. Storage Upload
         setProcessingStep("UPLOADING");
         const fileName = `${currentUserId}/meeting_${Date.now()}.wav`;
@@ -207,21 +180,12 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onComplete }) => {
 
       <div className="flex items-center gap-4">
         {isIdle && !audioBlob && (
-          <>
-            <Button
-              onClick={startRecording}
-              className="rounded-full w-16 h-16 bg-primary hover:bg-primary/90 shadow-soft"
-            >
-              <Mic className="w-8 h-8 text-white" />
-            </Button>
-            <Button
-              onClick={() => handleUpload(true)}
-              className="rounded-full px-6 bg-secondary text-secondary-foreground shadow-soft gap-2"
-            >
-              <FileAudio className="w-4 h-4" />
-              더미 데이터로 테스트
-            </Button>
-          </>
+          <Button
+            onClick={startRecording}
+            className="rounded-full w-16 h-16 bg-primary hover:bg-primary/90 shadow-soft"
+          >
+            <Mic className="w-8 h-8 text-white" />
+          </Button>
         )}
 
         {isRecording && (

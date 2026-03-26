@@ -1,11 +1,29 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card } from '@/components/ui/card';
-import { WaveformVisualizer } from './WaveformVisualizer';
-import { Calendar, User as UserIcon, FileText, CheckCircle2, ListTodo, Users, MessageSquareText, Download, FileDown } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { Card } from "@/components/ui/card";
+import { WaveformVisualizer } from "./WaveformVisualizer";
+import {
+  Calendar,
+  User as UserIcon,
+  FileText,
+  CheckCircle2,
+  ListTodo,
+  Users,
+  MessageSquareText,
+  Download,
+  FileDown,
+  Edit2,
+  Save,
+  X,
+  Plus,
+  Trash2,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { updateMeetingLog } from "../services/meetingLogService";
 
 interface MeetingLogDetailProps {
   log: {
@@ -22,34 +40,96 @@ interface MeetingLogDetailProps {
   };
 }
 
-export const MeetingLogDetail: React.FC<MeetingLogDetailProps> = ({ log }) => {
+export const MeetingLogDetail: React.FC<MeetingLogDetailProps> = ({
+  log: initialLog,
+}) => {
+  const [log, setLog] = React.useState(initialLog);
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [editedLog, setEditedLog] = React.useState(initialLog);
+  const [isSaving, setIsSaving] = React.useState(false);
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      const updated = await updateMeetingLog(log.id, {
+        title: editedLog.title,
+        summary: editedLog.summary,
+        participants: editedLog.participants,
+        action_items: editedLog.action_items,
+      });
+      setLog(updated);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Failed to save log:", error);
+      alert("저장 도중 오류가 발생했습니다.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditedLog(log);
+    setIsEditing(false);
+  };
+
+  const handleActionItemChange = (
+    index: number,
+    field: string,
+    value: string,
+  ) => {
+    const newItems = [...(editedLog.action_items || [])];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setEditedLog({ ...editedLog, action_items: newItems });
+  };
+
+  const addActionItem = () => {
+    const newItems = [
+      ...(editedLog.action_items || []),
+      { task: "", assignee: "", due_date: "" },
+    ];
+    setEditedLog({ ...editedLog, action_items: newItems });
+  };
+
+  const removeActionItem = (index: number) => {
+    const newItems = (editedLog.action_items || []).filter(
+      (_, i) => i !== index,
+    );
+    setEditedLog({ ...editedLog, action_items: newItems });
+  };
   const handleDownload = () => {
     const dateStr = new Date(log.created_at).toLocaleString();
-    const content = `# ${log.title || '회의록'}
+    const content = `# ${log.title || "회의록"}
 **회의 일시:** ${dateStr}
-**참여자:** ${log.participants?.join(', ') || '없음'}
+**참여자:** ${log.participants?.join(", ") || "없음"}
 
 ## 📝 회의 요약
-${log.summary || '요약 내용이 없습니다.'}
+${log.summary || "요약 내용이 없습니다."}
 
 ## ✅ 주요 액션 아이템
-${log.action_items && log.action_items.length > 0 
-  ? log.action_items.map((item: any) => `- [ ] ${item.task}${item.assignee ? ` (담당: ${item.assignee})` : ''}${item.due_date ? ` (기한: ${item.due_date})` : ''}`).join('\n')
-  : '도출된 액션 아이템이 없습니다.'}
+${
+  log.action_items && log.action_items.length > 0
+    ? log.action_items
+        .map(
+          (item: any) =>
+            `- [ ] ${item.task}${item.assignee ? ` (담당: ${item.assignee})` : ""}${item.due_date ? ` (기한: ${item.due_date})` : ""}`,
+        )
+        .join("\n")
+    : "도출된 액션 아이템이 없습니다."
+}
 
 ---
 ## 🎙️ STT 원본 (원본 텍스트)
-${log.stt_text || '기록된 텍스트가 없습니다.'}
+${log.stt_text || "기록된 텍스트가 없습니다."}
 
 ---
 *WorkPresso AI를 통해 생성된 회의록입니다.*
 `;
 
-    const blob = new Blob([content], { type: 'text/markdown' });
+    const blob = new Blob([content], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `${log.title || 'meeting_log'}_${new Date(log.created_at).toISOString().split('T')[0]}.md`;
+    a.download = `${log.title || "meeting_log"}_${new Date(log.created_at).toISOString().split("T")[0]}.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -65,24 +145,72 @@ ${log.stt_text || '기록된 텍스트가 없습니다.'}
             <span>{new Date(log.created_at).toLocaleString()} 회의</span>
           </div>
           <div className="flex items-center gap-3">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleDownload}
-              className="rounded-full gap-2 text-xs border-primary/20 hover:bg-primary/5"
-            >
-              <FileDown className="w-3.5 h-3.5" /> 다운로드 (Markdown)
-            </Button>
+            {!isEditing ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditing(true)}
+                  className="rounded-full gap-2 text-xs border-primary/20 hover:bg-primary/5"
+                >
+                  <Edit2 className="w-3.5 h-3.5" /> 수정하기
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownload}
+                  className="rounded-full gap-2 text-xs border-primary/20 hover:bg-primary/5"
+                >
+                  <FileDown className="w-3.5 h-3.5" /> 다운로드 (Markdown)
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCancel}
+                  className="rounded-full gap-2 text-xs text-muted"
+                >
+                  <X className="w-3.5 h-3.5" /> 취소
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="rounded-full gap-2 text-xs bg-success hover:bg-success/90 text-white"
+                >
+                  {isSaving ? (
+                    <span className="animate-spin">⏳</span>
+                  ) : (
+                    <Save className="w-3.5 h-3.5" />
+                  )}{" "}
+                  저장하기
+                </Button>
+              </>
+            )}
             {log.is_refined && (
               <Badge className="bg-success/10 text-success border-success/20 gap-1 px-3 py-1 rounded-full">
-                <CheckCircle2 className="w-3 h-3" /> AI 정제 완료
+                <CheckCircle2 className="w-3 h-3" /> AI 전환 완료
               </Badge>
             )}
           </div>
         </div>
-        <h2 className="text-3xl font-headings font-bold text-foreground">
-          {log.title || '회의록 상세'}
-        </h2>
+        {isEditing ? (
+          <Input
+            value={editedLog.title || ""}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setEditedLog({ ...editedLog, title: e.target.value })
+            }
+            className="text-3xl font-headings font-bold h-auto py-2 bg-transparent border-b border-primary/30 focus-visible:ring-0 rounded-none"
+            placeholder="제목을 입력하세요"
+          />
+        ) : (
+          <h2 className="text-3xl font-headings font-bold text-foreground">
+            {log.title || "회의록 상세"}
+          </h2>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -99,13 +227,36 @@ ${log.stt_text || '기록된 텍스트가 없습니다.'}
             <Users className="w-5 h-5 text-primary" />
             참여자
           </h3>
-          <div className="p-4 bg-background rounded-sm flex flex-wrap gap-2">
-            {log.participants && log.participants.length > 0 ? (
+          <div className="p-4 bg-background rounded-sm flex flex-wrap gap-2 min-h-[60px]">
+            {isEditing ? (
+              <Input
+                value={editedLog.participants?.join(", ") || ""}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setEditedLog({
+                    ...editedLog,
+                    participants: e.target.value
+                      .split(",")
+                      .map((s) => s.trim())
+                      .filter((s) => s),
+                  })
+                }
+                className="w-full text-sm"
+                placeholder="쉼표(,)로 구분하여 입력하세요"
+              />
+            ) : log.participants && log.participants.length > 0 ? (
               log.participants.map((name, i) => (
-                <Badge key={i} variant="secondary" className="rounded-full px-3">{name}</Badge>
+                <Badge
+                  key={i}
+                  variant="secondary"
+                  className="rounded-full px-3"
+                >
+                  {name}
+                </Badge>
               ))
             ) : (
-              <span className="text-sm text-muted italic">식별된 참여자가 없습니다.</span>
+              <span className="text-sm text-muted italic">
+                식별된 참여자가 없습니다.
+              </span>
             )}
           </div>
         </div>
@@ -118,11 +269,24 @@ ${log.stt_text || '기록된 텍스트가 없습니다.'}
             <MessageSquareText className="w-5 h-5 text-primary" />
             회의 핵심 요약
           </h3>
-          <div className="p-6 bg-primary/5 border border-primary/10 rounded-lg font-body leading-relaxed text-foreground">
-            {log.summary || (
-              <span className="text-muted italic">AI 요약 결과가 없습니다. 정제 중이거나 분석에 실패했습니다.</span>
-            )}
-          </div>
+          {isEditing ? (
+            <Textarea
+              value={editedLog.summary || ""}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setEditedLog({ ...editedLog, summary: e.target.value })
+              }
+              className="min-h-[150px] font-body text-foreground bg-primary/5 border-primary/10"
+              placeholder="회의 요약을 입력하세요"
+            />
+          ) : (
+            <div className="p-6 bg-primary/5 border border-primary/10 rounded-lg font-body leading-relaxed text-foreground">
+              {log.summary || (
+                <span className="text-muted italic">
+                  AI 요약 결과가 없습니다. 정제 중이거나 분석에 실패했습니다.
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 액션 아이템 */}
@@ -132,9 +296,78 @@ ${log.stt_text || '기록된 텍스트가 없습니다.'}
             주요 액션 아이템
           </h3>
           <div className="space-y-3">
-            {log.action_items && log.action_items.length > 0 ? (
+            {isEditing ? (
+              <>
+                {(editedLog.action_items || []).map((item: any, i) => (
+                  <div
+                    key={i}
+                    className="flex flex-col gap-2 p-4 bg-background rounded-lg border border-primary/20 relative group/item"
+                  >
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeActionItem(i)}
+                      className="absolute top-2 right-2 h-7 w-7 p-0 rounded-full hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover/item:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                    <Input
+                      value={item.task}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        handleActionItemChange(i, "task", e.target.value)
+                      }
+                      placeholder="할 일 제목"
+                      className="text-sm font-medium border-none p-0 focus-visible:ring-0 bg-transparent h-auto"
+                    />
+                    <div className="flex gap-4">
+                      <div className="flex items-center gap-1 border-b border-dashed border-muted/50">
+                        <UserIcon className="w-3 h-3 text-muted" />
+                        <Input
+                          value={item.assignee || ""}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            handleActionItemChange(
+                              i,
+                              "assignee",
+                              e.target.value,
+                            )
+                          }
+                          placeholder="담당자"
+                          className="text-xs h-6 p-0 w-24 border-none focus-visible:ring-0 bg-transparent"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1 border-b border-dashed border-muted/50">
+                        <Calendar className="w-3 h-3 text-muted" />
+                        <Input
+                          value={item.due_date || ""}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            handleActionItemChange(
+                              i,
+                              "due_date",
+                              e.target.value,
+                            )
+                          }
+                          placeholder="기한"
+                          className="text-xs h-6 p-0 w-32 border-none focus-visible:ring-0 bg-transparent"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addActionItem}
+                  className="w-full border-dashed rounded-lg py-4 text-muted hover:text-primary hover:border-primary/50"
+                >
+                  <Plus className="w-4 h-4 mr-2" /> 액션 아이템 추가
+                </Button>
+              </>
+            ) : log.action_items && log.action_items.length > 0 ? (
               log.action_items.map((item: any, i) => (
-                <div key={i} className="flex items-start gap-3 p-4 bg-background rounded-lg border border-border/50">
+                <div
+                  key={i}
+                  className="flex items-start gap-3 p-4 bg-background rounded-lg border border-border/50"
+                >
                   <div className="mt-1 w-4 h-4 rounded-full border-2 border-primary/30" />
                   <div className="flex-1">
                     <p className="font-medium">{item.task}</p>
@@ -168,7 +401,7 @@ ${log.stt_text || '기록된 텍스트가 없습니다.'}
             STT 원본 텍스트
           </h3>
           <div className="p-6 bg-background/50 border border-muted/20 rounded-lg text-sm font-body leading-relaxed text-muted-foreground whitespace-pre-wrap max-h-[300px] overflow-y-auto">
-            {log.stt_text || '기록된 텍스트가 없습니다.'}
+            {log.stt_text || "기록된 텍스트가 없습니다."}
           </div>
         </div>
       </div>
