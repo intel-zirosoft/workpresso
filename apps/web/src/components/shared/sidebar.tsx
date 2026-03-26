@@ -18,7 +18,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-[260px] h-screen sticky top-0 bg-surface border-r border-transparent shadow-soft flex flex-col z-40">
+    <aside className="w-[260px] h-screen sticky top-0 bg-surface border-r border-border/80 shadow-soft flex flex-col z-40">
       {/* Logo / Wordmark */}
       <div className="p-8">
         <Link href="/" className="text-2xl font-headings font-bold text-primary tracking-tight">
@@ -38,10 +38,10 @@ export function Sidebar() {
                 "flex items-center gap-3 px-4 py-3 rounded-pill transition-all duration-200 group",
                 isActive 
                   ? "bg-primary text-white shadow-soft" 
-                  : "text-muted hover:bg-background hover:text-text"
+                  : "text-text-muted hover:bg-surface-muted hover:text-text"
               )}
             >
-              <item.icon size={20} className={cn(isActive ? "text-white" : "text-muted group-hover:text-text")} />
+              <item.icon size={20} className={cn(isActive ? "text-white" : "text-text-muted group-hover:text-text")} />
               <span className="font-headings font-medium">{item.name}</span>
             </Link>
           );
@@ -49,16 +49,16 @@ export function Sidebar() {
       </nav>
 
       {/* Profile / Bottom Menu */}
-      <div className="p-6 mt-auto border-t border-background/50">
-        <div className="flex items-center gap-3 p-2 rounded-md">
+      <div className="p-6 mt-auto border-t border-border/70">
+        <div className="flex items-center gap-3 p-2 rounded-md bg-surface-muted/70">
           <div className="w-10 h-10 rounded-full bg-secondary overflow-hidden shadow-sm">
             <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-text truncate">사용자 이름</p>
-            <p className="text-[11px] font-medium text-muted truncate">프로덕트 디자이너</p>
+            <p className="text-[11px] font-medium text-text-muted truncate">프로덕트 디자이너</p>
           </div>
-          <button className="text-muted hover:text-destructive transition-colors">
+          <button className="text-text-muted hover:text-destructive transition-colors">
             <LogOut size={18} />
           </button>
         </div>
