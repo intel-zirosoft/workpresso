@@ -29,4 +29,3 @@ supabase/
 
 # AI Agents
 .codex/
-apps/web/next.config.js
