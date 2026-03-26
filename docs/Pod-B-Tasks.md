@@ -18,9 +18,21 @@
 
 **목표:** 팀원의 현재 상태(근태)를 시각화하고 타 파드와의 API 연동점 제공
 
-- [ ] **DB/Schema**: `schedules` 테이블에 `type` 컬럼 추가 및 `users.status` 연동 로직 설계
-- [ ] **Security (RLS)**: 팀원들의 일정을 서로 볼 수 있도록 `SELECT` 정책을 '전체 인증 유저'로 확장
-- [ ] **Backend (API)**: 전체 사용자의 일정 및 근태 상태 조회/변경 API 구현
-- [ ] **Frontend (UI)**: **Teammates 섹션** 내 근태 상태 관리용 칸반(Kanban) 보드 구현
-- [ ] **Frontend (State)**: 칸반 보드 내 드래그 앤 드롭 또는 클릭을 통한 상태 변경 및 API 연동
-- [ ] **Integration (Pod C API)**: Pod C(AI 에이전트) 연동 및 권한 설정
+- [x] **DB/Schema**: `schedules` 테이블에 `type` 컬럼 추가 및 `users.status` 연동 로직 설계
+- [x] **Security (RLS)**: 팀원들의 일정을 서로 볼 수 있도록 `SELECT` 정책을 '전체 인증 유저'로 확장
+- [x] **Backend (API)**: 전체 사용자의 일정 및 근태 상태 조회/변경 API 구현
+- [x] **Frontend (UI)**: **Teammates 섹션** 내 근태 상태 관리용 칸반(Kanban) 보드 구현
+- [x] **Frontend (State)**: 칸반 보드 내 드래그 앤 드롭 또는 클릭을 통한 상태 변경 및 API 연동
+- [x] **Integration (Pod C API)**: Pod C(AI 에이전트) 연동 및 권한 설정
+
+## 🧑‍💻 Part 3: 일정 커스텀 UI/UX 및 상태 자동 동기화
+
+**목표:** 캘린더 컴포넌트를 고도화하고, 등록된 스케줄을 바탕으로 칸반 상태(근태)를 자동 연동하는 스마트 시스템 구축
+
+- [ ] **Status Sync (Automation)**: 스케줄 기반 자동 상태 동기화 구현 (`시스템 스케줄 우선` 정책)
+  - 개인 캘린더에 휴가, 반차, 재택, 외근 등의 일정을 등록하면 해당 시간에 맞춰 Teammates 칸반 보드에서 카드가 해당 상태로 **자동 이동**
+  - 사용자가 칸반에서 수동으로 조작하더라도, **시스템에 등록된 스케줄을 최우선으로 적용(Override)**하여 충돌 방지
+- [ ] **Calendar UI/UX (Library Integration)**: 대형 캘린더 라이브러리(FullCalendar 또는 react-big-calendar 등) 도입 및 커스텀
+  - 업무 일정 관리용 메인 화면의 달력(Calendar) 크기를 화면 전체 크기로 확장
+  - [UI 개선] **지난 날짜**: 접근 방지를 위해 회색(비활성화) 처리
+  - [UI 개선] **일정 표기**: 일정이 있는 오늘/이후 날짜에 직관적인 표기(점 표기, 밑줄 표시 등) 적용

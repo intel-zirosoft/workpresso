@@ -2,7 +2,7 @@ import { StatusKanban } from "../_components/status-kanban";
 
 export default function TeammatesPage() {
   return (
-    <div className="space-y-8 h-full flex flex-col">
+    <div className="space-y-8 flex flex-col h-[calc(100vh-8rem)] min-h-[600px]">
       <header>
         <h1 className="text-3xl font-headings font-bold text-text tracking-tight">
           팀 멤버 현황

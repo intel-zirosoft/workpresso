@@ -26,7 +26,8 @@ const STATUS_COLUMNS: { id: UserStatus; label: string; color: string; dot: strin
   { id: 'MEETING', label: '회의 중', color: 'bg-amber-50', dot: 'bg-amber-400' },
   { id: 'REMOTE', label: '재택 근무', color: 'bg-blue-50', dot: 'bg-blue-400' },
   { id: 'OUTSIDE', label: '외근 중', color: 'bg-emerald-50', dot: 'bg-emerald-400' },
-  { id: 'VACATION', label: '휴가/반차', color: 'bg-rose-50', dot: 'bg-rose-400' },
+  { id: 'VACATION', label: '휴가', color: 'bg-rose-50', dot: 'bg-rose-400' },
+  { id: 'HALF_DAY', label: '반차', color: 'bg-purple-50', dot: 'bg-purple-400' },
   { id: 'OFFLINE', label: '부재 중', color: 'bg-slate-50', dot: 'bg-slate-300' },
 ];
 
@@ -104,14 +105,14 @@ export function StatusKanban() {
   }
 
   return (
-    <div className="flex gap-6 h-full overflow-x-auto pb-4 scrollbar-hide">
+    <div className="flex gap-4 h-full pb-2">
       {STATUS_COLUMNS.map((column) => (
         <div 
           key={column.id} 
           onDragOver={handleDragOver}
           onDrop={(e) => handleDrop(e, column.id)}
           className={cn(
-            "flex-shrink-0 w-[280px] flex flex-col h-full rounded-2xl border transition-colors",
+            "flex-1 min-w-0 flex flex-col h-full rounded-2xl border transition-colors",
             column.color,
             "border-background/40"
           )}
@@ -135,33 +136,35 @@ export function StatusKanban() {
                   draggable={isMe}
                   onDragStart={(e) => handleDragStart(e, teammate.id)}
                   className={cn(
-                    "bg-white p-4 rounded-xl shadow-sm border transition-all relative group",
-                    isMe ? "border-primary/30 ring-2 ring-primary/5 cursor-grab active:cursor-grabbing hover:shadow-soft" : "border-background/30 opacity-90"
+                    "bg-white p-4 rounded-xl shadow-sm border transition-all duration-200 relative group",
+                    isMe 
+                      ? "border-primary/40 ring-4 ring-primary/5 cursor-grab active:cursor-grabbing hover:shadow-md hover:-translate-y-1 z-10" 
+                      : "border-background/40 opacity-80 hover:opacity-100"
                   )}
                 >
                   {isMe && (
-                    <div className="absolute top-2 right-2 flex items-center gap-1 bg-primary/10 px-1.5 py-0.5 rounded-full">
+                    <div className="absolute top-2 right-2 flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded-full">
                       <Smile size={10} className="text-primary" />
-                      <span className="text-[8px] font-bold text-primary italic">ME</span>
+                      <span className="text-[9px] font-black text-primary tracking-wide">ME</span>
                     </div>
                   )}
                   <div className="flex items-start gap-3">
                     <div className={cn(
-                      "w-10 h-10 rounded-full bg-white flex items-center justify-center text-muted transition-colors flex-shrink-0 overflow-hidden border border-background/50 shadow-sm",
-                      isMe && "ring-2 ring-primary/20"
+                      "w-10 h-10 rounded-full bg-white flex items-center justify-center text-muted transition-all duration-300 flex-shrink-0 overflow-hidden border border-background/50 shadow-sm",
+                      isMe && "ring-2 ring-primary/20 group-hover:ring-primary/40 group-hover:scale-105"
                     )}>
                       <img 
                         src={`https://api.dicebear.com/7.x/notionists/svg?seed=${teammate.name}`} 
                         alt={teammate.name} 
                       />
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 mt-0.5">
                       <p className={cn("font-headings font-bold text-sm truncate", isMe ? "text-primary" : "text-text")}>
                         {teammate.name}
                       </p>
                       {teammate.department && (
                         <span className={cn(
-                          "text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider",
+                          "inline-block mt-1 text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider",
                           DEPARTMENT_COLORS[teammate.department] || "text-muted bg-background"
                         )}>
                           {teammate.department}
@@ -174,8 +177,11 @@ export function StatusKanban() {
             })}
             
             {teammates.filter(t => t.status === column.id).length === 0 && (
-              <div className="h-20 border border-dashed border-background/40 rounded-xl flex items-center justify-center">
-                <p className="text-[11px] text-muted opacity-50 font-headings">비어 있음</p>
+              <div className="h-full min-h-[120px] border-2 border-dashed border-background/60 rounded-xl flex flex-col items-center justify-center p-4 transition-colors hover:bg-white/20">
+                <div className="w-8 h-8 rounded-full bg-background/50 flex items-center justify-center mb-2">
+                  <span className="text-muted opacity-40 text-lg font-light">+</span>
+                </div>
+                <p className="text-[11px] text-muted opacity-60 font-headings font-medium">여기로 이동가능</p>
               </div>
             )}
           </div>
