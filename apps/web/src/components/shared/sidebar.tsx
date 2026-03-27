@@ -1,9 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Home, MessageSquare, Users, Layout, FileText, Bot, LogOut } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Home, MessageSquare, Users, Layout, Bot, Settings, LogOut, Calendar, FileText, Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+import { User } from "@supabase/supabase-js";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const navItems = [
   { name: "Home", href: "/", icon: Home },
@@ -12,13 +16,41 @@ const navItems = [
   { name: "Chatter", href: "/chatter", icon: MessageSquare },
   { name: "Teammates", href: "/teammates", icon: Users },
   { name: "Canvas", href: "/canvas", icon: Layout },
+  { name: "Schedules", href: "/schedules", icon: Calendar },
+  { name: "Voice", href: "/voice", icon: Mic }, // Pod D: Meeting Logs
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+
+    getUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [supabase.auth]);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.refresh();
+    router.push("/login");
+  };
 
   return (
-    <aside className="w-[260px] h-screen sticky top-0 bg-surface border-r border-border/80 shadow-soft flex flex-col z-40">
+    <aside className="w-[260px] h-screen sticky top-0 bg-surface border-r border-transparent shadow-soft flex flex-col z-40">
       {/* Logo / Wordmark */}
       <div className="p-8">
         <Link href="/" className="text-2xl font-headings font-bold text-primary tracking-tight">
@@ -38,7 +70,7 @@ export function Sidebar() {
                 "flex items-center gap-3 px-4 py-3 rounded-pill transition-all duration-200 group",
                 isActive 
                   ? "bg-primary text-white shadow-soft" 
-                  : "text-text-muted hover:bg-surface-muted hover:text-text"
+                  : "text-text-muted hover:bg-background hover:text-text"
               )}
             >
               <item.icon size={20} className={cn(isActive ? "text-white" : "text-text-muted group-hover:text-text")} />
@@ -48,21 +80,7 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Profile / Bottom Menu */}
-      <div className="p-6 mt-auto border-t border-border/70">
-        <div className="flex items-center gap-3 p-2 rounded-md bg-surface-muted/70">
-          <div className="w-10 h-10 rounded-full bg-secondary overflow-hidden shadow-sm">
-            <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Felix" alt="User" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-text truncate">사용자 이름</p>
-            <p className="text-[11px] font-medium text-text-muted truncate">프로덕트 디자이너</p>
-          </div>
-          <button className="text-text-muted hover:text-destructive transition-colors">
-            <LogOut size={18} />
-          </button>
-        </div>
-      </div>
+      {/* Profile / Bottom Menu - Removed as it moved to Header */}
     </aside>
   );
 }

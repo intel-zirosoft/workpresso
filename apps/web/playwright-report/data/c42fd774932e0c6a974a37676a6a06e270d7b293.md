@@ -1,0 +1,66 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e4]:
+      - link "WorkPresso" [ref=e6] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=e7]:
+        - link "Home" [ref=e8] [cursor=pointer]:
+          - /url: /
+          - img [ref=e9]
+          - generic [ref=e12]: Home
+        - link "Documents" [ref=e13] [cursor=pointer]:
+          - /url: /documents
+          - img [ref=e14]
+          - generic [ref=e17]: Documents
+        - link "Work Assistant" [ref=e18] [cursor=pointer]:
+          - /url: /chat
+          - img [ref=e19]
+          - generic [ref=e22]: Work Assistant
+        - link "Chatter" [ref=e23] [cursor=pointer]:
+          - /url: /chatter
+          - img [ref=e24]
+          - generic [ref=e26]: Chatter
+        - link "Teammates" [ref=e27] [cursor=pointer]:
+          - /url: /teammates
+          - img [ref=e28]
+          - generic [ref=e33]: Teammates
+        - link "Canvas" [ref=e34] [cursor=pointer]:
+          - /url: /canvas
+          - img [ref=e35]
+          - generic [ref=e37]: Canvas
+        - link "Schedules" [ref=e38] [cursor=pointer]:
+          - /url: /schedules
+          - img [ref=e39]
+          - generic [ref=e41]: Schedules
+        - link "Voice" [ref=e42] [cursor=pointer]:
+          - /url: /voice
+          - img [ref=e43]
+          - generic [ref=e46]: Voice
+    - generic [ref=e47]:
+      - banner [ref=e48]:
+        - generic [ref=e50]:
+          - button "로그인" [active] [ref=e51] [cursor=pointer]
+          - button "시작하기" [ref=e52] [cursor=pointer]
+      - main [ref=e53]:
+        - generic [ref=e56]:
+          - generic [ref=e57]:
+            - img [ref=e59]
+            - generic [ref=e62]: 환영합니다!
+            - generic [ref=e63]: WorkPresso 계정으로 로그인을 진행해 주세요.
+          - generic [ref=e65]:
+            - generic [ref=e67]:
+              - img [ref=e68]
+              - textbox "이메일 주소" [ref=e71]: admin@test.com
+            - generic [ref=e73]:
+              - img [ref=e74]
+              - textbox "비밀번호" [ref=e77]: workpresso123!
+            - button "로그인" [ref=e78] [cursor=pointer]
+          - paragraph [ref=e80]:
+            - text: 계정이 없으신가요?
+            - link "지금 가입하기" [ref=e81] [cursor=pointer]:
+              - /url: /signup
+  - alert [ref=e82]
+```

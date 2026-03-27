@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Fredoka, Nunito } from 'next/font/google'
+import { ReactNode } from 'react'
 import '@/styles/globals.css'
 import { Providers } from '@/providers'
 import { Sidebar } from '@/components/shared/sidebar'
@@ -48,22 +49,22 @@ const themeInitScript = `
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: ReactNode
 }) {
   return (
     <html lang="ko" suppressHydrationWarning className={`${fredoka.variable} ${nunito.variable}`}>
       <body className="font-body bg-background text-text antialiased">
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <Providers>
-          <div className="flex min-h-screen">
-            {/* Left Sidebar - Fixed 260px */}
-            <Sidebar />
-            
-            {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-h-screen bg-background">
+          <div className="flex min-h-screen relative overflow-x-hidden">
+            <div className="hidden md:block w-[260px] shrink-0 border-r border-background/50">
+              <Sidebar />
+            </div>
+
+            <div className="flex-1 flex flex-col min-h-screen bg-background w-full">
               <Header />
-              <main className="flex-1 overflow-y-auto">
-                <div className="container mx-auto p-8 max-w-[1400px]">
+              <main className="flex-1 overflow-y-auto w-full">
+                <div className="container mx-auto max-w-[1600px] p-4 md:p-8">
                   {children}
                 </div>
               </main>

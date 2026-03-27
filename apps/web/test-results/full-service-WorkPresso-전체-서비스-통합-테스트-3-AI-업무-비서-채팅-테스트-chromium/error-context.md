@@ -1,0 +1,69 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e4]:
+      - link "WorkPresso" [ref=e6] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=e7]:
+        - link "Home" [ref=e8] [cursor=pointer]:
+          - /url: /
+          - img [ref=e9]
+          - generic [ref=e12]: Home
+        - link "Documents" [ref=e13] [cursor=pointer]:
+          - /url: /documents
+          - img [ref=e14]
+          - generic [ref=e17]: Documents
+        - link "Work Assistant" [ref=e18] [cursor=pointer]:
+          - /url: /chat
+          - img [ref=e19]
+          - generic [ref=e22]: Work Assistant
+        - link "Chatter" [ref=e23] [cursor=pointer]:
+          - /url: /chatter
+          - img [ref=e24]
+          - generic [ref=e26]: Chatter
+        - link "Teammates" [ref=e27] [cursor=pointer]:
+          - /url: /teammates
+          - img [ref=e28]
+          - generic [ref=e33]: Teammates
+        - link "Canvas" [ref=e34] [cursor=pointer]:
+          - /url: /canvas
+          - img [ref=e35]
+          - generic [ref=e37]: Canvas
+        - link "Schedules" [ref=e38] [cursor=pointer]:
+          - /url: /schedules
+          - img [ref=e39]
+          - generic [ref=e41]: Schedules
+        - link "Voice" [ref=e42] [cursor=pointer]:
+          - /url: /voice
+          - img [ref=e43]
+          - generic [ref=e46]: Voice
+    - generic [ref=e47]:
+      - banner [ref=e48]:
+        - generic [ref=e50]:
+          - button "로그인" [ref=e51] [cursor=pointer]
+          - button "시작하기" [ref=e52] [cursor=pointer]
+      - main [ref=e53]:
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - generic [ref=e57]:
+              - heading "업무 비서" [level=1] [ref=e58]
+              - paragraph [ref=e59]: 당신의 업무 일정과 지식 베이스를 관리하는 AI 비서입니다.
+            - img [ref=e61]
+          - generic [ref=e66]:
+            - img [ref=e68]
+            - paragraph [ref=e73]: 안녕, 넌 누구니?
+          - generic [ref=e74]:
+            - generic [ref=e75]:
+              - button "개발표준" [ref=e76] [cursor=pointer]
+              - button "복리후생" [ref=e77] [cursor=pointer]
+              - button "주의사항" [ref=e78] [cursor=pointer]
+              - button "근무환경" [ref=e79] [cursor=pointer]
+              - button "보안수칙" [ref=e80] [cursor=pointer]
+            - generic [ref=e82]:
+              - textbox "명령어를 입력하거나 질문을 작성하세요..." [ref=e83]
+              - button [disabled]:
+                - img
+  - alert [ref=e84]
+```
