@@ -36,7 +36,7 @@ export async function POST(req: Request) {
 
     const userId = authUser.id;
     const { messages } = await req.json();
-    const lastMessage = messages[messages.length - 1]?.content || '';
+    const lastMessage = messages[messages.length - 1].content;
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

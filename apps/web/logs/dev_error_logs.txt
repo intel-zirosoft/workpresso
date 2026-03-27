@@ -1,0 +1,56 @@
+[2026-03-25T00:50:19.236Z] [ERROR] Meeting processing failed
+Details: {
+  "error": "Failed to create meeting log: insert or update on table \"meeting_logs\" violates foreign key constraint \"meeting_logs_owner_id_fkey\"",
+  "stack": "Error: Failed to create meeting log: insert or update on table \"meeting_logs\" violates foreign key constraint \"meeting_logs_owner_id_fkey\"\n    at createMeetingLog (webpack-internal:///(app-pages-browser)/./src/features/pod-d/services/meetingLogService.ts:15:15)\n    at async handleUpload (webpack-internal:///(app-pages-browser)/./src/features/pod-d/components/AudioRecorder.tsx:61:28)",
+  "status": "idle",
+  "hasAudioBlob": false
+}
+--------------------------------------------------
+[2026-03-25T00:54:03.741Z] [ERROR] Meeting processing failed
+Details: {
+  "error": "로그인이 필요합니다. 회의록을 저장하려면 로그인해 주세요.",
+  "stack": "Error: 로그인이 필요합니다. 회의록을 저장하려면 로그인해 주세요.\n    at handleUpload (webpack-internal:///(app-pages-browser)/./src/features/pod-d/components/AudioRecorder.tsx:50:23)",
+  "status": "idle",
+  "hasAudioBlob": false
+}
+--------------------------------------------------
+[2026-03-25T00:57:21.708Z] [ERROR] Meeting processing failed
+Details: {
+  "error": "로그인이 필요합니다. 회의록을 저장하려면 로그인해 주세요.",
+  "stack": "Error: 로그인이 필요합니다. 회의록을 저장하려면 로그인해 주세요.\n    at handleUpload (webpack-internal:///(app-pages-browser)/./src/features/pod-d/components/AudioRecorder.tsx:50:23)",
+  "status": "idle",
+  "hasAudioBlob": false
+}
+--------------------------------------------------
+[2026-03-25T02:04:45.857Z] [ERROR] Meeting processing failed
+Details: {
+  "error": "Failed to upload audio: Bucket not found",
+  "stack": "Error: Failed to upload audio: Bucket not found\n    at uploadAudio (webpack-internal:///(app-pages-browser)/./src/features/pod-d/services/audioStorage.ts:16:15)\n    at async handleUpload (webpack-internal:///(app-pages-browser)/./src/features/pod-d/components/AudioRecorder.tsx:81:28)",
+  "status": "stopped",
+  "hasAudioBlob": true
+}
+--------------------------------------------------
+[2026-03-25T02:07:34.855Z] [ERROR] Meeting processing failed
+Details: {
+  "error": "Failed to upload audio: Bucket not found",
+  "stack": "Error: Failed to upload audio: Bucket not found\n    at uploadAudio (webpack-internal:///(app-pages-browser)/./src/features/pod-d/services/audioStorage.ts:16:15)\n    at async handleUpload (webpack-internal:///(app-pages-browser)/./src/features/pod-d/components/AudioRecorder.tsx:81:28)",
+  "status": "stopped",
+  "hasAudioBlob": true
+}
+--------------------------------------------------
+[2026-03-25T02:10:35.379Z] [ERROR] Meeting processing failed
+Details: {
+  "error": "Failed to upload audio: new row violates row-level security policy",
+  "stack": "Error: Failed to upload audio: new row violates row-level security policy\n    at uploadAudio (webpack-internal:///(app-pages-browser)/./src/features/pod-d/services/audioStorage.ts:16:15)\n    at async handleUpload (webpack-internal:///(app-pages-browser)/./src/features/pod-d/components/AudioRecorder.tsx:81:28)",
+  "status": "stopped",
+  "hasAudioBlob": true
+}
+--------------------------------------------------
+[2026-03-25T10:37:59.810Z] [ERROR] Meeting processing failed
+Details: {
+  "error": "Failed to upload audio: new row violates row-level security policy",
+  "stack": "Error: Failed to upload audio: new row violates row-level security policy\n    at uploadAudio (webpack-internal:///(app-pages-browser)/./src/features/pod-d/services/audioStorage.ts:16:15)\n    at async handleUpload (webpack-internal:///(app-pages-browser)/./src/features/pod-d/components/AudioRecorder.tsx:81:28)",
+  "status": "stopped",
+  "hasAudioBlob": true
+}
+--------------------------------------------------

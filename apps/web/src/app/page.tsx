@@ -1,6 +1,7 @@
 "use client";
 
 import { Sparkles, Plus } from "lucide-react";
+import { CalendarView } from "@/app/(schedules)/_components/calendar-view";
 
 export default function HomePage() {
   return (
@@ -33,13 +34,9 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* Agenda Placeholder */}
-          <section className="bg-surface rounded-lg p-6 md:p-8 shadow-soft border border-background/50 min-h-[350px] md:min-h-[400px]">
-            <h3 className="text-lg md:text-xl font-headings font-bold text-text mb-6">오늘의 일정</h3>
-            <div className="flex flex-col items-center justify-center h-[250px] md:h-[300px] text-muted space-y-4">
-              <Sparkles className="opacity-20 text-primary w-8 h-8" />
-              <p className="font-headings font-medium text-sm md:text-base">일정 로직을 구현해 주세요.</p>
-            </div>
+          {/* Agenda & Calendar Area */}
+          <section className="bg-surface rounded-lg p-8 shadow-soft border border-background/50 min-h-[400px] flex items-center justify-center">
+            <CalendarView />
           </section>
         </div>
 

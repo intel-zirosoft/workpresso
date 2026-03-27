@@ -12,7 +12,7 @@ export function Header() {
   const [user, setUser] = useState<User | null>(null);
   const [department, setDepartment] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = createClient(); // 표준 방식으로 단순화 (null 에러 해결)
   const router = useRouter();
 
   // 부서 정보를 가져오는 별도의 비동기 함수
@@ -91,10 +91,10 @@ export function Header() {
                   {user.user_metadata?.name || user.email?.split('@')[0]}
                 </p>
                 <p className="text-[11px] font-medium text-primary/70 leading-tight">
-                  {user.user_metadata?.department || user.user_metadata?.position || "구성원"}
+                  {department || "구성원"}
                 </p>
               </div>
-              <p className="hidden md:block text-[11px] font-medium text-muted leading-tight mt-0.5">
+              <p className="hidden md:block text-[10px] md:text-[11px] font-medium text-muted leading-tight mt-0.5">
                 {user.email}
               </p>
             </div>

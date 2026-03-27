@@ -6,6 +6,7 @@ import { Send, Bot, User, Loader2, Sparkles, Code, Gift, AlertTriangle, Clock, S
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { MarkdownContent } from "@/components/shared/markdown-content";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useEffect, useRef, type ElementType } from "react";
@@ -40,7 +41,6 @@ function CoffeeLoader() {
     </div>
   );
 }
-
 
 export default function ChatPage() {
   const { messages, input, append, handleInputChange, handleSubmit, isLoading } = useChat({
@@ -88,7 +88,7 @@ export default function ChatPage() {
 
       <Card className="flex-1 overflow-hidden border-none shadow-soft bg-surface/50 backdrop-blur-sm relative">
         <CardContent className="h-full p-0">
-          <div 
+          <div
             ref={scrollRef}
             className="h-full overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6 scrollbar-hide"
           >
