@@ -1,0 +1,150 @@
+-- 1. 필수 확장 프로그램 활성화
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";     -- UUID 생성용
+CREATE EXTENSION IF NOT EXISTS "vector";        -- AI 벡터 저장용 (pgvector)
+
+-- 2. 공통 ENUM 타입 정의 (상태값 엄격 관리)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_status') THEN
+        CREATE TYPE USER_STATUS AS ENUM ('ACTIVE', 'VACATION', 'MEETING', 'OFFLINE');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'doc_status') THEN
+        CREATE TYPE DOC_STATUS AS ENUM ('DRAFT', 'PENDING', 'APPROVED', 'REJECTED');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'source_type') THEN
+        CREATE TYPE SOURCE_TYPE AS ENUM ('DOCUMENTS', 'MEETING_LOGS');
+    END IF;
+END $$;
+
+-- 3. updated_at 자동 갱신을 위한 함수 정의
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- 4. 테이블 생성
+
+-- [사용자 및 조직도]
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR NOT NULL,
+    department VARCHAR,
+    status USER_STATUS DEFAULT 'OFFLINE',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    deleted_at TIMESTAMP WITH TIME ZONE
+);
+
+-- [결재 문서 - Pod A]
+CREATE TABLE IF NOT EXISTS documents (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    author_id UUID REFERENCES users(id),
+    title VARCHAR NOT NULL,
+    content TEXT,
+    status DOC_STATUS DEFAULT 'DRAFT',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    deleted_at TIMESTAMP WITH TIME ZONE
+);
+
+-- [업무 일정 - Pod B]
+CREATE TABLE IF NOT EXISTS schedules (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id),
+    title VARCHAR NOT NULL,
+    start_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    end_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    deleted_at TIMESTAMP WITH TIME ZONE
+);
+
+-- [회의록 - Pod D]
+CREATE TABLE IF NOT EXISTS meeting_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    owner_id UUID REFERENCES users(id),
+    audio_url VARCHAR,
+    stt_text TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    deleted_at TIMESTAMP WITH TIME ZONE
+);
+
+-- [지식 지도 - Pod C]
+CREATE TABLE IF NOT EXISTS knowledge_vectors (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    source_type SOURCE_TYPE NOT NULL,
+    source_id UUID NOT NULL, 
+    embedding VECTOR(1536), -- OpenAI text-embedding-3-small 등 대응
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- [익스텐션 스토어]
+CREATE TABLE IF NOT EXISTS workspace_extensions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    ext_name VARCHAR NOT NULL UNIQUE,
+    is_active BOOLEAN DEFAULT false,
+    config JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    deleted_at TIMESTAMP WITH TIME ZONE
+);
+
+-- 5. 모든 테이블에 updated_at 자동 갱신 트리거 적용
+DO $$
+DECLARE
+    t text;
+BEGIN
+    FOR t IN 
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+          AND table_type = 'BASE TABLE'
+          AND table_name != 'knowledge_vectors' -- 벡터 테이블은 정책에 따라 제외 가능
+    LOOP
+        -- 기존 트리거가 있으면 삭제 후 재생성
+        EXECUTE format('DROP TRIGGER IF EXISTS set_updated_at ON %I', t);
+        EXECUTE format('CREATE TRIGGER set_updated_at BEFORE UPDATE ON %I FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();', t);
+    END LOOP;
+END;
+$$;
+
+-- 6. 인덱스 설정 (성능 최적화)
+-- 벡터 검색을 위한 인덱스 (ivfflat 또는 hnsw 추천)
+CREATE INDEX IF NOT EXISTS idx_knowledge_vectors_embedding ON knowledge_vectors 
+USING hnsw (embedding vector_cosine_ops);
+
+-- 7. 벡터 검색 함수 정의 (pgvector 활용)
+CREATE OR REPLACE FUNCTION match_knowledge (
+  query_embedding vector(1536),
+  match_threshold float,
+  match_count int
+)
+RETURNS TABLE (
+  id uuid,
+  source_type source_type,
+  source_id uuid,
+  metadata jsonb,
+  similarity float
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    kv.id,
+    kv.source_type,
+    kv.source_id,
+    kv.metadata,
+    1 - (kv.embedding <=> query_embedding) AS similarity
+  FROM knowledge_vectors kv
+  WHERE 1 - (kv.embedding <=> query_embedding) > match_threshold
+  ORDER BY similarity DESC
+  LIMIT match_count;
+END;
+$$;
