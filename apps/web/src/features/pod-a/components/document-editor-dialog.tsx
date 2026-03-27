@@ -9,6 +9,7 @@ import {
 import {
   Bold,
   ChevronRight,
+  Expand,
   Eye,
   EyeOff,
   FileText,
@@ -18,6 +19,7 @@ import {
   List,
   ListOrdered,
   Loader2,
+  Minimize2,
   Plus,
   Quote,
   UserPlus,
@@ -30,7 +32,6 @@ import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -64,9 +65,13 @@ type DocumentEditorDialogProps = {
   currentStep: EditorStep;
   selectedTemplateId: DocumentTemplateId;
   isPreviewVisible: boolean;
+  isExpandedContentView: boolean;
   onStepChange: (step: EditorStep) => void;
   onTemplateSelect: (templateId: DocumentTemplateId) => void;
   onTogglePreview: () => void;
+  onShowEditor: () => void;
+  onShowPreview: () => void;
+  onToggleExpandedContentView: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onCancel: () => void;
   onTitleChange: (value: string) => void;
@@ -109,17 +114,37 @@ function ToolbarActionButton({
     <Button
       type="button"
       variant={pressed ? "secondary" : "ghost"}
-      className="group rounded-pill"
+      className="rounded-pill"
       onClick={onClick}
       title={`${label} (${shortcut})`}
       aria-label={`${label} (${shortcut})`}
     >
       <Icon className="h-4 w-4" />
       <span>{label}</span>
-      <span className="hidden text-xs text-text/55 group-hover:inline group-focus-visible:inline">
-        ({shortcut})
-      </span>
     </Button>
+  );
+}
+
+function PreviewPanel({ title, content }: { title: string; content: string }) {
+  return (
+    <div className="rounded-md bg-background/80 px-4 py-4 shadow-inner ring-1 ring-background">
+      <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-text">
+        <Eye className="h-4 w-4" />
+        미리보기
+      </div>
+      {title.trim() || content.trim() ? (
+        <article className="prose prose-slate max-w-none font-body prose-headings:font-headings prose-headings:text-text prose-p:text-text prose-li:text-text prose-strong:text-text">
+          {title.trim() ? <h1>{title.trim()}</h1> : null}
+          <MarkdownContent>
+            {content || "_본문이 비어 있습니다._"}
+          </MarkdownContent>
+        </article>
+      ) : (
+        <div className="flex min-h-[320px] items-center justify-center rounded-md border border-dashed border-primary/20 bg-surface/60 px-6 py-10 text-center text-sm leading-6 text-text/60">
+          제목과 본문을 입력하면 이 영역에 미리보기가 표시됩니다.
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -139,9 +164,13 @@ export function DocumentEditorDialog({
   currentStep,
   selectedTemplateId,
   isPreviewVisible,
+  isExpandedContentView,
   onStepChange,
   onTemplateSelect,
   onTogglePreview,
+  onShowEditor,
+  onShowPreview,
+  onToggleExpandedContentView,
   onSubmit,
   onCancel,
   onTitleChange,
@@ -201,29 +230,29 @@ export function DocumentEditorDialog({
   const nextStep =
     currentStepIndex < steps.length - 1 ? steps[currentStepIndex + 1] : null;
   const isLastStep = currentStep === steps[steps.length - 1]?.value;
+  const showExpandedLayer = currentStep === "content" && isExpandedContentView;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[calc(100vh-1rem)] max-h-[calc(100vh-1rem)] w-[calc(100vw-1rem)] max-w-6xl flex-col gap-0 overflow-hidden border-none bg-surface p-0 shadow-2xl sm:h-[95vh]">
-        <DialogHeader className="border-b border-background/70 bg-background/35 px-6 py-5 pr-14 text-left">
+        <DialogHeader className="border-b border-background/70 bg-background/35 px-3 py-2.5 pr-12 text-left">
           <DialogTitle className="font-headings text-2xl text-text">
             {mode === "edit" ? "문서 편집" : "새 문서 작성"}
           </DialogTitle>
-          <DialogDescription className="font-body text-text/70">
-            정보량은 단계별로 나누고, 작성 중 필요한 기능만 그때그때 드러내는
-            멀티 스텝 작업 공간입니다.
-          </DialogDescription>
         </DialogHeader>
 
-        <form className="flex min-h-0 flex-1 flex-col" onSubmit={onSubmit}>
+        <form
+          className="relative flex min-h-0 flex-1 flex-col"
+          onSubmit={onSubmit}
+        >
           {errorMessage ? (
-            <div className="border-b border-destructive/20 bg-destructive/10 px-6 py-3 text-sm text-destructive">
+            <div className="border-b border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {errorMessage}
             </div>
           ) : null}
 
-          <div className="border-b border-background/70 bg-background/20 px-6 py-4">
-            <div className="grid gap-3 md:grid-cols-3">
+          <div className="border-b border-background/70 bg-background/20 px-3 py-2">
+            <div className="grid gap-2 md:grid-cols-3">
               {steps.map((step, index) => {
                 const isActive = step.value === currentStep;
                 const isCompleted = index < currentStepIndex;
@@ -244,7 +273,7 @@ export function DocumentEditorDialog({
                       onStepChange(step.value);
                     }}
                     className={cn(
-                      "rounded-md border px-4 py-3 text-left transition-colors",
+                      "rounded-md border px-3 py-2 text-left transition-colors",
                       isActive
                         ? "border-primary bg-primary/10"
                         : "border-background/70 bg-surface/80",
@@ -255,13 +284,13 @@ export function DocumentEditorDialog({
                       !canProceedFromContentStep
                     }
                   >
-                    <div className="text-xs font-semibold uppercase tracking-wide text-text/55">
+                    <div className="text-[10px] font-semibold uppercase tracking-wide text-text/55">
                       {step.label}
                     </div>
-                    <div className="mt-1 font-semibold text-text">
+                    <div className="mt-0.5 text-sm font-semibold text-text">
                       {step.description}
                     </div>
-                    <div className="mt-2 text-xs text-text/55">
+                    <div className="mt-1 text-[11px] text-text/55">
                       {isActive ? "현재 단계" : isCompleted ? "완료" : "이동"}
                     </div>
                   </button>
@@ -270,9 +299,9 @@ export function DocumentEditorDialog({
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
+          <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
             {currentStep === "template" ? (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <div>
                   <h3 className="font-headings text-xl text-text">
                     템플릿 선택
@@ -283,7 +312,7 @@ export function DocumentEditorDialog({
                   </p>
                 </div>
 
-                <div className="grid gap-4 xl:grid-cols-2">
+                <div className="grid gap-3 xl:grid-cols-2">
                   {documentTemplateOptions.map((template) => {
                     const isSelected = selectedTemplateId === template.id;
 
@@ -293,7 +322,7 @@ export function DocumentEditorDialog({
                         type="button"
                         onClick={() => onTemplateSelect(template.id)}
                         className={cn(
-                          "rounded-md border p-5 text-left transition-all",
+                          "rounded-md border p-4 text-left transition-all",
                           isSelected
                             ? "border-primary bg-primary/10 shadow-soft"
                             : "border-background/70 bg-background/45 hover:bg-background/65",
@@ -321,7 +350,7 @@ export function DocumentEditorDialog({
                         </div>
 
                         {template.title || template.content ? (
-                          <div className="mt-4 rounded-md bg-surface/80 px-4 py-3 text-sm text-text/65">
+                          <div className="mt-3 rounded-md bg-surface/80 px-3 py-2.5 text-sm text-text/65">
                             <div className="font-semibold text-text">
                               {template.title || "제목 없음"}
                             </div>
@@ -330,7 +359,7 @@ export function DocumentEditorDialog({
                             </div>
                           </div>
                         ) : (
-                          <div className="mt-4 rounded-md border border-dashed border-background/80 px-4 py-4 text-sm text-text/55">
+                          <div className="mt-3 rounded-md border border-dashed border-background/80 px-3 py-3 text-sm text-text/55">
                             빈 문서부터 시작합니다.
                           </div>
                         )}
@@ -342,36 +371,33 @@ export function DocumentEditorDialog({
             ) : null}
 
             {currentStep === "content" ? (
-              <div className="space-y-6">
-                <div className="space-y-2">
+              <div className="space-y-2">
+                <div className="space-y-1">
                   <label
                     htmlFor="document-title"
                     className="text-sm font-bold text-text"
                   >
                     제목
                   </label>
-                  <Input
-                    id="document-title"
-                    value={editorState.title}
-                    onChange={(event) => onTitleChange(event.target.value)}
-                    maxLength={DOCUMENT_TITLE_MAX_LENGTH}
-                    placeholder="예: 2026년 2분기 협업 운영 계획"
-                    className="h-12 rounded-md border-background bg-background/70"
-                    disabled={isDisabled}
-                  />
-                  <div className="flex items-center justify-between text-xs text-text/55">
-                    <span>
-                      제목은 결재 목록과 상세 화면에서 함께 사용됩니다.
-                    </span>
-                    <span>
+                  <div className="relative">
+                    <Input
+                      id="document-title"
+                      value={editorState.title}
+                      onChange={(event) => onTitleChange(event.target.value)}
+                      maxLength={DOCUMENT_TITLE_MAX_LENGTH}
+                      placeholder="예: 2026년 2분기 협업 운영 계획"
+                      className="h-10 rounded-md border-background bg-background/70 pr-16"
+                      disabled={isDisabled}
+                    />
+                    <div className="pointer-events-none absolute bottom-2 right-3 text-xs text-text/55">
                       {editorState.title.trim().length}/
                       {DOCUMENT_TITLE_MAX_LENGTH}
-                    </span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex flex-wrap gap-2 rounded-md bg-background/60 p-3">
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2 rounded-md bg-background/60 p-2">
                     <ToolbarActionButton
                       icon={Bold}
                       label="굵게"
@@ -427,18 +453,35 @@ export function DocumentEditorDialog({
                       onClick={onTogglePreview}
                       pressed={isPreviewVisible}
                     />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="rounded-pill"
+                      onClick={onToggleExpandedContentView}
+                    >
+                      <Expand className="h-4 w-4" />
+                      크게보기
+                    </Button>
                   </div>
 
-                  <textarea
-                    ref={textareaRef}
-                    value={editorState.content}
-                    onChange={onContentChange}
-                    onKeyDown={onContentKeyDown}
-                    maxLength={DOCUMENT_CONTENT_MAX_LENGTH}
-                    placeholder={`# 문서 초안\n\n필요한 내용을 Markdown으로 작성해 보세요.\n\n- 목적\n- 배경\n- 요청 사항`}
-                    className="min-h-[420px] w-full rounded-md bg-background/80 px-4 py-4 font-body text-sm leading-7 text-text shadow-inner outline-none ring-1 ring-background transition focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-70 xl:min-h-[540px]"
-                    disabled={isDisabled}
-                  />
+                  {!isPreviewVisible ? (
+                    <textarea
+                      ref={textareaRef}
+                      value={editorState.content}
+                      onChange={onContentChange}
+                      onKeyDown={onContentKeyDown}
+                      maxLength={DOCUMENT_CONTENT_MAX_LENGTH}
+                      placeholder={`# 문서 초안\n\n필요한 내용을 Markdown으로 작성해 보세요.\n\n- 목적\n- 배경\n- 요청 사항`}
+                      className="min-h-[420px] w-full resize-none overflow-hidden rounded-md bg-background/80 px-4 py-4 font-body text-sm leading-7 text-text shadow-inner outline-none ring-1 ring-background transition focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-70"
+                      disabled={isDisabled}
+                    />
+                  ) : (
+                    <PreviewPanel
+                      title={editorState.title}
+                      content={editorState.content}
+                    />
+                  )}
+
                   <div className="flex items-center justify-between text-xs text-text/55">
                     <span>Markdown 문자열을 그대로 저장합니다.</span>
                     <span>
@@ -447,35 +490,12 @@ export function DocumentEditorDialog({
                     </span>
                   </div>
                 </div>
-
-                {isPreviewVisible ? (
-                  <div className="rounded-md bg-background/70 p-6 shadow-inner">
-                    <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-text">
-                      <Eye className="h-4 w-4" />
-                      미리보기
-                    </div>
-                    {editorState.title.trim() || editorState.content.trim() ? (
-                      <article className="prose prose-slate max-w-none font-body prose-headings:font-headings prose-headings:text-text prose-p:text-text prose-li:text-text prose-strong:text-text">
-                        {editorState.title.trim() ? (
-                          <h1>{editorState.title.trim()}</h1>
-                        ) : null}
-                        <MarkdownContent>
-                          {editorState.content || "_본문이 비어 있습니다._"}
-                        </MarkdownContent>
-                      </article>
-                    ) : (
-                      <div className="rounded-md border border-dashed border-primary/20 bg-surface/60 px-6 py-10 text-center text-sm leading-6 text-text/60">
-                        제목과 본문을 입력하면 이 영역에 미리보기가 표시됩니다.
-                      </div>
-                    )}
-                  </div>
-                ) : null}
               </div>
             ) : null}
 
             {currentStep === "workflow" ? (
-              <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-                <div className="space-y-4 rounded-md bg-background/55 p-4">
+              <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+                <div className="space-y-4 rounded-md bg-background/55 p-3">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <h3 className="font-headings text-lg text-text">
@@ -502,7 +522,7 @@ export function DocumentEditorDialog({
                     {editorState.approvalSteps.map((step, index) => (
                       <div
                         key={step.localId}
-                        className="grid gap-3 rounded-md bg-surface p-4 md:grid-cols-[0.7fr_1fr_auto]"
+                        className="grid gap-3 rounded-md bg-surface p-3 md:grid-cols-[0.7fr_1fr_auto]"
                       >
                         <div className="space-y-2">
                           <label className="text-xs font-semibold uppercase tracking-wide text-text/55">
@@ -565,7 +585,7 @@ export function DocumentEditorDialog({
                   </div>
                 </div>
 
-                <div className="space-y-4 rounded-md bg-background/55 p-4">
+                <div className="space-y-4 rounded-md bg-background/55 p-3">
                   <div>
                     <h3 className="font-headings text-lg text-text">
                       공람 대상
@@ -602,7 +622,66 @@ export function DocumentEditorDialog({
             ) : null}
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-background/70 bg-background/30 px-6 py-4">
+          {showExpandedLayer ? (
+            <div className="absolute inset-0 z-20 flex flex-col bg-surface">
+              <div className="border-b border-background/70 bg-background/20 px-3 py-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-sm font-semibold text-text">
+                    집중 보기
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      variant={isPreviewVisible ? "ghost" : "secondary"}
+                      className="rounded-pill"
+                      onClick={onShowEditor}
+                    >
+                      편집
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={isPreviewVisible ? "secondary" : "ghost"}
+                      className="rounded-pill"
+                      onClick={onShowPreview}
+                    >
+                      미리보기
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-pill"
+                      onClick={onToggleExpandedContentView}
+                    >
+                      <Minimize2 className="h-4 w-4" />
+                      기본 보기
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+                {!isPreviewVisible ? (
+                  <textarea
+                    ref={textareaRef}
+                    value={editorState.content}
+                    onChange={onContentChange}
+                    onKeyDown={onContentKeyDown}
+                    maxLength={DOCUMENT_CONTENT_MAX_LENGTH}
+                    placeholder={`# 문서 초안\n\n필요한 내용을 Markdown으로 작성해 보세요.\n\n- 목적\n- 배경\n- 요청 사항`}
+                    className="min-h-[640px] w-full resize-none overflow-hidden rounded-md bg-background/80 px-4 py-4 font-body text-sm leading-7 text-text shadow-inner outline-none ring-1 ring-background transition focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-70"
+                    disabled={isDisabled}
+                  />
+                ) : (
+                  <PreviewPanel
+                    title={editorState.title}
+                    content={editorState.content}
+                  />
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-background/70 bg-background/30 px-3 py-2">
             <div className="text-sm text-text/55">
               {steps[currentStepIndex]?.description}
             </div>

@@ -56,6 +56,9 @@ type EditorHistoryEntry = {
   selectionEnd: number;
 };
 
+const NORMAL_EDITOR_MIN_HEIGHT = 420;
+const EXPANDED_EDITOR_MIN_HEIGHT = 640;
+
 function getErrorMessage(error: unknown) {
   if (error instanceof DocumentApiError) {
     return error.message;
@@ -92,6 +95,7 @@ export function DocumentWorkspace() {
   const [selectedTemplateId, setSelectedTemplateId] =
     useState<DocumentTemplateId>("skip");
   const [isPreviewVisible, setIsPreviewVisible] = useState(false);
+  const [isExpandedContentView, setIsExpandedContentView] = useState(false);
   const [editorState, setEditorState] = useState<EditorState>(
     createEmptyEditorState(),
   );
@@ -217,6 +221,7 @@ export function DocumentWorkspace() {
     setEditorStep("template");
     setSelectedTemplateId("skip");
     setIsPreviewVisible(false);
+    setIsExpandedContentView(false);
     setEditorState(createEmptyEditorState());
     resetEditorHistory("");
     setIsEditorOpen(true);
@@ -237,6 +242,7 @@ export function DocumentWorkspace() {
     setEditorStep("content");
     setSelectedTemplateId("skip");
     setIsPreviewVisible(false);
+    setIsExpandedContentView(false);
     setEditorState(createEditorStateFromDocument(document));
     resetEditorHistory(document.content);
     setIsDetailOpen(false);
@@ -249,6 +255,7 @@ export function DocumentWorkspace() {
     setEditorStep("template");
     setSelectedTemplateId("skip");
     setIsPreviewVisible(false);
+    setIsExpandedContentView(false);
 
     if (reopenDetail && selectedDocumentId) {
       setIsDetailOpen(true);
@@ -362,6 +369,22 @@ export function DocumentWorkspace() {
     }));
   }
 
+  function resizeEditorTextarea() {
+    const textarea = textareaRef.current;
+
+    if (!textarea) {
+      return;
+    }
+
+    const minHeight =
+      isExpandedContentView && editorStep === "content"
+        ? EXPANDED_EDITOR_MIN_HEIGHT
+        : NORMAL_EDITOR_MIN_HEIGHT;
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.max(textarea.scrollHeight, minHeight)}px`;
+  }
+
   function scheduleTextareaSelection(start: number, end: number) {
     pendingSelectionRef.current = { start, end };
 
@@ -376,6 +399,7 @@ export function DocumentWorkspace() {
       textarea.focus();
       textarea.setSelectionRange(pendingSelection.start, pendingSelection.end);
       pendingSelectionRef.current = null;
+      resizeEditorTextarea();
     });
   }
 
@@ -599,12 +623,6 @@ export function DocumentWorkspace() {
 
     const normalizedKey = event.key.toLowerCase();
 
-    if (normalizedKey === "v" && event.shiftKey) {
-      event.preventDefault();
-      setIsPreviewVisible((current) => !current);
-      return;
-    }
-
     if (normalizedKey === "z") {
       event.preventDefault();
       restoreHistorySnapshot(event.shiftKey ? "redo" : "undo");
@@ -678,6 +696,59 @@ export function DocumentWorkspace() {
 
     resetEditorHistory(editorState.content);
   }, [editorState.content, isEditorOpen]);
+
+  useEffect(() => {
+    if (!isEditorOpen || editorStep !== "content" || isPreviewVisible) {
+      return;
+    }
+
+    resizeEditorTextarea();
+  }, [
+    editorState.content,
+    editorStep,
+    isEditorOpen,
+    isPreviewVisible,
+    isExpandedContentView,
+  ]);
+
+  useEffect(() => {
+    if (!isEditorOpen || editorStep !== "content") {
+      return;
+    }
+
+    function handleWindowKeyDown(event: globalThis.KeyboardEvent) {
+      const isMeta = event.metaKey || event.ctrlKey;
+
+      if (!isMeta || !event.shiftKey || event.key.toLowerCase() !== "v") {
+        return;
+      }
+
+      event.preventDefault();
+      setIsPreviewVisible((current) => !current);
+    }
+
+    window.addEventListener("keydown", handleWindowKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleWindowKeyDown);
+    };
+  }, [editorStep, isEditorOpen]);
+
+  useEffect(() => {
+    if (!isEditorOpen || editorStep !== "content" || isPreviewVisible) {
+      return;
+    }
+
+    function handleWindowResize() {
+      resizeEditorTextarea();
+    }
+
+    window.addEventListener("resize", handleWindowResize);
+
+    return () => {
+      window.removeEventListener("resize", handleWindowResize);
+    };
+  }, [editorStep, isEditorOpen, isPreviewVisible, isExpandedContentView]);
 
   function handleSaveDocument(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -754,6 +825,10 @@ export function DocumentWorkspace() {
       return;
     }
 
+    if (nextStep !== "content") {
+      setIsExpandedContentView(false);
+    }
+
     setEditorStep(nextStep);
   }
 
@@ -768,6 +843,7 @@ export function DocumentWorkspace() {
 
     setSelectedTemplateId(templateId);
     setIsPreviewVisible(false);
+    setIsExpandedContentView(false);
     setEditorState((current) => ({
       ...current,
       title: template.title,
@@ -847,9 +923,15 @@ export function DocumentWorkspace() {
         currentStep={editorStep}
         selectedTemplateId={selectedTemplateId}
         isPreviewVisible={isPreviewVisible}
+        isExpandedContentView={isExpandedContentView}
         onStepChange={handleEditorStepChange}
         onTemplateSelect={handleTemplateSelect}
         onTogglePreview={() => setIsPreviewVisible((current) => !current)}
+        onShowEditor={() => setIsPreviewVisible(false)}
+        onShowPreview={() => setIsPreviewVisible(true)}
+        onToggleExpandedContentView={() =>
+          setIsExpandedContentView((current) => !current)
+        }
         onSubmit={handleSaveDocument}
         onCancel={handleCancelEditing}
         onTitleChange={(value) => updateEditorState("title", value)}
