@@ -26,6 +26,9 @@ import { DocumentEditorDialog } from "@/features/pod-a/components/document-edito
 import {
   createEditorStateFromDocument,
   createEmptyEditorState,
+  documentTemplateOptions,
+  type DocumentTemplateId,
+  type EditorStep,
   type EditorState,
   type StatusFilter,
 } from "@/features/pod-a/components/document-workspace-shared";
@@ -85,6 +88,10 @@ export function DocumentWorkspace() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editorDocumentId, setEditorDocumentId] = useState<string | null>(null);
+  const [editorStep, setEditorStep] = useState<EditorStep>("template");
+  const [selectedTemplateId, setSelectedTemplateId] =
+    useState<DocumentTemplateId>("skip");
+  const [isPreviewVisible, setIsPreviewVisible] = useState(false);
   const [editorState, setEditorState] = useState<EditorState>(
     createEmptyEditorState(),
   );
@@ -207,6 +214,9 @@ export function DocumentWorkspace() {
     setStatusFilter("ALL");
     setIsDetailOpen(false);
     setEditorDocumentId(null);
+    setEditorStep("template");
+    setSelectedTemplateId("skip");
+    setIsPreviewVisible(false);
     setEditorState(createEmptyEditorState());
     resetEditorHistory("");
     setIsEditorOpen(true);
@@ -224,6 +234,9 @@ export function DocumentWorkspace() {
     }
 
     setEditorDocumentId(document.id);
+    setEditorStep("content");
+    setSelectedTemplateId("skip");
+    setIsPreviewVisible(false);
     setEditorState(createEditorStateFromDocument(document));
     resetEditorHistory(document.content);
     setIsDetailOpen(false);
@@ -233,6 +246,9 @@ export function DocumentWorkspace() {
   function closeEditor(reopenDetail: boolean) {
     setIsEditorOpen(false);
     setEditorDocumentId(null);
+    setEditorStep("template");
+    setSelectedTemplateId("skip");
+    setIsPreviewVisible(false);
 
     if (reopenDetail && selectedDocumentId) {
       setIsDetailOpen(true);
@@ -331,6 +347,10 @@ export function DocumentWorkspace() {
       (step) => step.stepLabel.trim().length > 0 && step.approverId,
     ) &&
     !isMutating;
+  const canProceedFromContentStep =
+    editorState.title.trim().length > 0 &&
+    editorState.title.trim().length <= DOCUMENT_TITLE_MAX_LENGTH &&
+    editorState.content.length <= DOCUMENT_CONTENT_MAX_LENGTH;
 
   function updateEditorState<K extends keyof EditorState>(
     key: K,
@@ -579,6 +599,12 @@ export function DocumentWorkspace() {
 
     const normalizedKey = event.key.toLowerCase();
 
+    if (normalizedKey === "v" && event.shiftKey) {
+      event.preventDefault();
+      setIsPreviewVisible((current) => !current);
+      return;
+    }
+
     if (normalizedKey === "z") {
       event.preventDefault();
       restoreHistorySnapshot(event.shiftKey ? "redo" : "undo");
@@ -723,6 +749,33 @@ export function DocumentWorkspace() {
     closeEditor(reopenDetail);
   }
 
+  function handleEditorStepChange(nextStep: EditorStep) {
+    if (nextStep === "workflow" && !canProceedFromContentStep) {
+      return;
+    }
+
+    setEditorStep(nextStep);
+  }
+
+  function handleTemplateSelect(templateId: DocumentTemplateId) {
+    const template = documentTemplateOptions.find(
+      (item) => item.id === templateId,
+    );
+
+    if (!template) {
+      return;
+    }
+
+    setSelectedTemplateId(templateId);
+    setIsPreviewVisible(false);
+    setEditorState((current) => ({
+      ...current,
+      title: template.title,
+      content: template.content,
+    }));
+    resetEditorHistory(template.content);
+  }
+
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <DocumentWorkspaceShell
@@ -785,11 +838,18 @@ export function DocumentWorkspace() {
         currentUserId={currentUserId}
         isMutating={isMutating}
         canSaveDraft={canSaveDraft}
+        canProceedFromContentStep={canProceedFromContentStep}
         errorMessage={mutationErrorMessage}
         editorState={editorState}
         availableUsers={availableUsers}
         isUsersLoading={usersQuery.isLoading}
         textareaRef={textareaRef}
+        currentStep={editorStep}
+        selectedTemplateId={selectedTemplateId}
+        isPreviewVisible={isPreviewVisible}
+        onStepChange={handleEditorStepChange}
+        onTemplateSelect={handleTemplateSelect}
+        onTogglePreview={() => setIsPreviewVisible((current) => !current)}
         onSubmit={handleSaveDocument}
         onCancel={handleCancelEditing}
         onTitleChange={(value) => updateEditorState("title", value)}

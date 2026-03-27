@@ -113,44 +113,56 @@ export function DocumentWorkspaceShell({
             </CardDescription>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {scopeConfig.map((item) => {
-              const isActive = scope === item.value;
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-md bg-background/55 p-4">
+              <div className="mb-3 text-sm font-semibold text-text">
+                문서 분류
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {scopeConfig.map((item) => {
+                  const isActive = scope === item.value;
 
-              return (
-                <Button
-                  key={item.value}
-                  type="button"
-                  variant={isActive ? "default" : "ghost"}
-                  className="rounded-pill"
-                  onClick={() => onScopeChange(item.value)}
-                >
-                  {item.label}
-                </Button>
-              );
-            })}
-          </div>
+                  return (
+                    <Button
+                      key={item.value}
+                      type="button"
+                      variant={isActive ? "default" : "ghost"}
+                      className="rounded-pill"
+                      onClick={() => onScopeChange(item.value)}
+                    >
+                      {item.label}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
 
-          <div className="flex flex-wrap gap-2">
-            {statusFilters.map((filter) => {
-              const isActive = statusFilter === filter.value;
+            <div className="rounded-md bg-background/55 p-4">
+              <div className="mb-3 text-sm font-semibold text-text">
+                결재 분류
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {statusFilters.map((filter) => {
+                  const isActive = statusFilter === filter.value;
 
-              return (
-                <Button
-                  key={filter.value}
-                  type="button"
-                  variant={isActive ? "secondary" : "ghost"}
-                  className="rounded-pill"
-                  onClick={() => onStatusFilterChange(filter.value)}
-                >
-                  {filter.label}
-                </Button>
-              );
-            })}
+                  return (
+                    <Button
+                      key={filter.value}
+                      type="button"
+                      variant={isActive ? "secondary" : "ghost"}
+                      className="rounded-pill"
+                      onClick={() => onStatusFilterChange(filter.value)}
+                    >
+                      {filter.label}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </CardHeader>
 
-        <CardContent className="p-4">
+        <CardContent className="space-y-4 p-4">
           {isAuthLoading ? (
             <div className="flex items-center justify-center gap-2 py-10 text-sm text-text/60">
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -185,106 +197,59 @@ export function DocumentWorkspaceShell({
             </div>
           ) : null}
 
-          {scope === "authored" ? (
-            <div className="hidden overflow-hidden rounded-md border border-background/70 md:block">
-              <table className="w-full border-collapse text-sm">
-                <thead>
-                  <tr className="bg-background/60 text-left text-text/70">
-                    <th className="px-4 py-3">제목</th>
-                    <th className="px-4 py-3">상태</th>
-                    <th className="px-4 py-3">현재 단계</th>
-                    <th className="px-4 py-3">수정일</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {documents.map((document) => {
-                    const isSelected = selectedDocumentId === document.id;
+          <div className="overflow-y-auto pr-1 md:max-h-[min(62vh,calc(100vh-19rem))]">
+            {scope === "authored" ? (
+              <div className="hidden overflow-hidden rounded-md border border-background/70 md:block">
+                <table className="w-full border-collapse text-sm">
+                  <thead>
+                    <tr className="sticky top-0 bg-background/95 text-left text-text/70 backdrop-blur">
+                      <th className="px-4 py-3">제목</th>
+                      <th className="px-4 py-3">상태</th>
+                      <th className="px-4 py-3">현재 단계</th>
+                      <th className="px-4 py-3">수정일</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {documents.map((document) => {
+                      const isSelected = selectedDocumentId === document.id;
 
-                    return (
-                      <tr
-                        key={document.id}
-                        className={cn(
-                          "cursor-pointer border-t border-background/70 transition-colors hover:bg-background/60",
-                          isSelected && "bg-primary/10",
-                        )}
-                        onClick={() => onSelectDocument(document.id)}
-                      >
-                        <td className="px-4 py-3 font-medium text-text">
-                          {document.title}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={cn(
-                              "rounded-pill px-3 py-1 text-xs font-semibold",
-                              statusBadgeClassMap[document.status],
-                            )}
-                          >
-                            {statusLabelMap[document.status]}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-text/70">
-                          {document.currentStepLabel ?? "-"}
-                        </td>
-                        <td className="px-4 py-3 text-text/60">
-                          {formatDate(document.updatedAt)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : null}
+                      return (
+                        <tr
+                          key={document.id}
+                          className={cn(
+                            "cursor-pointer border-t border-background/70 transition-colors hover:bg-background/60",
+                            isSelected && "bg-primary/10",
+                          )}
+                          onClick={() => onSelectDocument(document.id)}
+                        >
+                          <td className="px-4 py-3 font-medium text-text">
+                            {document.title}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={cn(
+                                "rounded-pill px-3 py-1 text-xs font-semibold",
+                                statusBadgeClassMap[document.status],
+                              )}
+                            >
+                              {statusLabelMap[document.status]}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-text/70">
+                            {document.currentStepLabel ?? "-"}
+                          </td>
+                          <td className="px-4 py-3 text-text/60">
+                            {formatDate(document.updatedAt)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
 
-          <div className="space-y-3 md:hidden">
-            {documents.map((document) => {
-              const isSelected = selectedDocumentId === document.id;
-
-              return (
-                <button
-                  key={document.id}
-                  type="button"
-                  onClick={() => onSelectDocument(document.id)}
-                  className={cn(
-                    "w-full rounded-md px-4 py-4 text-left transition-all",
-                    isSelected
-                      ? "bg-primary text-white shadow-soft"
-                      : "bg-background/70 text-text hover:bg-background",
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-headings text-base font-semibold">
-                        {document.title}
-                      </p>
-                      <p
-                        className={cn(
-                          "mt-1 text-xs",
-                          isSelected ? "text-white/80" : "text-text/60",
-                        )}
-                      >
-                        {document.currentStepLabel ??
-                          statusLabelMap[document.status]}
-                      </p>
-                    </div>
-                    <span
-                      className={cn(
-                        "rounded-pill px-3 py-1 text-xs font-semibold",
-                        isSelected
-                          ? "bg-white/20 text-white"
-                          : statusBadgeClassMap[document.status],
-                      )}
-                    >
-                      {statusLabelMap[document.status]}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {scope !== "authored" ? (
-            <div className="space-y-3">
+            <div className="space-y-3 md:hidden">
               {documents.map((document) => {
                 const isSelected = selectedDocumentId === document.id;
 
@@ -294,35 +259,26 @@ export function DocumentWorkspaceShell({
                     type="button"
                     onClick={() => onSelectDocument(document.id)}
                     className={cn(
-                      "hidden w-full rounded-md px-4 py-4 text-left transition-all md:block",
+                      "w-full rounded-md px-4 py-4 text-left transition-all",
                       isSelected
                         ? "bg-primary text-white shadow-soft"
                         : "bg-background/70 text-text hover:bg-background",
                     )}
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0 space-y-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
                         <p className="truncate font-headings text-base font-semibold">
                           {document.title}
                         </p>
-                        <div
+                        <p
                           className={cn(
-                            "text-sm",
+                            "mt-1 text-xs",
                             isSelected ? "text-white/80" : "text-text/60",
                           )}
                         >
-                          작성자 {renderUserName(document.author)}
-                        </div>
-                        <div
-                          className={cn(
-                            "text-xs",
-                            isSelected ? "text-white/75" : "text-text/55",
-                          )}
-                        >
-                          {document.currentStepLabel
-                            ? `${document.currentStepLabel} · ${renderUserName(document.currentApprover)}`
-                            : "현재 활성 단계 없음"}
-                        </div>
+                          {document.currentStepLabel ??
+                            statusLabelMap[document.status]}
+                        </p>
                       </div>
                       <span
                         className={cn(
@@ -339,7 +295,65 @@ export function DocumentWorkspaceShell({
                 );
               })}
             </div>
-          ) : null}
+
+            {scope !== "authored" ? (
+              <div className="space-y-3">
+                {documents.map((document) => {
+                  const isSelected = selectedDocumentId === document.id;
+
+                  return (
+                    <button
+                      key={document.id}
+                      type="button"
+                      onClick={() => onSelectDocument(document.id)}
+                      className={cn(
+                        "hidden w-full rounded-md px-4 py-4 text-left transition-all md:block",
+                        isSelected
+                          ? "bg-primary text-white shadow-soft"
+                          : "bg-background/70 text-text hover:bg-background",
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0 space-y-2">
+                          <p className="truncate font-headings text-base font-semibold">
+                            {document.title}
+                          </p>
+                          <div
+                            className={cn(
+                              "text-sm",
+                              isSelected ? "text-white/80" : "text-text/60",
+                            )}
+                          >
+                            작성자 {renderUserName(document.author)}
+                          </div>
+                          <div
+                            className={cn(
+                              "text-xs",
+                              isSelected ? "text-white/75" : "text-text/55",
+                            )}
+                          >
+                            {document.currentStepLabel
+                              ? `${document.currentStepLabel} · ${renderUserName(document.currentApprover)}`
+                              : "현재 활성 단계 없음"}
+                          </div>
+                        </div>
+                        <span
+                          className={cn(
+                            "rounded-pill px-3 py-1 text-xs font-semibold",
+                            isSelected
+                              ? "bg-white/20 text-white"
+                              : statusBadgeClassMap[document.status],
+                          )}
+                        >
+                          {statusLabelMap[document.status]}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+          </div>
         </CardContent>
       </Card>
     </div>

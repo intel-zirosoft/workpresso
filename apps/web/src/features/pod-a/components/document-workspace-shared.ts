@@ -8,6 +8,24 @@ import {
 
 export type StatusFilter = "ALL" | DocumentStatus;
 
+export type EditorStep = "template" | "content" | "workflow";
+
+export type DocumentTemplateId =
+  | "general"
+  | "expense"
+  | "project"
+  | "purchase"
+  | "report"
+  | "skip";
+
+export type DocumentTemplateOption = {
+  id: DocumentTemplateId;
+  label: string;
+  summary: string;
+  title: string;
+  content: string;
+};
+
 export type EditorApprovalStep = ApprovalStepInput & {
   localId: string;
 };
@@ -51,6 +69,171 @@ export const statusFilters: Array<{ value: StatusFilter; label: string }> = [
   { value: "PENDING", label: "결재 대기" },
   { value: "APPROVED", label: "승인" },
   { value: "REJECTED", label: "반려" },
+];
+
+export const documentTemplateOptions: DocumentTemplateOption[] = [
+  {
+    id: "general",
+    label: "일반 결재 문서",
+    summary: "가장 범용적인 승인 문서 형식입니다.",
+    title: "결재 요청서",
+    content: `## 요청 개요
+- **제목:**  
+- **목적:**  
+- **요청 내용:**  
+
+---
+
+## 상세 내용
+- 배경:  
+- 진행 필요 사항:  
+- 기대 효과:  
+
+---
+
+## 일정
+- 시작일:  
+- 종료일:  
+
+---
+
+## 참고 사항
+- 첨부파일:  
+- 기타:  `,
+  },
+  {
+    id: "expense",
+    label: "지출 결의서",
+    summary: "예산 사용 목적과 예상 비용을 정리합니다.",
+    title: "지출 결의 요청",
+    content: `## 지출 개요
+- **지출 항목:**  
+- **지출 목적:**  
+- **총 금액:**  
+
+---
+
+## 지출 내역
+| 항목 | 금액 | 비고 |
+|------|------|------|
+|  |  |  |
+|  |  |  |
+
+---
+
+## 결제 정보
+- 결제 수단:  
+- 지급 예정일:  
+
+---
+
+## 첨부
+- 영수증: ☐ 있음 / ☐ 없음  
+- 기타:  `,
+  },
+  {
+    id: "project",
+    label: "프로젝트 승인 요청서",
+    summary: "프로젝트 개요와 일정, 기대 효과를 정리합니다.",
+    title: "프로젝트 승인 요청",
+    content: `## 프로젝트 개요
+- **프로젝트명:**  
+- **목적:**  
+- **배경 및 필요성:**  
+
+---
+
+## 주요 내용
+- 범위:  
+- 핵심 기능:  
+- 기대 성과:  
+
+---
+
+## 일정
+- 기획:  
+- 개발:  
+- 완료:  
+
+---
+
+## 예산
+- 총 예산:  
+- 주요 항목:  
+
+---
+
+## 리스크
+- 예상 문제:  
+- 대응 방안:  `,
+  },
+  {
+    id: "purchase",
+    label: "구매 요청서",
+    summary: "필요 물품과 구매 사유를 중심으로 작성합니다.",
+    title: "구매 요청",
+    content: `## 구매 개요
+- **구매 목적:**  
+- **사용 용도:**  
+
+---
+
+## 구매 내역
+| 품목명 | 수량 | 단가 | 금액 | 비고 |
+|--------|------|------|------|------|
+|  |  |  |  |  |
+|  |  |  |  |  |
+
+---
+
+## 공급 정보
+- 업체명:  
+- 견적: ☐ 있음 / ☐ 없음  
+
+---
+
+## 납기
+- 요청 납기일:  `,
+  },
+  {
+    id: "report",
+    label: "업무 보고 및 승인서",
+    summary: "진행 현황 보고와 후속 승인 요청을 함께 담습니다.",
+    title: "업무 보고 및 승인 요청",
+    content: `## 업무 개요
+- **업무명:**  
+- **목적:**  
+
+---
+
+## 진행 내용
+- 수행 내용:  
+- 진행 상태: ☐ 진행 중 / ☐ 완료  
+
+---
+
+## 결과
+- 주요 성과:  
+- 결과 요약:  
+
+---
+
+## 이슈
+- 문제점:  
+- 개선 방안:  
+
+---
+
+## 요청 사항
+- 확인 및 승인 요청:  `,
+  },
+  {
+    id: "skip",
+    label: "건너뛰기",
+    summary: "빈 문서부터 직접 작성합니다.",
+    title: "",
+    content: "",
+  },
 ];
 
 export function createEmptyEditorState(): EditorState {
