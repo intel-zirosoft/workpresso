@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createScheduleSchema } from "@/lib/validations/schedule";
 
 export async function GET() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -25,7 +25,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
 
