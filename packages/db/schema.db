@@ -11,6 +11,9 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'doc_status') THEN
         CREATE TYPE DOC_STATUS AS ENUM ('DRAFT', 'PENDING', 'APPROVED', 'REJECTED');
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'approval_step_status') THEN
+        CREATE TYPE APPROVAL_STEP_STATUS AS ENUM ('WAITING', 'PENDING', 'APPROVED', 'REJECTED');
+    END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'source_type') THEN
         CREATE TYPE SOURCE_TYPE AS ENUM ('DOCUMENTS', 'MEETING_LOGS');
     END IF;
@@ -29,7 +32,7 @@ $$ language 'plpgsql';
 
 -- [사용자 및 조직도]
 CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     name VARCHAR NOT NULL,
     department VARCHAR,
     status USER_STATUS DEFAULT 'OFFLINE',
@@ -40,19 +43,46 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- [결재 문서 - Pod A]
 CREATE TABLE IF NOT EXISTS documents (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     author_id UUID REFERENCES users(id),
     title VARCHAR NOT NULL,
     content TEXT,
     status DOC_STATUS DEFAULT 'DRAFT',
+    submitted_at TIMESTAMP WITH TIME ZONE,
+    final_approved_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     deleted_at TIMESTAMP WITH TIME ZONE
 );
 
+CREATE TABLE IF NOT EXISTS document_approval_steps (
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+    document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    step_order INTEGER NOT NULL,
+    step_label VARCHAR NOT NULL,
+    approver_id UUID NOT NULL REFERENCES users(id),
+    status APPROVAL_STEP_STATUS NOT NULL DEFAULT 'WAITING',
+    acted_at TIMESTAMP WITH TIME ZONE,
+    comment TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    deleted_at TIMESTAMP WITH TIME ZONE,
+    CONSTRAINT document_approval_steps_unique_order UNIQUE (document_id, step_order)
+);
+
+CREATE TABLE IF NOT EXISTS document_cc_recipients (
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+    document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    recipient_id UUID NOT NULL REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    deleted_at TIMESTAMP WITH TIME ZONE,
+    CONSTRAINT document_cc_recipients_unique_recipient UNIQUE (document_id, recipient_id)
+);
+
 -- [업무 일정 - Pod B]
 CREATE TABLE IF NOT EXISTS schedules (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     user_id UUID REFERENCES users(id),
     title VARCHAR NOT NULL,
     start_time TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -64,7 +94,7 @@ CREATE TABLE IF NOT EXISTS schedules (
 
 -- [회의록 - Pod D]
 CREATE TABLE IF NOT EXISTS meeting_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     owner_id UUID REFERENCES users(id),
     audio_url VARCHAR,
     stt_text TEXT,
@@ -75,7 +105,7 @@ CREATE TABLE IF NOT EXISTS meeting_logs (
 
 -- [지식 지도 - Pod C]
 CREATE TABLE IF NOT EXISTS knowledge_vectors (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     source_type SOURCE_TYPE NOT NULL,
     source_id UUID NOT NULL, 
     embedding VECTOR(1536), -- OpenAI text-embedding-3-small 등 대응
@@ -86,7 +116,7 @@ CREATE TABLE IF NOT EXISTS knowledge_vectors (
 
 -- [익스텐션 스토어]
 CREATE TABLE IF NOT EXISTS workspace_extensions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     ext_name VARCHAR NOT NULL UNIQUE,
     is_active BOOLEAN DEFAULT false,
     config JSONB DEFAULT '{}'::jsonb,
@@ -118,11 +148,19 @@ $$;
 -- 벡터 검색을 위한 인덱스 (ivfflat 또는 hnsw 추천)
 CREATE INDEX IF NOT EXISTS idx_knowledge_vectors_embedding ON knowledge_vectors 
 USING hnsw (embedding vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS idx_document_approval_steps_document_id ON document_approval_steps (document_id);
+CREATE INDEX IF NOT EXISTS idx_document_approval_steps_approver_status ON document_approval_steps (approver_id, status);
+CREATE INDEX IF NOT EXISTS idx_document_cc_recipients_document_id ON document_cc_recipients (document_id);
+CREATE INDEX IF NOT EXISTS idx_document_cc_recipients_recipient_id ON document_cc_recipients (recipient_id);
 
 -- 7. RLS 설정 (Pod A - documents)
 -- Supabase Auth 사용자 UUID와 public.users.id가 동일하다는 전제하에 정책을 적용한다.
 ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE documents FORCE ROW LEVEL SECURITY;
+ALTER TABLE document_approval_steps ENABLE ROW LEVEL SECURITY;
+ALTER TABLE document_approval_steps FORCE ROW LEVEL SECURITY;
+ALTER TABLE document_cc_recipients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE document_cc_recipients FORCE ROW LEVEL SECURITY;
 
 DO $$
 BEGIN
@@ -164,6 +202,172 @@ BEGIN
         FOR UPDATE
         USING (auth.uid() = author_id AND deleted_at IS NULL)
         WITH CHECK (auth.uid() = author_id);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_policies
+        WHERE schemaname = 'public'
+          AND tablename = 'document_approval_steps'
+          AND policyname = 'document_approval_steps_select_related'
+    ) THEN
+        CREATE POLICY document_approval_steps_select_related
+        ON document_approval_steps
+        FOR SELECT
+        USING (
+            deleted_at IS NULL
+            AND EXISTS (
+                SELECT 1
+                FROM documents d
+                WHERE d.id = document_id
+                  AND d.deleted_at IS NULL
+                  AND (
+                    d.author_id = auth.uid()
+                    OR approver_id = auth.uid()
+                    OR EXISTS (
+                        SELECT 1
+                        FROM document_cc_recipients c
+                        WHERE c.document_id = document_id
+                          AND c.recipient_id = auth.uid()
+                          AND c.deleted_at IS NULL
+                    )
+                  )
+            )
+        );
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_policies
+        WHERE schemaname = 'public'
+          AND tablename = 'document_approval_steps'
+          AND policyname = 'document_approval_steps_insert_author'
+    ) THEN
+        CREATE POLICY document_approval_steps_insert_author
+        ON document_approval_steps
+        FOR INSERT
+        WITH CHECK (
+            EXISTS (
+                SELECT 1
+                FROM documents d
+                WHERE d.id = document_id
+                  AND d.author_id = auth.uid()
+                  AND d.deleted_at IS NULL
+            )
+        );
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_policies
+        WHERE schemaname = 'public'
+          AND tablename = 'document_approval_steps'
+          AND policyname = 'document_approval_steps_update_related'
+    ) THEN
+        CREATE POLICY document_approval_steps_update_related
+        ON document_approval_steps
+        FOR UPDATE
+        USING (
+            EXISTS (
+                SELECT 1
+                FROM documents d
+                WHERE d.id = document_id
+                  AND d.deleted_at IS NULL
+                  AND (d.author_id = auth.uid() OR approver_id = auth.uid())
+            )
+        )
+        WITH CHECK (
+            EXISTS (
+                SELECT 1
+                FROM documents d
+                WHERE d.id = document_id
+                  AND d.deleted_at IS NULL
+                  AND (d.author_id = auth.uid() OR approver_id = auth.uid())
+            )
+        );
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_policies
+        WHERE schemaname = 'public'
+          AND tablename = 'document_cc_recipients'
+          AND policyname = 'document_cc_recipients_select_related'
+    ) THEN
+        CREATE POLICY document_cc_recipients_select_related
+        ON document_cc_recipients
+        FOR SELECT
+        USING (
+            deleted_at IS NULL
+            AND (
+                recipient_id = auth.uid()
+                OR EXISTS (
+                    SELECT 1
+                    FROM documents d
+                    WHERE d.id = document_id
+                      AND d.deleted_at IS NULL
+                      AND d.author_id = auth.uid()
+                )
+                OR EXISTS (
+                    SELECT 1
+                    FROM document_approval_steps s
+                    WHERE s.document_id = document_id
+                      AND s.deleted_at IS NULL
+                      AND s.approver_id = auth.uid()
+                )
+            )
+        );
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_policies
+        WHERE schemaname = 'public'
+          AND tablename = 'document_cc_recipients'
+          AND policyname = 'document_cc_recipients_insert_author'
+    ) THEN
+        CREATE POLICY document_cc_recipients_insert_author
+        ON document_cc_recipients
+        FOR INSERT
+        WITH CHECK (
+            EXISTS (
+                SELECT 1
+                FROM documents d
+                WHERE d.id = document_id
+                  AND d.author_id = auth.uid()
+                  AND d.deleted_at IS NULL
+            )
+        );
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_policies
+        WHERE schemaname = 'public'
+          AND tablename = 'document_cc_recipients'
+          AND policyname = 'document_cc_recipients_update_author'
+    ) THEN
+        CREATE POLICY document_cc_recipients_update_author
+        ON document_cc_recipients
+        FOR UPDATE
+        USING (
+            EXISTS (
+                SELECT 1
+                FROM documents d
+                WHERE d.id = document_id
+                  AND d.author_id = auth.uid()
+                  AND d.deleted_at IS NULL
+            )
+        )
+        WITH CHECK (
+            EXISTS (
+                SELECT 1
+                FROM documents d
+                WHERE d.id = document_id
+                  AND d.author_id = auth.uid()
+                  AND d.deleted_at IS NULL
+            )
+        );
     END IF;
 END $$;
 

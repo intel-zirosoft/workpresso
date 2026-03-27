@@ -1,12 +1,21 @@
-import { streamText, embed, tool } from 'ai';
+import { convertToCoreMessages, embed, streamText, tool, type Message } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { createClient } from '@supabase/supabase-js';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { z } from 'zod';
+
+import { createAdminClient } from '@/lib/supabase/admin';
+import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+const chatRequestSchema = z.object({
+  messages: z.array(
+    z.object({
+      role: z.string(),
+      content: z.unknown(),
+    }),
+  ).min(1, '최소 1개 이상의 메시지가 필요합니다.'),
+});
 
 const createScheduleSchema = z.object({
   title: z.string().describe('일정 제목'),
@@ -15,34 +24,59 @@ const createScheduleSchema = z.object({
 });
 
 type CreateScheduleArgs = z.infer<typeof createScheduleSchema>;
+type NormalizedChatMessage = Omit<Message, 'id'>;
+
+function extractMessageText(content: unknown): string {
+  if (typeof content === 'string') {
+    return content;
+  }
+
+  if (Array.isArray(content)) {
+    return content
+      .flatMap((part) => {
+        if (
+          typeof part === 'object' &&
+          part !== null &&
+          'type' in part &&
+          'text' in part &&
+          part.type === 'text' &&
+          typeof part.text === 'string'
+        ) {
+          return [part.text];
+        }
+
+        return [];
+      })
+      .join('\n')
+      .trim();
+  }
+
+  return '';
+}
 
 export async function POST(req: Request) {
   try {
-    const cookieStore = cookies();
-    const authSupabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) { return cookieStore.get(name)?.value; },
-          set() {}, 
-          remove() {},
-        },
-      }
-    );
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY가 설정되지 않았습니다.');
+    }
 
-    const { data: { user: authUser } } = await authSupabase.auth.getUser();
+    const supabase = await createClient();
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
+
     if (!authUser) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const userId = authUser.id;
-    const { messages } = await req.json();
-    const lastMessage = messages[messages.length - 1].content;
+    const { messages } = chatRequestSchema.parse(await req.json());
+    const normalizedMessages: NormalizedChatMessage[] = messages.map((message) => ({
+      role: message.role as Message['role'],
+      content: extractMessageText(message.content),
+    }));
+    const lastMessage =
+      normalizedMessages[normalizedMessages.length - 1]?.content ?? '';
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { persistSession: false } }
-    );
+    const adminSupabase = createAdminClient();
 
     let contextText = '관련 지식 없음';
     try {
@@ -51,25 +85,33 @@ export async function POST(req: Request) {
           model: openai.embedding('text-embedding-3-small'),
           value: lastMessage,
         });
-        const { data: documents } = await supabase.rpc('match_knowledge', {
+        const { data: documents } = await adminSupabase.rpc('match_knowledge', {
           query_embedding: embedding,
           match_threshold: 0.1,
           match_count: 5,
         });
-        if (documents) contextText = documents.map((doc: any) => doc.metadata?.content || '').join('\n\n');
+        if (documents) {
+          contextText = documents
+            .map((doc: any) => doc.metadata?.content || '')
+            .filter(Boolean)
+            .join('\n\n');
+        }
       }
-    } catch (e) { console.warn('RAG Skip'); }
+    } catch (e) {
+      console.warn('RAG Skip', e);
+    }
 
     const result = await streamText({
       model: openai('gpt-4o-mini'),
       system: `당신은 워크프레소의 업무 비서입니다. 한국어로 친절하게 답변하세요. 내부 지식: ${contextText}`,
-      messages,
+      messages: convertToCoreMessages(normalizedMessages),
+      maxSteps: 2,
       tools: {
         create_schedule: tool({
           description: '일정 등록',
           parameters: createScheduleSchema,
           execute: async ({ title, start_time, end_time }: CreateScheduleArgs) => {
-            const { error } = await supabase
+            const { error } = await adminSupabase
               .from('schedules')
               .insert([{ title, start_time, end_time, user_id: userId }]);
             if (error) throw new Error(error.message);

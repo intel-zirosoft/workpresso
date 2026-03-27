@@ -33,16 +33,14 @@ export default function RootLayout({
       <body className="font-body bg-background text-text antialiased">
         <Providers>
           <div className="flex min-h-screen relative overflow-x-hidden">
-            {/* Sidebar - Desktop Only */}
             <div className="hidden md:block w-[260px] shrink-0 border-r border-background/50">
               <Sidebar />
             </div>
-            
-            {/* Content Area */}
+
             <div className="flex-1 flex flex-col min-h-screen bg-background w-full">
               <Header />
               <main className="flex-1 overflow-y-auto w-full">
-                <div className="container mx-auto p-4 md:p-8 max-w-[1400px]">
+                <div className="container mx-auto max-w-[1600px] p-4 md:p-8">
                   {children}
                 </div>
               </main>

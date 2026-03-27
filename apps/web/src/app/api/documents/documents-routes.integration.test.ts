@@ -95,6 +95,34 @@ async function createTestUser() {
   return data;
 }
 
+async function createWorkflowParticipants() {
+  const [firstApprover, secondApprover, thirdApprover, ccRecipient] =
+    await Promise.all([
+      createTestUser(),
+      createTestUser(),
+      createTestUser(),
+      createTestUser(),
+    ]);
+
+  return {
+    approvalSteps: [
+      {
+        stepLabel: "팀장",
+        approverId: firstApprover.id,
+      },
+      {
+        stepLabel: "부서장",
+        approverId: secondApprover.id,
+      },
+      {
+        stepLabel: "대표",
+        approverId: thirdApprover.id,
+      },
+    ],
+    ccRecipientIds: [ccRecipient.id],
+  };
+}
+
 async function createTestDocument(
   authorId: string,
   overrides?: Partial<{
@@ -173,6 +201,7 @@ describe("Pod A document routes integration", () => {
 
   it("creates a real draft document in Supabase", async () => {
     const user = await createTestUser();
+    const workflowParticipants = await createWorkflowParticipants();
     mockGetUser.mockResolvedValue({
       data: {
         user: {
@@ -189,6 +218,8 @@ describe("Pod A document routes integration", () => {
           authorId: user.id,
           title: "통합 테스트 초안",
           content: "실제 Supabase DB에 저장되는지 확인합니다.",
+          approvalSteps: workflowParticipants.approvalSteps,
+          ccRecipientIds: workflowParticipants.ccRecipientIds,
         }),
       })
     );
@@ -259,6 +290,7 @@ describe("Pod A document routes integration", () => {
 
   it("updates a real document row in Supabase", async () => {
     const user = await createTestUser();
+    const workflowParticipants = await createWorkflowParticipants();
     const document = await createTestDocument(user.id, {
       title: "수정 전 제목",
       content: "수정 전 본문",
@@ -279,6 +311,8 @@ describe("Pod A document routes integration", () => {
         body: JSON.stringify({
           title: "수정 후 제목",
           content: "수정 후 본문",
+          approvalSteps: workflowParticipants.approvalSteps,
+          ccRecipientIds: workflowParticipants.ccRecipientIds,
         }),
       }),
       { params: { id: document.id } }
@@ -302,7 +336,7 @@ describe("Pod A document routes integration", () => {
     });
   });
 
-  it("updates document status in Supabase while exercising the status route", async () => {
+  it("returns 410 for the deprecated direct status route", async () => {
     const user = await createTestUser();
     const document = await createTestDocument(user.id, {
       title: "승인 대상 문서",
@@ -317,22 +351,6 @@ describe("Pod A document routes integration", () => {
       },
       error: null,
     });
-    const originalFetch = globalThis.fetch;
-    vi.stubGlobal(
-      "fetch",
-      vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
-        const requestUrl = typeof input === "string" ? input : input.toString();
-
-        if (requestUrl.includes("/functions/v1/document-knowledge-sync")) {
-          return Promise.resolve(
-            new Response(JSON.stringify({ ok: true }), { status: 200 })
-          );
-        }
-
-        return originalFetch(input, init);
-      })
-    );
-
     const response = await patchDocumentStatus(
       new Request(`http://localhost:3000/api/documents/${document.id}/status`, {
         method: "PATCH",
@@ -344,8 +362,9 @@ describe("Pod A document routes integration", () => {
     );
     const body = await response.json();
 
-    expect(response.status).toBe(200);
-    expect(body.document.status).toBe("APPROVED");
+    expect(response.status).toBe(410);
+    expect(body.message).toContain("/submit");
+    expect(body.message).toContain("/approval");
 
     const { data: storedDocument, error } = await adminSupabase
       .from("documents")
@@ -355,7 +374,7 @@ describe("Pod A document routes integration", () => {
 
     expect(error).toBeNull();
     expect(storedDocument).toMatchObject({
-      status: "APPROVED",
+      status: "PENDING",
     });
   });
 });

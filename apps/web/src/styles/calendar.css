@@ -1,0 +1,164 @@
+/* FullCalendar Custom Styles */
+.fc {
+  --fc-button-bg-color: transparent;
+  --fc-button-border-color: transparent;
+  --fc-button-hover-bg-color: hsla(var(--primary), 0.1);
+  --fc-button-active-bg-color: hsla(var(--primary), 0.2);
+  --fc-button-text-color: var(--text);
+  --fc-border-color: hsla(var(--background), 0.5);
+  --fc-today-bg-color: hsla(var(--primary), 0.05);
+  --fc-page-bg-color: transparent;
+  
+  font-family: inherit;
+}
+
+/* Header styling */
+.fc .fc-toolbar-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.fc .fc-button-primary {
+  border: 1px solid rgba(var(--background), 1);
+  border-radius: 9999px;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s;
+  color: var(--text);
+}
+
+.fc .fc-button-primary:not(:disabled):active,
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  background-color: hsl(var(--primary));
+  color: white;
+  border-color: hsl(var(--primary));
+}
+
+/* Day Cell styling */
+.fc .fc-daygrid-day-top {
+  flex-direction: row !important;
+  padding: 8px 8px 0 8px !important; /* 날짜 숫자 주변 여백 추가 */
+}
+
+.fc .fc-daygrid-day-number {
+  padding: 8px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+/* Sunday coloring (Red) */
+.fc .fc-day-sun .fc-daygrid-day-number {
+  color: #ef4444 !important;
+}
+
+.fc .fc-daygrid-day.fc-day-today {
+  background-color: hsla(var(--primary), 0.08) !important;
+}
+
+.fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+  background-color: #3b82f6 !important; /* 더 선명한 파란색으로 변경 */
+  color: white !important;
+  border-radius: 50%;
+  width: 32px; /* 크기 키워서 잘림 방지 */
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px;
+  padding: 0;
+}
+
+/* Sunday coloring (Red) - Aggressive Selector */
+.fc .fc-day-sun,
+.fc .fc-day-sun .fc-daygrid-day-number,
+.fc .fc-daygrid-day.fc-day-sun .fc-daygrid-day-number {
+  color: #ef4444 !important;
+}
+
+/* Past Dates styling - Thick Marker Stroke Effect (High Visibility) */
+.fc .fc-day-past:not(.fc-day-today) {
+  background-color: hsla(var(--background), 0.5) !important;
+  position: relative !important;
+}
+
+.fc .fc-day-past:not(.fc-day-today) .fc-daygrid-day-frame::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 55% !important;
+  left: -2px !important;
+  right: -2px !important;
+  height: 14px !important; /* 더 두꺼운 마커 느낌 */
+  background-color: rgba(71, 85, 105, 0.4) !important; /* 더 진한 마커 색상 */
+  transform: translateY(-50%) !important;
+  pointer-events: none !important;
+  z-index: 20 !important;
+}
+
+/* Round ends of the marker stroke */
+.fc td.fc-day-past:first-child .fc-daygrid-day-frame::before,
+.fc td:not(.fc-day-past) + td.fc-day-past .fc-daygrid-day-frame::before {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+  left: 10px !important;
+}
+
+.fc td.fc-day-past:last-child .fc-daygrid-day-frame::before,
+.fc td.fc-day-past:has(+ .fc-day-today) .fc-daygrid-day-frame::before {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+  right: 10px !important;
+}
+
+.fc .fc-day-past:not(.fc-day-today) .fc-daygrid-day-number {
+  color: hsla(var(--foreground), 0.4) !important;
+  z-index: 25 !important;
+}
+
+.fc .fc-day-other {
+  opacity: 0.4;
+}
+
+/* Event Dots */
+.calendar-event-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 4px;
+}
+
+.fc .fc-daygrid-event {
+  background-color: transparent;
+  border: none;
+  padding: 2px 4px;
+  cursor: pointer;
+}
+
+.fc .fc-event-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Hide scrollbar but allow scrolling */
+.fc-scroller {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.fc-scroller::-webkit-scrollbar {
+  display: none;
+}
+
+/* 요일(일월화수목금토) 및 날짜 섹션 여백 추가 */
+.fc .fc-col-header-cell {
+  padding: 12px 0 !important;
+  background-color: hsla(var(--background), 0.5);
+}
+
+.fc .fc-daygrid-day-frame {
+  padding-top: 4px;
+}

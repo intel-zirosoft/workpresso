@@ -65,7 +65,7 @@ export function Header() {
   };
 
   return (
-    <header className="h-[72px] md:h-[96px] flex items-center justify-between md:justify-end px-4 md:px-10 sticky top-0 bg-background/80 backdrop-blur-md z-[100]">
+    <header className="h-[72px] md:h-[96px] flex items-center justify-between md:justify-end px-4 md:px-10 sticky top-0 bg-background/80 backdrop-blur-md">
       {/* Mobile Menu */}
       <div className="md:hidden">
         <Button variant="ghost" size="icon" className="text-primary">

@@ -1,12 +1,19 @@
 import {
+  approvalActionInputSchema,
   createDocumentInputSchema,
-  createDocumentResponseSchema,
   documentListResponseSchema,
-  updateDocumentStatusInputSchema,
+  documentResponseSchema,
+  documentScopeSchema,
+  documentStatusSchema,
   updateDocumentInputSchema,
+  userListResponseSchema,
+  type ApprovalActionInput,
   type CreateDocumentInput,
-  type DocumentRecord,
+  type DocumentDetail,
+  type DocumentScope,
   type DocumentStatus,
+  type DocumentSummary,
+  type DocumentUser,
   type UpdateDocumentInput,
 } from "@/features/pod-a/services/document-schema";
 
@@ -27,25 +34,64 @@ async function parseJson(response: Response) {
   return data;
 }
 
-export async function fetchDocuments(
-  status?: DocumentStatus
-): Promise<DocumentRecord[]> {
-  const queryString = status
-    ? `?${new URLSearchParams({ status }).toString()}`
-    : "";
-  const response = await fetch(`/api/documents${queryString}`, {
-    method: "GET",
-    cache: "no-store",
-  });
+function buildListQueryString(options?: {
+  scope?: DocumentScope;
+  status?: DocumentStatus;
+}) {
+  const params = new URLSearchParams();
 
+  if (options?.scope) {
+    params.set("scope", documentScopeSchema.parse(options.scope));
+  }
+
+  if (options?.status) {
+    params.set("status", documentStatusSchema.parse(options.status));
+  }
+
+  const queryString = params.toString();
+
+  return queryString ? `?${queryString}` : "";
+}
+
+export async function fetchDocuments(options?: {
+  scope?: DocumentScope;
+  status?: DocumentStatus;
+}): Promise<DocumentSummary[]> {
+  const response = await fetch(
+    `/api/documents${buildListQueryString(options ?? { scope: "authored" })}`,
+    {
+      method: "GET",
+      cache: "no-store",
+    },
+  );
   const data = await parseJson(response);
 
   return documentListResponseSchema.parse(data).documents;
 }
 
+export async function fetchDocument(documentId: string): Promise<DocumentDetail> {
+  const response = await fetch(`/api/documents/${documentId}`, {
+    method: "GET",
+    cache: "no-store",
+  });
+  const data = await parseJson(response);
+
+  return documentResponseSchema.parse(data).document;
+}
+
+export async function fetchDocumentUsers(): Promise<DocumentUser[]> {
+  const response = await fetch("/api/users", {
+    method: "GET",
+    cache: "no-store",
+  });
+  const data = await parseJson(response);
+
+  return userListResponseSchema.parse(data).users;
+}
+
 export async function createDocument(
-  input: CreateDocumentInput
-): Promise<DocumentRecord> {
+  input: CreateDocumentInput,
+): Promise<DocumentDetail> {
   const payload = createDocumentInputSchema.parse(input);
   const response = await fetch("/api/documents", {
     method: "POST",
@@ -54,16 +100,15 @@ export async function createDocument(
     },
     body: JSON.stringify(payload),
   });
-
   const data = await parseJson(response);
 
-  return createDocumentResponseSchema.parse(data).document;
+  return documentResponseSchema.parse(data).document;
 }
 
 export async function updateDocument(
   documentId: string,
-  input: UpdateDocumentInput
-): Promise<DocumentRecord> {
+  input: UpdateDocumentInput,
+): Promise<DocumentDetail> {
   const payload = updateDocumentInputSchema.parse(input);
   const response = await fetch(`/api/documents/${documentId}`, {
     method: "PATCH",
@@ -72,26 +117,33 @@ export async function updateDocument(
     },
     body: JSON.stringify(payload),
   });
-
   const data = await parseJson(response);
 
-  return createDocumentResponseSchema.parse(data).document;
+  return documentResponseSchema.parse(data).document;
 }
 
-export async function updateDocumentStatus(
+export async function submitDocument(documentId: string): Promise<DocumentDetail> {
+  const response = await fetch(`/api/documents/${documentId}/submit`, {
+    method: "POST",
+  });
+  const data = await parseJson(response);
+
+  return documentResponseSchema.parse(data).document;
+}
+
+export async function actOnDocument(
   documentId: string,
-  status: DocumentStatus
-): Promise<DocumentRecord> {
-  const payload = updateDocumentStatusInputSchema.parse({ status });
-  const response = await fetch(`/api/documents/${documentId}/status`, {
-    method: "PATCH",
+  input: ApprovalActionInput,
+): Promise<DocumentDetail> {
+  const payload = approvalActionInputSchema.parse(input);
+  const response = await fetch(`/api/documents/${documentId}/approval`, {
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
   });
-
   const data = await parseJson(response);
 
-  return createDocumentResponseSchema.parse(data).document;
+  return documentResponseSchema.parse(data).document;
 }
