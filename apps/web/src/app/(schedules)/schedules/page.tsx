@@ -15,7 +15,7 @@ export default function SchedulesPage() {
       </header>
 
       <div className="bg-surface rounded-2xl p-8 shadow-soft border border-background/50">
-        <CalendarView />
+        <CalendarView variant="full" />
       </div>
     </div>
   );

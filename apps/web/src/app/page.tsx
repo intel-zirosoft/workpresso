@@ -36,7 +36,7 @@ export default function HomePage() {
 
           {/* Agenda & Calendar Area */}
           <section className="bg-surface rounded-lg p-8 shadow-soft border border-background/50 min-h-[400px] flex items-center justify-center">
-            <CalendarView />
+            <CalendarView variant="default" />
           </section>
         </div>
 
