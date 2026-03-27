@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { format, isSameDay, parse, isBefore, startOfDay } from "date-fns";
 import { ko } from "date-fns/locale";
 import { Plus, Clock, Trash2, Loader2, Pencil, Users } from "lucide-react";
@@ -10,25 +10,58 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import "@/styles/calendar.css";
+import {
+  createSchedule,
+  deleteSchedule,
+  fetchSchedules,
+  type Schedule,
+  type ScheduleInput,
+  ScheduleApiError,
+  updateSchedule,
+} from "./schedule-api";
 
-interface Schedule {
-  id: string;
-  title: string;
-  start_time: string;
-  end_time: string;
-  type?: string;
+const TYPE_CONFIG: Record<string, { label: string; color: string; icon: any }> =
+  {
+    TASK: { label: "업무", color: "bg-primary", icon: Clock },
+    MEETING: { label: "회의", color: "bg-amber-400", icon: Users },
+    VACATION: { label: "휴가", color: "bg-rose-400", icon: Clock },
+    HALF_DAY: { label: "반차", color: "bg-rose-300", icon: Clock },
+    WFH: { label: "재택", color: "bg-blue-400", icon: Clock },
+    OUTSIDE: { label: "외근", color: "bg-emerald-400", icon: Clock },
+  };
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof ScheduleApiError) {
+    return error.message;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return null;
 }
 
-const TYPE_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
-  TASK: { label: "업무", color: "bg-primary", icon: Clock },
-  MEETING: { label: "회의", color: "bg-amber-400", icon: Users },
-  VACATION: { label: "휴가", color: "bg-rose-400", icon: Clock },
-  HALF_DAY: { label: "반차", color: "bg-rose-300", icon: Clock },
-  WFH: { label: "재택", color: "bg-blue-400", icon: Clock },
-  OUTSIDE: { label: "외근", color: "bg-emerald-400", icon: Clock },
-};
+function getTypeConfig(type?: string) {
+  if (type && type in TYPE_CONFIG) {
+    return TYPE_CONFIG[type];
+  }
 
-export function CalendarView({ variant = "default" }: { variant?: "default" | "full" }) {
+  return TYPE_CONFIG.TASK;
+}
+
+function sortSchedules(schedules: Schedule[]) {
+  return [...schedules].sort(
+    (a, b) =>
+      new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
+  );
+}
+
+export function CalendarView({
+  variant = "default",
+}: {
+  variant?: "default" | "full";
+}) {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
@@ -36,75 +69,95 @@ export function CalendarView({ variant = "default" }: { variant?: "default" | "f
   const calendarRef = useRef<FullCalendar>(null);
 
   // 일정 목록 가져오기 (GET)
-  const { data: schedules = [], isLoading } = useQuery<Schedule[]>({
+  const {
+    data: schedules = [],
+    isLoading,
+    error: schedulesError,
+  } = useQuery<Schedule[]>({
     queryKey: ["schedules"],
-    queryFn: async () => {
-      const res = await fetch("/api/schedules");
-      if (!res.ok) throw new Error("Failed to fetch schedules");
-      return res.json();
-    },
+    queryFn: fetchSchedules,
   });
 
-  // 일정 생성/수정/삭제 뮤테이션 (기존 코드와 동일)
   const createMutation = useMutation({
-    mutationFn: async (newSchedule: Omit<Schedule, "id">) => {
-      const res = await fetch("/api/schedules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newSchedule),
-      });
-      if (!res.ok) throw new Error("Failed to create schedule");
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+    mutationFn: createSchedule,
+    onSuccess: (createdSchedule) => {
+      queryClient.setQueryData<Schedule[]>(["schedules"], (current = []) =>
+        sortSchedules([...current, createdSchedule]),
+      );
       setIsModalOpen(false);
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<Schedule> }) => {
-      const res = await fetch(`/api/schedules/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error("Failed to update schedule");
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+    mutationFn: ({ id, data }: { id: string; data: Partial<ScheduleInput> }) =>
+      updateSchedule(id, data),
+    onSuccess: (updatedSchedule) => {
+      queryClient.setQueryData<Schedule[]>(["schedules"], (current = []) =>
+        sortSchedules(
+          current.map((schedule) =>
+            schedule.id === updatedSchedule.id ? updatedSchedule : schedule,
+          ),
+        ),
+      );
       setIsModalOpen(false);
       setEditingSchedule(null);
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await fetch(`/api/schedules/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete schedule");
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+    mutationFn: deleteSchedule,
+    onSuccess: (_, deletedId) => {
+      queryClient.setQueryData<Schedule[]>(["schedules"], (current = []) =>
+        current.filter((schedule) => schedule.id !== deletedId),
+      );
     },
   });
 
   const selectedDateSchedules = schedules
-    .filter((schedule) => date && isSameDay(new Date(schedule.start_time), date))
-    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+    .filter(
+      (schedule) => date && isSameDay(new Date(schedule.start_time), date),
+    )
+    .sort(
+      (a, b) =>
+        new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
+    );
 
-  const handleSaveSchedule = (data: { title: string; startTime: string; endTime: string; type: string }) => {
+  const submitErrorMessage =
+    getErrorMessage(createMutation.error) ??
+    getErrorMessage(updateMutation.error);
+
+  const pageErrorMessage =
+    getErrorMessage(schedulesError) ??
+    submitErrorMessage ??
+    getErrorMessage(deleteMutation.error);
+
+  const handleSaveSchedule = (data: {
+    title: string;
+    startTime: string;
+    endTime: string;
+    type: string;
+  }) => {
     if (!date) return;
     const startDateTime = parse(data.startTime, "HH:mm", date);
     const endDateTime = parse(data.endTime, "HH:mm", date);
-    
+
     if (editingSchedule) {
       updateMutation.mutate({
         id: editingSchedule.id,
-        data: { title: data.title, start_time: startDateTime.toISOString(), end_time: endDateTime.toISOString(), type: data.type },
+        data: {
+          title: data.title,
+          start_time: startDateTime.toISOString(),
+          end_time: endDateTime.toISOString(),
+          type: data.type,
+        },
       });
     } else {
-      createMutation.mutate({ title: data.title, start_time: startDateTime.toISOString(), end_time: endDateTime.toISOString(), type: data.type });
+      createMutation.mutate({
+        title: data.title,
+        start_time: startDateTime.toISOString(),
+        end_time: endDateTime.toISOString(),
+        type: data.type,
+      });
     }
   };
 
@@ -122,20 +175,20 @@ export function CalendarView({ variant = "default" }: { variant?: "default" | "f
   };
 
   // FullCalendar용 이벤트 데이터 변환
-  const calendarEvents = schedules.map(s => ({
+  const calendarEvents = schedules.map((s) => ({
     id: s.id,
     title: s.title,
     start: s.start_time,
     end: s.end_time,
-    backgroundColor: 'transparent',
-    borderColor: 'transparent',
-    extendedProps: { type: s.type || 'TASK' }
+    backgroundColor: "transparent",
+    borderColor: "transparent",
+    extendedProps: { type: s.type || "TASK" },
   }));
 
   const handleDateClick = (arg: any) => {
     const clickedDate = arg.date;
     setDate(clickedDate);
-    
+
     // [요청 사항] 클릭한 날짜가 다른 달인 경우 자동으로 해당 달력으로 이동
     if (calendarRef.current) {
       const calendarApi = calendarRef.current.getApi();
@@ -147,11 +200,13 @@ export function CalendarView({ variant = "default" }: { variant?: "default" | "f
   };
 
   const renderEventContent = (eventInfo: any) => {
-    const type = eventInfo.event.extendedProps.type;
+    const typeConfig = getTypeConfig(eventInfo.event.extendedProps.type);
     return (
       <div className="flex items-center px-1 overflow-hidden">
-        <span className={cn("calendar-event-dot", TYPE_CONFIG[type].color)} />
-        <span className="truncate text-[11px] font-bold text-text opacity-80">{eventInfo.event.title}</span>
+        <span className={cn("calendar-event-dot", typeConfig.color)} />
+        <span className="truncate text-[11px] font-bold text-text opacity-80">
+          {eventInfo.event.title}
+        </span>
       </div>
     );
   };
@@ -169,13 +224,14 @@ export function CalendarView({ variant = "default" }: { variant?: "default" | "f
             headerToolbar={{
               left: "prev,next today",
               center: "title",
-              right: "dayGridMonth,dayGridWeek"
+              right: "dayGridMonth,dayGridWeek",
             }}
             events={calendarEvents}
             dateClick={handleDateClick}
             eventClick={(info) => {
-              const schedule = schedules.find(s => s.id === info.event.id);
-              if (schedule) handleEdit(schedule, { stopPropagation: () => {} } as any);
+              const schedule = schedules.find((s) => s.id === info.event.id);
+              if (schedule)
+                handleEdit(schedule, { stopPropagation: () => {} } as any);
             }}
             eventContent={renderEventContent}
             height="100%"
@@ -184,6 +240,12 @@ export function CalendarView({ variant = "default" }: { variant?: "default" | "f
           />
         </div>
 
+        {pageErrorMessage ? (
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+            {pageErrorMessage}
+          </div>
+        ) : null}
+
         {/* 선택된 날짜의 일정 목록 (하단 또는 측면 보조) */}
         {date && (
           <div className="bg-white/50 rounded-2xl p-6 border border-dashed border-background/80">
@@ -191,44 +253,79 @@ export function CalendarView({ variant = "default" }: { variant?: "default" | "f
               <h4 className="text-lg font-headings font-bold text-text">
                 {format(date, "MM월 dd일 (EEEE)", { locale: ko })}
               </h4>
-              <button 
-                onClick={() => { setEditingSchedule(null); setIsModalOpen(true); }}
+              <button
+                onClick={() => {
+                  setEditingSchedule(null);
+                  setIsModalOpen(true);
+                }}
                 className="px-4 py-2 rounded-pill bg-primary text-white font-bold text-sm shadow-sm hover:shadow-soft transition-all"
               >
                 + 새 일정
               </button>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {selectedDateSchedules.map(schedule => (
-                <div key={schedule.id} className="p-4 rounded-xl bg-white border border-background shadow-xs relative overflow-hidden group">
-                  <div className={cn("absolute left-0 top-0 bottom-0 w-1", TYPE_CONFIG[schedule.type || "TASK"].color)} />
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-[10px] text-muted font-bold uppercase mb-1">{format(new Date(schedule.start_time), "HH:mm")} - {format(new Date(schedule.end_time), "HH:mm")}</p>
-                      <h5 className="font-bold text-text mb-2">{schedule.title}</h5>
-                    </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={(e) => handleEdit(schedule, e)} className="p-1.5 hover:bg-background rounded-full transition-colors"><Pencil size={14} className="text-primary/60" /></button>
-                      <button onClick={(e) => handleDelete(schedule.id, e)} className="p-1.5 hover:bg-red-50 rounded-full transition-colors"><Trash2 size={14} className="text-red-300" /></button>
+              {isLoading ? (
+                <div className="col-span-full flex min-h-24 items-center justify-center">
+                  <Loader2 className="animate-spin text-muted" size={24} />
+                </div>
+              ) : null}
+              {!isLoading &&
+                selectedDateSchedules.map((schedule) => (
+                  <div
+                    key={schedule.id}
+                    className="p-4 rounded-xl bg-white border border-background shadow-xs relative overflow-hidden group"
+                  >
+                    <div
+                      className={cn(
+                        "absolute left-0 top-0 bottom-0 w-1",
+                        getTypeConfig(schedule.type).color,
+                      )}
+                    />
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-[10px] text-muted font-bold uppercase mb-1">
+                          {format(new Date(schedule.start_time), "HH:mm")} -{" "}
+                          {format(new Date(schedule.end_time), "HH:mm")}
+                        </p>
+                        <h5 className="font-bold text-text mb-2">
+                          {schedule.title}
+                        </h5>
+                      </div>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => handleEdit(schedule, e)}
+                          className="p-1.5 hover:bg-background rounded-full transition-colors"
+                        >
+                          <Pencil size={14} className="text-primary/60" />
+                        </button>
+                        <button
+                          onClick={(e) => handleDelete(schedule.id, e)}
+                          className="p-1.5 hover:bg-red-50 rounded-full transition-colors"
+                        >
+                          <Trash2 size={14} className="text-red-300" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-              {selectedDateSchedules.length === 0 && (
-                <p className="col-span-full text-center py-4 text-muted text-sm font-medium italic">해당 날짜에 일정이 없습니다.</p>
+                ))}
+              {!isLoading && selectedDateSchedules.length === 0 && (
+                <p className="col-span-full text-center py-4 text-muted text-sm font-medium italic">
+                  해당 날짜에 일정이 없습니다.
+                </p>
               )}
             </div>
           </div>
         )}
 
-        <ScheduleModal 
-          open={isModalOpen} 
+        <ScheduleModal
+          open={isModalOpen}
           onOpenChange={setIsModalOpen}
           selectedDate={date}
           onSave={handleSaveSchedule}
           isPending={createMutation.isPending || updateMutation.isPending}
           initialData={editingSchedule}
+          submitError={submitErrorMessage}
         />
       </div>
     );
@@ -248,12 +345,23 @@ export function CalendarView({ variant = "default" }: { variant?: "default" | "f
       </div>
 
       <div className="lg:w-1/2 flex flex-col space-y-4">
+        {pageErrorMessage ? (
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+            {pageErrorMessage}
+          </div>
+        ) : null}
+
         <div className="flex items-center justify-between mb-2">
           <h4 className="text-lg font-headings font-bold text-text">
-            {date ? format(date, "MM월 dd일 (EEEE)", { locale: ko }) : "날짜를 선택하세요"}
+            {date
+              ? format(date, "MM월 dd일 (EEEE)", { locale: ko })
+              : "날짜를 선택하세요"}
           </h4>
-          <button 
-            onClick={() => { setEditingSchedule(null); setIsModalOpen(true); }}
+          <button
+            onClick={() => {
+              setEditingSchedule(null);
+              setIsModalOpen(true);
+            }}
             disabled={!date}
             className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
           >
@@ -263,19 +371,42 @@ export function CalendarView({ variant = "default" }: { variant?: "default" | "f
 
         <div className="space-y-3 flex-1 overflow-y-auto max-h-[300px] pr-2">
           {isLoading ? (
-            <div className="flex justify-center items-center h-40"><Loader2 className="animate-spin text-muted" size={24} /></div>
+            <div className="flex justify-center items-center h-40">
+              <Loader2 className="animate-spin text-muted" size={24} />
+            </div>
           ) : selectedDateSchedules.length > 0 ? (
             selectedDateSchedules.map((schedule) => (
-              <div key={schedule.id} className="flex flex-col p-4 rounded-xl bg-white border border-background shadow-sm hover:shadow-soft transition-shadow relative overflow-hidden group">
-                <div className={cn("absolute left-0 top-0 bottom-0 w-1", TYPE_CONFIG[schedule.type || "TASK"].color)} />
+              <div
+                key={schedule.id}
+                className="flex flex-col p-4 rounded-xl bg-white border border-background shadow-sm hover:shadow-soft transition-shadow relative overflow-hidden group"
+              >
+                <div
+                  className={cn(
+                    "absolute left-0 top-0 bottom-0 w-1",
+                    getTypeConfig(schedule.type).color,
+                  )}
+                />
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-primary text-sm mb-1">
                     <Clock size={14} className="opacity-70" />
-                    <span>{format(new Date(schedule.start_time), "HH:mm")} - {format(new Date(schedule.end_time), "HH:mm")}</span>
+                    <span>
+                      {format(new Date(schedule.start_time), "HH:mm")} -{" "}
+                      {format(new Date(schedule.end_time), "HH:mm")}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={(e) => handleEdit(schedule, e)} className="p-1.5 hover:bg-background rounded-full"><Pencil size={14} /></button>
-                    <button onClick={(e) => handleDelete(schedule.id, e)} className="p-1.5 hover:bg-red-50 rounded-full"><Trash2 size={14} className="text-red-300" /></button>
+                    <button
+                      onClick={(e) => handleEdit(schedule, e)}
+                      className="p-1.5 hover:bg-background rounded-full"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      onClick={(e) => handleDelete(schedule.id, e)}
+                      className="p-1.5 hover:bg-red-50 rounded-full"
+                    >
+                      <Trash2 size={14} className="text-red-300" />
+                    </button>
                   </div>
                 </div>
                 <p className="font-bold text-text">{schedule.title}</p>
@@ -289,15 +420,15 @@ export function CalendarView({ variant = "default" }: { variant?: "default" | "f
         </div>
       </div>
 
-      <ScheduleModal 
-        open={isModalOpen} 
+      <ScheduleModal
+        open={isModalOpen}
         onOpenChange={setIsModalOpen}
         selectedDate={date}
         onSave={handleSaveSchedule}
         isPending={createMutation.isPending || updateMutation.isPending}
         initialData={editingSchedule}
+        submitError={submitErrorMessage}
       />
     </div>
   );
 }
-
