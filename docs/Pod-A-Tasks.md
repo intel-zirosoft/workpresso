@@ -2,14 +2,16 @@
 
 본 문서는 풀스택 수직적 분할(Full-stack Vertical Slicing) 원칙에 따라 Pod A의 세부 구현 기능을 팀원들에게 분배하기 위한 태스크 리스트입니다.
 
-## 📌 현재 구현 현황 (2026-03-26)
+## 📌 현재 구현 현황 (2026-03-27)
 
 - 문서 워크플로우 v2의 **주요 코드 구현은 완료**되었습니다.
 - 완료 범위:
   - 다단계 결재선 / 공람(CC) 데이터 구조 추가
   - `GET /api/documents?scope=&status=`, `GET /api/documents/[id]`, `POST /api/documents/[id]/submit`, `POST /api/documents/[id]/approval` 포함 API 개편
-  - 읽기 우선 상세 화면, 편집 버튼 진입, Markdown 툴바/단축키, `Tab` 들여쓰기, 제목 단계 단축키 구현
-  - `내 문서 Grid`, `내 결재함`, `공람 문서` 분리 UI 구현
+  - 읽기 우선 상세 모달, 대형 편집 오버레이, 편집 버튼 진입 플로우 구현
+  - Markdown 툴바/단축키, `Tab` 들여쓰기, 제목 단계 단축키, `Ctrl/Cmd+Shift+V` 미리보기 토글 구현
+  - 멀티 스텝 편집기(템플릿 선택 → 본문 작성 → 결재선/공람) 및 집중 보기(`크게보기`) 오버레이 구현
+  - `내 문서 Grid`, `내 결재함`, `공람 문서` 분리 UI 및 탐색 컨테이너 내부 스크롤 구현
   - Pod A unit test 갱신 및 통과
 - 남은 확인:
   - Supabase에 신규 마이그레이션 실제 적용 전 integration 기준 검증 필요
@@ -67,9 +69,9 @@
 
 ## 🧑‍💻 Part 5: 문서 편집 경험 개선
 
-**목표:** 읽기 우선 상세 화면과 비개발자 친화적인 Markdown 입력 경험 제공
+**목표:** 읽기 우선 상세 모달과 비개발자 친화적인 Markdown 입력 경험 제공
 
-- [x] **Frontend (UI)**: 상세 화면 진입 시 기본값을 읽기 전용 모드로 전환
+- [x] **Frontend (UI)**: 문서 선택 시 읽기 전용 상세를 모달 오버레이로 노출
 - [x] **Frontend (UI)**: 작성자 전용 `편집` 버튼으로만 수정 모드에 진입하도록 플로우 수정
 - [x] **Frontend (Permission)**: `DRAFT`/`REJECTED`만 편집 가능, `PENDING`/`APPROVED`는 읽기 전용으로 고정
 - [x] **Frontend (UI)**: textarea 상단 Markdown 툴바 추가 (`B`, `I`, `링크`, `불릿`, `번호`, `인용`)
@@ -77,6 +79,11 @@
 - [x] **Frontend (UX)**: `Ctrl/Cmd+B`, `Ctrl/Cmd+I`, `Ctrl/Cmd+K` 단축키 지원
 - [x] **Frontend (UX)**: `Tab` 키 입력 시 현재 줄 또는 선택 줄에 들여쓰기 적용
 - [x] **Frontend (UX)**: `Ctrl/Cmd+]`, `Ctrl/Cmd+[` 단축키로 제목 단계 1레벨씩 증가/감소 처리
+- [x] **Frontend (UI)**: 멀티 스텝 편집기 구성 (`템플릿 선택 → 제목/본문 → 결재선/공람`)
+- [x] **Frontend (UI)**: 템플릿 프리셋 (`일반 결재 문서`, `지출 결의서`, `프로젝트 승인 요청서`, `구매 요청서`, `업무 보고 및 승인서`, `건너뛰기`) 적용
+- [x] **Frontend (UI)**: 미리보기는 상시 노출 대신 토글형으로 전환하고 `Ctrl/Cmd+Shift+V` 단축키 연결
+- [x] **Frontend (UX)**: 편집/미리보기를 유지한 채 같은 다이얼로그 안에서 `크게보기` 집중 모드 제공
+- [x] **Frontend (UX)**: 본문 textarea auto-resize를 적용해 이중 스크롤을 줄이고 오버레이 본문 기준 단일 스크롤 구조로 정리
 - [x] **Frontend (Detail)**: 상세 뷰에 결재 타임라인, 현재 단계, CC 목록, 상태 배지 노출
 
 ## 🧑‍💻 Part 6: 문서 목록 / 인박스 UI
@@ -86,8 +93,10 @@
 - [x] **Frontend (UI)**: `내 문서 Grid` 구현 (데스크톱 표형 레이아웃, 모바일 카드 폴백)
 - [x] **Frontend (UI)**: `내 결재함` 구현 (내가 현재 결재해야 하는 문서만 표시)
 - [x] **Frontend (UI)**: `공람 문서` 구현 (CC 지정으로 열람 가능한 문서만 표시)
+- [x] **Frontend (UI)**: `문서 분류`와 `결재 분류` 필터를 좌우 구획형 레이아웃으로 재구성
+- [x] **Frontend (UX)**: 문서 탐색 목록이 길어질 때 페이지 전체가 아니라 탐색 컨테이너 내부에서 스크롤되도록 조정
 - [x] **Frontend (State)**: scope, status, selected document 기준 TanStack Query 캐시 전략 재정의
-- [x] **Frontend (UX)**: 목록에서 문서 선택 시 읽기 전용 상세 패널 동기화
+- [x] **Frontend (UX)**: 목록에서 문서 선택 시 읽기 전용 상세 모달 동기화
 - [x] **Security**: 권한 없는 문서가 목록/상세 어디에도 노출되지 않도록 API 응답과 UI 상태 정합성 검증
 
 ## 🧑‍💻 Part 7: 테스트 및 문서 동기화
@@ -99,9 +108,11 @@
 - [ ] **API Test**: 활성 단계 approver만 승인/반려 가능한지 권한 위반 케이스 검증
 - [ ] **API Test**: 중간 단계 반려 시 문서 `REJECTED` 전환과 재편집 가능 상태 검증
 - [ ] **API Test**: 마지막 단계 승인 시 문서 `APPROVED` 전환과 Pod C Edge Function 호출 1회 검증
-- [ ] **UI Test / Manual QA**: 상세 화면 읽기 모드, 편집 버튼, Markdown 툴바/단축키 동작 점검
+- [ ] **UI Test / Manual QA**: 상세 모달 읽기 모드, 편집 버튼, Markdown 툴바/단축키 동작 점검
 - [ ] **UI Test / Manual QA**: `Tab` 들여쓰기와 `Ctrl/Cmd+]`, `Ctrl/Cmd+[` 제목 단계 단축키 동작 점검
 - [ ] **UI Test / Manual QA**: `내 문서 Grid`, `내 결재함`, `공람 문서` scope별 노출 검증
+- [ ] **UI Test / Manual QA**: 멀티 스텝 편집기 전환, 템플릿 적용, 미리보기 토글, `크게보기` 집중 모드 동작 점검
+- [ ] **UI Test / Manual QA**: textarea auto-resize와 오버레이 단일 스크롤 동작 점검
 - [ ] **Docs Sync**: API 변경 시 `docs/Workpresso_API_명세서.md`와 관련 협업 문서 동기화
 - [ ] **Dependency Log**: 신규 라이브러리 도입 시 `docs/DEPENDENCIES.md` 즉시 업데이트
 - [x] **Unit Test**: `npm test` 기준 Pod A 관련 unit test 통과
