@@ -14,6 +14,8 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.48",
+    "@ai-sdk/react": "^3.0.140",
+    "@ai-sdk/ui-utils": "^1.2.11",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -25,7 +27,7 @@
     "@supabase/supabase-js": "^2.45.4",
     "@tailwindcss/typography": "^0.5.15",
     "@tanstack/react-query": "^5.56.2",
-    "ai": "^3.3.37",
+    "ai": "^6.0.138",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",

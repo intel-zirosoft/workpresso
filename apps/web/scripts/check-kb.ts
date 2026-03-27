@@ -11,7 +11,6 @@ const supabase = createClient(
 
 async function checkDatabase() {
   console.log('🔍 DB 지식 데이터 정밀 진단 중...');
-
   try {
     // 1. 전체 데이터 개수 확인
     const { count, error: countError } = await supabase

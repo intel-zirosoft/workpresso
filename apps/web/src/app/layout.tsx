@@ -32,12 +32,12 @@ export default function RootLayout({
       <body className="font-body bg-background text-text antialiased">
         <Providers>
           <div className="flex min-h-screen relative overflow-x-hidden">
-            {/* Sidebar - Hidden on mobile, fixed width on desktop */}
+            {/* Sidebar - Desktop Only */}
             <div className="hidden md:block w-[260px] shrink-0 border-r border-background/50">
               <Sidebar />
             </div>
             
-            {/* Main Content Area - Full width on mobile, flexible on desktop */}
+            {/* Content Area */}
             <div className="flex-1 flex flex-col min-h-screen bg-background w-full">
               <Header />
               <main className="flex-1 overflow-y-auto w-full">
