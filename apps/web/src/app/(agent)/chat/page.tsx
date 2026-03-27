@@ -1,6 +1,7 @@
 "use client";
 
 import { useChat } from "ai/react";
+import { type Message } from "ai";
 import { Send, Bot, User, Loader2, Sparkles, Code, Gift, AlertTriangle, Clock, Shield, Coffee, Droplets } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
@@ -8,13 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useEffect, useRef, type ElementType } from "react";
-
-// 메시지 인터페이스 정의 (SDK 타입 에러 방지)
-interface ChatMessage {
-  id: string;
-  role: "user" | "assistant" | "system" | "data" | "tool";
-  content: string;
-}
 
 interface QuickCommand {
   label: string;
@@ -47,8 +41,9 @@ function CoffeeLoader() {
   );
 }
 
+
 export default function ChatPage() {
-  const { messages, input, setInput, handleInputChange, handleSubmit, isLoading } = useChat({
+  const { messages, input, append, handleInputChange, handleSubmit, isLoading } = useChat({
     api: "/api/chat",
   });
 
@@ -63,13 +58,20 @@ export default function ChatPage() {
     }
   }, [messages, isLoading]);
 
-  const handleQuickCommand = (value: string) => {
-    setInput(value);
+  const handleQuickCommand = async (value: string) => {
+    if (isLoading) return;
+    try {
+      await append({
+        role: "user",
+        content: value,
+      });
+    } catch (error) {
+      console.error("Append error:", error);
+    }
   };
 
   return (
     <div className="flex flex-col h-[calc(100vh-10rem)] md:h-[calc(100vh-12rem)] max-w-4xl mx-auto space-y-4 md:space-y-6">
-      {/* Header 섹션 */}
       <div className="flex items-center justify-between px-2">
         <div>
           <h1 className="text-2xl md:text-4xl font-headings font-bold text-primary tracking-tight">
@@ -84,7 +86,6 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* 메시지 영역 */}
       <Card className="flex-1 overflow-hidden border-none shadow-soft bg-surface/50 backdrop-blur-sm relative">
         <CardContent className="h-full p-0">
           <div 
@@ -123,7 +124,7 @@ export default function ChatPage() {
               </div>
             )}
             
-            {(messages as ChatMessage[]).map((m) => (
+            {messages.map((m: Message) => (
               <div
                 key={m.id}
                 className={cn(
@@ -170,7 +171,6 @@ export default function ChatPage() {
         </CardContent>
       </Card>
 
-      {/* 입력 영역 */}
       <div className="space-y-3">
         {messages.length > 0 && !isLoading && (
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide px-2">
