@@ -10,7 +10,7 @@ ALTER TABLE public.documents
     ADD COLUMN IF NOT EXISTS final_approved_at TIMESTAMP WITH TIME ZONE;
 
 CREATE TABLE IF NOT EXISTS public.document_approval_steps (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     document_id UUID NOT NULL REFERENCES public.documents(id) ON DELETE CASCADE,
     step_order INTEGER NOT NULL,
     step_label VARCHAR NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS public.document_approval_steps (
 );
 
 CREATE TABLE IF NOT EXISTS public.document_cc_recipients (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     document_id UUID NOT NULL REFERENCES public.documents(id) ON DELETE CASCADE,
     recipient_id UUID NOT NULL REFERENCES public.users(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),

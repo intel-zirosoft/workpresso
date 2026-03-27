@@ -32,7 +32,7 @@ $$ language 'plpgsql';
 
 -- [사용자 및 조직도]
 CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     name VARCHAR NOT NULL,
     department VARCHAR,
     status USER_STATUS DEFAULT 'OFFLINE',
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- [결재 문서 - Pod A]
 CREATE TABLE IF NOT EXISTS documents (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     author_id UUID REFERENCES users(id),
     title VARCHAR NOT NULL,
     content TEXT,
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS documents (
 );
 
 CREATE TABLE IF NOT EXISTS document_approval_steps (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
     step_order INTEGER NOT NULL,
     step_label VARCHAR NOT NULL,
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS document_approval_steps (
 );
 
 CREATE TABLE IF NOT EXISTS document_cc_recipients (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
     recipient_id UUID NOT NULL REFERENCES users(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS document_cc_recipients (
 
 -- [업무 일정 - Pod B]
 CREATE TABLE IF NOT EXISTS schedules (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     user_id UUID REFERENCES users(id),
     title VARCHAR NOT NULL,
     start_time TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS schedules (
 
 -- [회의록 - Pod D]
 CREATE TABLE IF NOT EXISTS meeting_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     owner_id UUID REFERENCES users(id),
     audio_url VARCHAR,
     stt_text TEXT,
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS meeting_logs (
 
 -- [지식 지도 - Pod C]
 CREATE TABLE IF NOT EXISTS knowledge_vectors (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     source_type SOURCE_TYPE NOT NULL,
     source_id UUID NOT NULL, 
     embedding VECTOR(1536), -- OpenAI text-embedding-3-small 등 대응
@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS knowledge_vectors (
 
 -- [익스텐션 스토어]
 CREATE TABLE IF NOT EXISTS workspace_extensions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     ext_name VARCHAR NOT NULL UNIQUE,
     is_active BOOLEAN DEFAULT false,
     config JSONB DEFAULT '{}'::jsonb,
