@@ -37,3 +37,12 @@
   - [UI 개선] **지난 날짜**: 두꺼운 다크 그레이 마커 스트로크(Rounded ends) 적용 완료
   - [UI 개선] **일정 표기**: 일요일 빨간색 처리 및 오늘 날짜 선명한 블루 강조 적용
   - [UI 개선] **상호작용**: 다른 달의 날짜 클릭 시 자동으로 해당 월로 화면 전환 기능 구현
+
+## 🧑‍💻 Part 4: 코드 리뷰 피드백 반영 및 시스템 고도화
+
+**목표:** 시니어 개발자의 코드 리뷰를 바탕으로 캘린더, 칸반, 문서 에디터의 코드 품질 및 성능 최적화
+
+- [x] **Calendar (Refactoring)**: `calendarRef`를 활용한 오늘 날짜 자동 스크롤 로직 최적화 (DOM 직접 접근 제거)
+- [x] **Kanban (Optimization)**: `useMemo` 기반 팀원 그룹화 로직 적용 및 `KanbanColumnId` 타입 안정성 강화
+- [x] **Document Editor (UI/UX)**: 하드코딩된 색상값 제거(Semantic Color 적용) 및 아이콘 매핑 로직 외부 분리
+- [x] **Common (Refactoring)**: 중복 클래스(`custom-scrollbar`) 및 유틸리티 점검 및 통합

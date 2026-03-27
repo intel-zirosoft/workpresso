@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, User, MoreHorizontal, UserCircle, Briefcase, MapPin, Calendar, Clock, Smile } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,8 @@ interface Teammate {
   status: UserStatus;
 }
 
+type KanbanColumnId = UserStatus | 'VACATION_HALF_DAY';
+
 const DEPARTMENT_COLORS: Record<string, string> = {
   '디자인': 'text-rose-500 bg-rose-50',
   '개발': 'text-blue-500 bg-blue-50',
@@ -21,7 +23,7 @@ const DEPARTMENT_COLORS: Record<string, string> = {
   '경영': 'text-emerald-500 bg-emerald-50',
 };
 
-const STATUS_COLUMNS: { id: string; label: string; color: string; dot: string }[] = [
+const STATUS_COLUMNS: { id: KanbanColumnId; label: string; color: string; dot: string }[] = [
   { id: 'ACTIVE', label: '업무 중', color: 'bg-primary/5', dot: 'bg-primary' },
   { id: 'MEETING', label: '회의 중', color: 'bg-amber-50', dot: 'bg-amber-400' },
   { id: 'REMOTE', label: '재택 근무', color: 'bg-blue-50', dot: 'bg-blue-400' },
@@ -58,6 +60,24 @@ export function StatusKanban() {
     },
   });
 
+  // 팀원들을 상태별로 그룹화 (성능 최적화: 유즈메모 활용)
+  const groupedTeammates = useMemo(() => {
+    const groups: Record<string, Teammate[]> = {};
+    STATUS_COLUMNS.forEach(col => {
+      groups[col.id] = [];
+    });
+
+    teammates.forEach(teammate => {
+      if (teammate.status === 'VACATION' || teammate.status === 'HALF_DAY') {
+        groups['VACATION_HALF_DAY']?.push(teammate);
+      } else if (groups[teammate.status]) {
+        groups[teammate.status].push(teammate);
+      }
+    });
+
+    return groups;
+  }, [teammates]);
+
   // 상태 업데이트
   const updateStatusMutation = useMutation({
     mutationFn: async ({ status }: { status: UserStatus }) => {
@@ -88,7 +108,7 @@ export function StatusKanban() {
     e.dataTransfer.dropEffect = "move";
   };
 
-  const handleDrop = (e: React.DragEvent, targetId: string) => {
+  const handleDrop = (e: React.DragEvent, targetId: KanbanColumnId) => {
     e.preventDefault();
     const teammateId = e.dataTransfer.getData("teammateId");
     if (teammateId === currentUser?.id) {
@@ -110,11 +130,7 @@ export function StatusKanban() {
   return (
     <div className="flex gap-4 h-full pb-2 overflow-x-auto custom-scrollbar">
       {STATUS_COLUMNS.map((column) => {
-        const columnTeammates = teammates.filter(t => 
-          column.id === 'VACATION_HALF_DAY' 
-            ? (t.status === 'VACATION' || t.status === 'HALF_DAY')
-            : t.status === column.id
-        );
+        const columnTeammates = groupedTeammates[column.id] || [];
         const isEmpty = columnTeammates.length === 0;
 
         return (

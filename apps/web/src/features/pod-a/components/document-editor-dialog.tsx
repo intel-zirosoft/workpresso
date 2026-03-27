@@ -59,6 +59,16 @@ import {
   type DocumentUser,
 } from "@/features/pod-a/services/document-schema";
 
+const TEMPLATE_ICONS: Record<string, any> = {
+  general: FileText,
+  expense: CreditCard,
+  project: Target,
+  purchase: ShoppingCart,
+  report: ClipboardCheck,
+  leave: Calendar,
+  skip: Plus,
+};
+
 type DocumentEditorDialogProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -247,7 +257,7 @@ export function DocumentEditorDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[calc(100vh-1rem)] max-h-[calc(100vh-1rem)] w-[calc(100vw-1rem)] max-w-7xl flex-row gap-0 overflow-hidden border-none bg-white p-0 shadow-2xl sm:h-[95vh]">
         {/* Left Sidebar */}
-        <aside className="w-[280px] bg-[#f8f9fc] border-r border-slate-100 flex flex-col p-8 shrink-0">
+        <aside className="w-[280px] bg-slate-50 border-r border-slate-100 flex flex-col p-8 shrink-0">
           <div className="mb-12">
             <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-primary mb-1">Steps</h2>
             <p className="text-[13px] text-slate-400 font-medium tracking-tight">Document Progress</p>
@@ -349,18 +359,7 @@ export function DocumentEditorDialog({
                   <div className="grid gap-8 xl:grid-cols-2">
                     {documentTemplateOptions.map((template) => {
                       const isSelected = selectedTemplateId === template.id;
-                      const TemplateIcon = (() => {
-                        switch (template.id) {
-                          case "general": return FileText;
-                          case "expense": return CreditCard;
-                          case "project": return Target;
-                          case "purchase": return ShoppingCart;
-                          case "report": return ClipboardCheck;
-                          case "leave": return Calendar;
-                          case "skip": return Plus;
-                          default: return FileText;
-                        }
-                      })();
+                      const TemplateIcon = TEMPLATE_ICONS[template.id] || FileText;
 
                       return (
                         <button

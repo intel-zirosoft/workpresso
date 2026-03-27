@@ -212,24 +212,22 @@ export function CalendarView({
   };
 
   // [요청 사항] 금일 날짜를 기준으로 가로 스크롤 맞춤
-  useEffect(() => {
-    if (isLoading || variant !== "full") return;
+  const scrollToToday = () => {
+    if (variant !== "full") return;
+    
+    // querySelector 대신 calendarRef.current를 통해 범위를 좁혀 안전하게 접근합니다.
+    const calendarEl = (calendarRef.current as any)?.el;
+    if (!calendarEl) return;
 
-    const timer = setTimeout(() => {
-      const todayCell = document.querySelector(".fc-day-today");
-      const calendarContainer = todayCell?.closest(".fc-view-harness");
-      
-      if (todayCell && calendarContainer) {
-        todayCell.scrollIntoView({ 
-          behavior: "smooth", 
-          block: "nearest", 
-          inline: "center" 
-        });
-      }
-    }, 500); // 캘린더 렌더링 대기
-
-    return () => clearTimeout(timer);
-  }, [isLoading, variant]);
+    const todayCell = calendarEl.querySelector(".fc-day-today");
+    if (todayCell) {
+      todayCell.scrollIntoView({ 
+        behavior: "smooth", 
+        block: "nearest", 
+        inline: "center" 
+      });
+    }
+  };
 
   // [Full Variant] 대형 달력 렌더링
   if (variant === "full") {
@@ -248,6 +246,11 @@ export function CalendarView({
             }}
             events={calendarEvents}
             dateClick={handleDateClick}
+            datesSet={() => {
+              // 렌더링이 완료된 시점에 스크롤을 시도합니다.
+              // 약간의 지연(v-sync)을 주어 DOM 렌더링 완료를 보장할 수 있습니다.
+              requestAnimationFrame(scrollToToday);
+            }}
             eventClick={(info) => {
               const schedule = schedules.find((s) => s.id === info.event.id);
               if (schedule)
