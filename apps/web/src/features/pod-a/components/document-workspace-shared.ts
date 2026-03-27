@@ -16,6 +16,7 @@ export type DocumentTemplateId =
   | "project"
   | "purchase"
   | "report"
+  | "leave"
   | "skip";
 
 export type DocumentTemplateOption = {
@@ -228,9 +229,30 @@ export const documentTemplateOptions: DocumentTemplateOption[] = [
 - 확인 및 승인 요청:  `,
   },
   {
+    id: "leave",
+    label: "연차/휴가 신청서",
+    summary: "휴가 종류를 선택하고 기간 및 사유를 작성하여 신청합니다.",
+    title: "연차/휴가 신청",
+    content: `## 휴가 정보
+- **휴가 종류:** 연차 / 오전반차 / 오후반차 / 병가 / 기타 ( )
+- **신청 기간:** 2026-00-00 ~ 2026-00-00
+- **총 일수:** 0일
+
+---
+
+## 신청 사유
+- 사유: 개인 사정 및 가사로 인한 휴가 신청
+
+---
+
+## 비상 연락망
+- 연락처: 010-0000-0000
+- 대리 업무 담당자: `,
+  },
+  {
     id: "skip",
-    label: "건너뛰기",
-    summary: "빈 문서부터 직접 작성합니다.",
+    label: "새 양식 만들기",
+    summary: "템플릿 없이 빈 문서에서 자유롭게 업무를 시작하세요.",
     title: "",
     content: "",
   },
