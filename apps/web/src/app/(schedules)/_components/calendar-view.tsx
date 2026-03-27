@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { format, isSameDay, parse, isBefore, startOfDay } from "date-fns";
 import { ko } from "date-fns/locale";
 import { Plus, Clock, Trash2, Loader2, Pencil, Users } from "lucide-react";
@@ -211,11 +211,31 @@ export function CalendarView({
     );
   };
 
+  // [요청 사항] 금일 날짜를 기준으로 가로 스크롤 맞춤
+  useEffect(() => {
+    if (isLoading || variant !== "full") return;
+
+    const timer = setTimeout(() => {
+      const todayCell = document.querySelector(".fc-day-today");
+      const calendarContainer = todayCell?.closest(".fc-view-harness");
+      
+      if (todayCell && calendarContainer) {
+        todayCell.scrollIntoView({ 
+          behavior: "smooth", 
+          block: "nearest", 
+          inline: "center" 
+        });
+      }
+    }, 500); // 캘린더 렌더링 대기
+
+    return () => clearTimeout(timer);
+  }, [isLoading, variant]);
+
   // [Full Variant] 대형 달력 렌더링
   if (variant === "full") {
     return (
       <div className="flex flex-col gap-6 h-[calc(100vh-14rem)] min-h-[600px]">
-        <div className="flex-1 bg-surface rounded-3xl p-6 shadow-soft border border-background/50 overflow-hidden">
+      <div className="flex-1 bg-surface rounded-3xl p-6 shadow-soft border border-background/50 overflow-x-auto custom-scrollbar min-w-0">
           <FullCalendar
             ref={calendarRef}
             plugins={[dayGridPlugin, interactionPlugin]}
