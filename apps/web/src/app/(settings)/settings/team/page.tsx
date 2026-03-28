@@ -1,4 +1,5 @@
 import { getUserProfile, getAllUsers } from '@/features/settings/services/userAction';
+import { getAllTeams } from '@/features/settings/services/teamAction';
 import { redirect } from 'next/navigation';
 import { MemberManagement } from '@/features/settings/components/MemberManagement';
 
@@ -10,8 +11,11 @@ export default async function TeamSettingsPage() {
     redirect('/settings/profile');
   }
 
-  // Fetch all users for management
-  const users = await getAllUsers();
+  // Fetch all users and teams for management
+  const [users, teams] = await Promise.all([
+    getAllUsers(),
+    getAllTeams()
+  ]);
 
   return (
     <div className="animate-in fade-in duration-700">
@@ -23,7 +27,8 @@ export default async function TeamSettingsPage() {
       </div>
 
       <MemberManagement 
-        users={users} 
+        users={users as any} 
+        teams={teams}
         currentUserId={profile.id} 
       />
     </div>

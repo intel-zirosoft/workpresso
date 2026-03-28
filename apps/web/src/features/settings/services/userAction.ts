@@ -47,7 +47,8 @@ export async function getAllUsers() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('users')
-    .select('*');
+    .select('*, teams(name)')
+    .is('deleted_at', null);
 
   if (error) throw new Error(error.message);
   return data;
@@ -70,7 +71,7 @@ export async function updateUserRoleAndTeam(targetUserId: string, role: string, 
   if (error) throw new Error(error.message);
   return data;
 }
-export async function inviteNewMember(email: string, name: string, department: string, role: string) {
+export async function inviteNewMember(email: string, name: string, role: string, team_id?: string, department?: string) {
   const profile = await getUserProfile();
   if (profile.role !== 'SUPER_ADMIN' && profile.role !== 'ORG_ADMIN') {
     throw new Error('Forbidden: Only admins can invite members');
@@ -78,22 +79,21 @@ export async function inviteNewMember(email: string, name: string, department: s
 
   const adminClient = createAdminClient();
   
-  // 1. Supabase Auth에 사용자 초대 (임시 비번 또는 매직링크는 Supabase 설정에 따름)
+  // 1. Supabase Auth에 사용자 초대
   const { data: authData, error: authError } = await adminClient.auth.admin.inviteUserByEmail(email, {
-    data: { name, department, role } // Metadata
+    data: { name, role, team_id } // Metadata
   });
 
   if (authError) throw new Error(authError.message);
 
-  // 2. public.users 테이블에 프로필 생성 (Auth 트리거가 없는 경우 직접 생성)
-  // 대부분의 Supabase 설정에서는 Auth 생성 시 트리거로 public.users에 인서트하도록 되어 있으나, 
-  // 여기서는 명시적으로 보장하기 위해 upsert를 고려할 수 있습니다.
+  // 2. public.users 테이블에 프로필 생성
   const { data, error } = await adminClient
     .from('users')
     .upsert({ 
       id: authData.user.id,
       name,
-      department,
+      department: department || '', // 하위 호환성 유지
+      team_id: team_id || null,
       role,
       updated_at: new Date().toISOString()
     })
@@ -106,7 +106,7 @@ export async function inviteNewMember(email: string, name: string, department: s
   return data;
 }
 
-export async function adminUpdateUserProfile(targetUserId: string, updates: { name?: string, department?: string, role?: string }) {
+export async function adminUpdateUserProfile(targetUserId: string, updates: { name?: string, department?: string, role?: string, team_id?: string | null }) {
   const profile = await getUserProfile();
   if (profile.role !== 'SUPER_ADMIN' && profile.role !== 'ORG_ADMIN') {
     throw new Error('Forbidden');

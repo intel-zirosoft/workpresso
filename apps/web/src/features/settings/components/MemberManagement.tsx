@@ -21,7 +21,8 @@ import {
   RefreshCw,
   Building2,
   Trash2,
-  Pencil
+  Pencil,
+  Tag
 } from 'lucide-react';
 import { 
   DropdownMenu, 
@@ -43,21 +44,29 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
+interface Team {
+  id: string;
+  name: string;
+}
+
 interface User {
   id: string;
   name: string;
   email?: string;
   role: string;
   department?: string;
+  team_id?: string | null;
   avatar_url?: string;
+  teams?: { name: string } | null;
 }
 
 interface MemberManagementProps {
   users: User[];
   currentUserId: string;
+  teams: Team[];
 }
 
-export function MemberManagement({ users, currentUserId }: MemberManagementProps) {
+export function MemberManagement({ users, currentUserId, teams }: MemberManagementProps) {
   const [updating, setUpdating] = useState<string | null>(null);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -71,12 +80,15 @@ export function MemberManagement({ users, currentUserId }: MemberManagementProps
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
     const name = formData.get('name') as string;
-    const department = formData.get('department') as string;
+    const team_id = formData.get('team_id') as string;
     const role = formData.get('role') as string;
+
+    const selectedTeam = teams.find(t => t.id === team_id);
+    const departmentStr = selectedTeam?.name || '';
 
     try {
       setUpdating('inviting');
-      await inviteNewMember(email, name, department, role);
+      await inviteNewMember(email, name, role, team_id || undefined, departmentStr);
       setIsInviteOpen(false);
       router.refresh();
     } catch (error) {
@@ -90,9 +102,13 @@ export function MemberManagement({ users, currentUserId }: MemberManagementProps
     e.preventDefault();
     if (!selectedUser) return;
     const formData = new FormData(e.currentTarget);
+    const team_id = formData.get('team_id') as string;
+    const selectedTeam = teams.find(t => t.id === team_id);
+
     const updates = {
       name: formData.get('name') as string,
-      department: formData.get('department') as string,
+      team_id: team_id || null,
+      department: selectedTeam?.name || '',
       role: formData.get('role') as string,
     };
 
@@ -175,18 +191,19 @@ export function MemberManagement({ users, currentUserId }: MemberManagementProps
                   <span className="text-[10px] bg-primary text-white px-2 py-0.5 rounded-full font-bold shadow-sm">나</span>
                 )}
               </div>
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-2 mt-1">
                 <div className="flex items-center gap-1.5 text-xs text-muted font-medium">
                   <Mail className="w-3.5 h-3.5 text-primary/40" />
                   <span className="truncate">{user.email || '이메일 정보 없음'}</span>
                 </div>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center flex-wrap gap-2">
                   <UserRoleBadge role={user.role} />
-                  {user.department && (
-                    <span className="text-[11px] text-muted-foreground font-bold px-3 py-0.5 bg-background rounded-full border border-primary/5">
-                      {user.department}
+                  <div className="flex items-center gap-1.5 px-3 py-0.5 bg-background rounded-full border border-primary/5 shadow-sm text-primary">
+                    <Building2 className="w-3 h-3 text-primary/60" />
+                    <span className="text-[11px] font-bold">
+                      {user.teams?.name || user.department || '미지정'}
                     </span>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -266,35 +283,46 @@ export function MemberManagement({ users, currentUserId }: MemberManagementProps
           <form onSubmit={handleInvite} className="space-y-6 pt-4">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-xs font-bold text-muted px-4 uppercase tracking-wider">이메일 주소</Label>
+                <Label htmlFor="invite-email" className="text-[11px] font-black text-muted px-4 uppercase tracking-widest">이메일 주소</Label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted/50" />
-                  <Input id="email" name="email" type="email" required className="rounded-pill bg-background/50 border-transparent h-12 pl-12 focus:bg-white" placeholder="work@example.com" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted/30" />
+                  <Input id="invite-email" name="email" type="email" required className="rounded-pill bg-background/50 border-transparent h-12 pl-12 focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all" placeholder="work@example.com" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-xs font-bold text-muted px-4 uppercase tracking-wider">성명</Label>
-                  <Input id="name" name="name" required className="rounded-pill bg-background/50 border-transparent h-12 px-5 focus:bg-white" placeholder="홍길동" />
+                  <Label htmlFor="invite-name" className="text-[11px] font-black text-muted px-4 uppercase tracking-widest">성명</Label>
+                  <Input id="invite-name" name="name" required className="rounded-pill bg-background/50 border-transparent h-12 px-5 focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all font-bold" placeholder="홍길동" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="department" className="text-xs font-bold text-muted px-4 uppercase tracking-wider">부서</Label>
-                  <Input id="department" name="department" className="rounded-pill bg-background/50 border-transparent h-12 px-5 focus:bg-white" placeholder="기획팀" />
+                  <Label htmlFor="invite-team" className="text-[11px] font-black text-muted px-4 uppercase tracking-widest">소속 팀(부서)</Label>
+                  <div className="relative group">
+                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted/30 group-focus-within:text-primary transition-colors pointer-events-none" />
+                    <select id="invite-team" name="team_id" className="w-full rounded-pill bg-background/50 border-transparent h-12 pl-11 pr-5 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all outline-none appearance-none">
+                      <option value="">소속팀 선택</option>
+                      {teams.map(team => (
+                        <option key={team.id} value={team.id}>{team.name}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="role" className="text-xs font-bold text-muted px-4 uppercase tracking-wider">부여할 권한</Label>
-                <select id="role" name="role" className="w-full rounded-pill bg-background/50 border-transparent h-12 px-6 text-sm font-bold focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all outline-none appearance-none">
-                  <option value="USER">일반 사용자</option>
-                  <option value="TEAM_ADMIN">팀 관리자</option>
-                  <option value="ORG_ADMIN">조직 관리자</option>
-                  <option value="SUPER_ADMIN">최고 관리자</option>
-                </select>
+                <Label htmlFor="invite-role" className="text-[11px] font-black text-muted px-4 uppercase tracking-widest">부여할 글로벌 권한</Label>
+                <div className="relative group">
+                  <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted/30 group-focus-within:text-primary transition-colors pointer-events-none" />
+                  <select id="invite-role" name="role" className="w-full rounded-pill bg-background/50 border-transparent h-12 pl-11 pr-5 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all outline-none appearance-none">
+                    <option value="USER">일반 사용자 (USER)</option>
+                    <option value="TEAM_ADMIN">팀 관리자 (TEAM_ADMIN)</option>
+                    <option value="ORG_ADMIN">조직 관리자 (ORG_ADMIN)</option>
+                    <option value="SUPER_ADMIN">최고 관리자 (SUPER_ADMIN)</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            <DialogFooter className="sm:justify-center">
-              <Button type="submit" disabled={!!updating} className="rounded-pill w-full h-12 bg-primary font-bold shadow-soft hover:shadow-md transition-all">
+            <DialogFooter className="sm:justify-center pt-2">
+              <Button type="submit" disabled={!!updating} className="rounded-pill w-full h-12 bg-primary font-bold shadow-soft hover:shadow-md transition-all active:scale-95">
                 {updating === 'inviting' ? <RefreshCw className="w-5 h-5 animate-spin" /> : '초대장 발송하기'}
               </Button>
             </DialogFooter>
@@ -302,44 +330,53 @@ export function MemberManagement({ users, currentUserId }: MemberManagementProps
         </DialogContent>
       </Dialog>
 
-      {/* Edit/Delete Modal */}
+      {/* Edit Modal */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="rounded-[32px] sm:max-w-md p-8 bg-white shadow-2xl border-background/50">
+        <DialogContent className="rounded-[32px] sm:max-w-md p-8 bg-white shadow-2xl border-background/50 animate-in zoom-in-95 duration-300">
           <DialogHeader className="space-y-3">
             <div className="bg-primary/5 w-12 h-12 rounded-2xl flex items-center justify-center mb-1">
               <Pencil className="w-6 h-6 text-primary" />
             </div>
-            <DialogTitle className="text-2xl font-headings font-bold text-text">멤버 정보 수정</DialogTitle>
+            <DialogTitle className="text-2xl font-headings font-bold text-text tracking-tight">멤버 프로필 수정</DialogTitle>
             <DialogDescription className="text-sm font-body font-medium text-muted">
-              {selectedUser?.name}님의 조직 프로필과 권한을 관리합니다.
+              {selectedUser?.name}님의 조직 내 역할과 배치 팀을 관리합니다.
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleEdit} className="space-y-6 pt-4">
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-name" className="text-xs font-bold text-muted px-4 uppercase tracking-wider">성명</Label>
-                  <Input id="edit-name" name="name" defaultValue={selectedUser?.name} required className="rounded-pill bg-background/50 border-transparent h-12 px-5 focus:bg-white" />
+                  <Label htmlFor="edit-name" className="text-[11px] font-black text-muted px-4 uppercase tracking-widest">성명</Label>
+                  <Input id="edit-name" name="name" defaultValue={selectedUser?.name} required className="rounded-pill bg-background/50 border-transparent h-12 px-5 focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all font-bold" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-department" className="text-xs font-bold text-muted px-4 uppercase tracking-wider">부서</Label>
-                  <Input id="edit-department" name="department" defaultValue={selectedUser?.department} className="rounded-pill bg-background/50 border-transparent h-12 px-5 focus:bg-white" />
+                  <Label htmlFor="edit-team" className="text-[11px] font-black text-muted px-4 uppercase tracking-widest">배치할 팀(부서)</Label>
+                  <div className="relative group">
+                    <select id="edit-team" name="team_id" defaultValue={selectedUser?.team_id || ''} className="w-full rounded-pill bg-background/50 border-transparent h-12 px-5 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-primary/10 outline-none transition-all appearance-none">
+                      <option value="">미지정</option>
+                      {teams.map(team => (
+                        <option key={team.id} value={team.id}>{team.name}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-role" className="text-xs font-bold text-muted px-4 uppercase tracking-wider">부여할 권한</Label>
-                <select id="edit-role" name="role" defaultValue={selectedUser?.role} className="w-full rounded-pill bg-background/50 border-transparent h-12 px-6 text-sm font-bold focus:bg-white focus:ring-2 focus:ring-primary/10 outline-none transition-all">
-                  <option value="USER">일반 사용자</option>
-                  <option value="TEAM_ADMIN">팀 관리자</option>
-                  <option value="ORG_ADMIN">조직 관리자</option>
-                  <option value="SUPER_ADMIN">최고 관리자</option>
-                </select>
+                <Label htmlFor="edit-role" className="text-[11px] font-black text-muted px-4 uppercase tracking-widest">글로벌 권한 설정</Label>
+                <div className="relative group">
+                  <select id="edit-role" name="role" defaultValue={selectedUser?.role} className="w-full rounded-pill bg-background/50 border-transparent h-12 px-6 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-primary/10 outline-none transition-all appearance-none">
+                    <option value="USER">일반 사용자</option>
+                    <option value="TEAM_ADMIN">팀 관리자</option>
+                    <option value="ORG_ADMIN">조직 관리자</option>
+                    <option value="SUPER_ADMIN">최고 관리자</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 pt-6">
-              <Button type="submit" disabled={!!updating} className="rounded-pill w-full h-12 bg-primary font-bold shadow-soft hover:shadow-md">
+            <div className="flex flex-col gap-3 pt-6 border-t border-background mt-4">
+              <Button type="submit" disabled={!!updating} className="rounded-pill w-full h-12 bg-primary font-bold shadow-soft hover:shadow-md transition-all active:scale-95">
                 {updating === selectedUser?.id ? <RefreshCw className="w-5 h-5 animate-spin" /> : '수정 사항 저장'}
               </Button>
               <Button 
@@ -370,4 +407,3 @@ export function MemberManagement({ users, currentUserId }: MemberManagementProps
     </div>
   );
 }
-
