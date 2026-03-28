@@ -1,23 +1,32 @@
-import { getUserProfile } from '@/features/settings/services/userAction';
+import { getUserProfile, getAllUsers } from '@/features/settings/services/userAction';
 import { redirect } from 'next/navigation';
+import { MemberManagement } from '@/features/settings/components/MemberManagement';
 
 export default async function TeamSettingsPage() {
   const profile = await getUserProfile();
   
-  if (profile.role !== 'SUPER_ADMIN' && profile.role !== 'ORG_ADMIN' && profile.role !== 'TEAM_ADMIN') {
+  // Strict check for administrative roles
+  if (profile.role !== 'SUPER_ADMIN' && profile.role !== 'ORG_ADMIN') {
     redirect('/settings/profile');
   }
 
+  // Fetch all users for management
+  const users = await getAllUsers();
+
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-headings font-bold text-foreground">내 팀 관리</h1>
-        <p className="text-sm text-muted-foreground mt-1">소속 팀의 정보를 관리합니다.</p>
+    <div className="animate-in fade-in duration-700">
+      <div className="mb-8">
+        <h1 className="text-3xl font-headings font-bold text-text">내 팀 관리</h1>
+        <p className="text-sm text-muted mt-1 font-body">
+          조직의 구성원을 확인하고 역할과 부서를 관리합니다.
+        </p>
       </div>
 
-      <div className="p-8 text-center text-muted-foreground bg-primary/5 rounded-2xl border border-dashed border-primary/20">
-        <p>팀원 관리 기능은 구현 준비 중입니다.</p>
-      </div>
+      <MemberManagement 
+        users={users} 
+        currentUserId={profile.id} 
+      />
     </div>
   );
 }
+

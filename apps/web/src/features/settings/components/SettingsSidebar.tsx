@@ -23,9 +23,9 @@ export function SettingsSidebar({ userRole }: SettingsSidebarProps) {
   const filteredItems = navItems.filter(item => item.allowedRoles.includes(userRole));
 
   return (
-    <nav className="flex flex-col gap-2 w-64 min-h-[calc(100vh-4rem)] p-6 bg-background border-r">
-      <h2 className="text-xl font-headings font-bold text-foreground mb-6">설정</h2>
-      <div className="flex flex-col gap-1">
+    <nav className="flex flex-col gap-2 w-64 min-h-[calc(100vh-4rem)] p-6 bg-background border-r border-background/50">
+      <h2 className="text-xl font-headings font-bold text-text tracking-tight mb-8 px-2">설정</h2>
+      <div className="flex flex-col gap-2">
         {filteredItems.map(item => {
           const isActive = pathname.startsWith(item.href);
           const Icon = item.icon;
@@ -34,14 +34,19 @@ export function SettingsSidebar({ userRole }: SettingsSidebarProps) {
               key={item.name}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 font-body text-sm font-medium",
+                "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 font-headings text-sm font-bold group",
                 isActive 
-                  ? "bg-primary text-primary-foreground shadow-sm" 
-                  : "text-muted-foreground hover:bg-primary/10 hover:text-foreground"
+                  ? "bg-primary text-primary-foreground shadow-md translate-x-1" 
+                  : "text-muted hover:bg-primary/5 hover:text-primary hover:translate-x-1"
               )}
             >
-              <Icon className="w-4 h-4" />
-              {item.name}
+              <div className={cn(
+                "p-1.5 rounded-lg transition-colors duration-300",
+                isActive ? "bg-white/20" : "bg-primary/5 group-hover:bg-primary/10 text-primary"
+              )}>
+                <Icon className={cn("w-4 h-4", isActive ? "text-primary-foreground" : "text-primary")} />
+              </div>
+              <span className="flex-1">{item.name}</span>
             </Link>
           );
         })}
