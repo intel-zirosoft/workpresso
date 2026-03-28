@@ -59,5 +59,5 @@ export async function POST() {
   } catch (error: any) {
     console.error('Sync Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+  } 
 }
