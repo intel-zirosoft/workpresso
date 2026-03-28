@@ -137,7 +137,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
   };
 
   return (
-    <Card className="p-8 bg-surface shadow-soft border-none rounded-md flex flex-col gap-8 max-w-4xl mx-auto">
+    <Card className="p-10 bg-white shadow-soft border border-background/50 rounded-3xl flex flex-col gap-10 max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-muted text-sm font-body">
@@ -151,7 +151,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
                   variant="outline"
                   size="sm"
                   onClick={() => setIsEditing(true)}
-                  className="rounded-full gap-2 text-xs border-primary/20 hover:bg-primary/5"
+                  className="rounded-pill gap-2 text-xs border-primary/20 hover:bg-primary/5 h-9 px-4 h-9 font-bold"
                 >
                   <Edit2 className="w-3.5 h-3.5" /> 수정하기
                 </Button>
@@ -159,7 +159,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
                   variant="outline"
                   size="sm"
                   onClick={handleDownload}
-                  className="rounded-full gap-2 text-xs border-primary/20 hover:bg-primary/5"
+                  className="rounded-pill gap-2 text-xs border-primary/20 hover:bg-primary/5 h-9 px-4 h-9 font-bold"
                 >
                   <FileDown className="w-3.5 h-3.5" /> 다운로드 (Markdown)
                 </Button>
@@ -170,7 +170,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
                   variant="ghost"
                   size="sm"
                   onClick={handleCancel}
-                  className="rounded-full gap-2 text-xs text-muted"
+                  className="rounded-pill gap-2 text-xs text-muted h-9 px-4 font-bold"
                 >
                   <X className="w-3.5 h-3.5" /> 취소
                 </Button>
@@ -179,10 +179,10 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
                   size="sm"
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="rounded-full gap-2 text-xs bg-success hover:bg-success/90 text-white"
+                  className="rounded-pill gap-2 text-xs bg-success hover:bg-success/90 text-white h-9 px-6 shadow-md font-bold"
                 >
                   {isSaving ? (
-                    <span className="animate-spin">⏳</span>
+                    <span className="animate-spin text-sm">⏳</span>
                   ) : (
                     <Save className="w-3.5 h-3.5" />
                   )}{" "}
@@ -191,9 +191,9 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
               </>
             )}
             {log.is_refined && (
-              <Badge className="bg-success/10 text-success border-success/20 gap-1 px-3 py-1 rounded-full">
-                <CheckCircle2 className="w-3 h-3" /> AI 전환 완료
-              </Badge>
+                <Badge className="bg-success/10 text-success border-success/20 gap-1.5 px-4 py-1.5 rounded-pill shadow-sm">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> AI 전환 완료
+                </Badge>
             )}
           </div>
         </div>
@@ -227,7 +227,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
             <Users className="w-5 h-5 text-primary" />
             참여자
           </h3>
-          <div className="p-4 bg-background rounded-sm flex flex-wrap gap-2 min-h-[60px]">
+          <div className="p-6 bg-background/50 border border-background rounded-2xl flex flex-wrap gap-2 min-h-[70px] shadow-inner">
             {isEditing ? (
               <Input
                 value={editedLog.participants?.join(", ") || ""}
@@ -279,7 +279,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
               placeholder="회의 요약을 입력하세요"
             />
           ) : (
-            <div className="p-6 bg-primary/5 border border-primary/10 rounded-lg font-body leading-relaxed text-foreground">
+            <div className="p-8 bg-white/50 border border-background rounded-2xl font-body leading-relaxed text-foreground shadow-sm animate-in fade-in duration-700">
               {log.summary || (
                 <span className="text-muted italic">
                   AI 요약 결과가 없습니다. 정제 중이거나 분석에 실패했습니다.
@@ -301,7 +301,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
                 {(editedLog.action_items || []).map((item: any, i) => (
                   <div
                     key={i}
-                    className="flex flex-col gap-2 p-4 bg-background rounded-lg border border-primary/20 relative group/item"
+                    className="flex flex-col gap-2 p-5 bg-white rounded-2xl border border-background relative group/item shadow-sm hover:shadow-md transition-all slide-in-from-top-2 duration-300"
                   >
                     <Button
                       variant="ghost"
@@ -357,7 +357,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
                   variant="outline"
                   size="sm"
                   onClick={addActionItem}
-                  className="w-full border-dashed rounded-lg py-4 text-muted hover:text-primary hover:border-primary/50"
+                  className="w-full border-dashed rounded-2xl py-6 text-muted hover:text-primary hover:border-primary/50 bg-white/50 hover:bg-white transition-all font-bold shadow-sm"
                 >
                   <Plus className="w-4 h-4 mr-2" /> 액션 아이템 추가
                 </Button>
@@ -366,7 +366,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
               log.action_items.map((item: any, i) => (
                 <div
                   key={i}
-                  className="flex items-start gap-3 p-4 bg-background rounded-lg border border-border/50"
+                  className="flex items-start gap-4 p-5 bg-white rounded-2xl border border-background shadow-sm hover:shadow-md transition-all active:scale-[0.99]"
                 >
                   <div className="mt-1 w-4 h-4 rounded-full border-2 border-primary/30" />
                   <div className="flex-1">
@@ -397,10 +397,10 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
         {/* 원본 텍스트 */}
         <div className="flex flex-col gap-4 mt-4">
           <h3 className="text-lg font-headings font-semibold flex items-center gap-2 text-muted">
-            <FileText className="w-5 h-5" />
+            <FileText className="w-5 h-5 text-muted-foreground/60" />
             STT 원본 텍스트
           </h3>
-          <div className="p-6 bg-background/50 border border-muted/20 rounded-lg text-sm font-body leading-relaxed text-muted-foreground whitespace-pre-wrap max-h-[300px] overflow-y-auto">
+          <div className="p-8 bg-background/50 border border-background rounded-2xl text-sm font-body leading-relaxed text-muted-foreground whitespace-pre-wrap max-h-[350px] overflow-y-auto custom-scrollbar shadow-inner mt-2">
             {log.stt_text || "기록된 텍스트가 없습니다."}
           </div>
         </div>

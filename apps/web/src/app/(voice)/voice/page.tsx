@@ -1,19 +1,38 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Trash2, CheckSquare, Square, X, History, ArrowLeft, FileAudio, Mic2 } from 'lucide-react';
-import { listMeetingLogs, deleteMeetingLogs } from '@/features/pod-d/services/meetingLogService';
-import { MeetingLogDetail } from '@/features/pod-d/components/MeetingLogDetail';
-import { createClient } from '@/lib/supabase/client';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import React, { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Trash2,
+  CheckSquare,
+  Square,
+  X,
+  History,
+  ArrowLeft,
+  FileAudio,
+  Mic2,
+  RefreshCw,
+} from "lucide-react";
+import {
+  listMeetingLogs,
+  deleteMeetingLogs,
+} from "@/features/pod-d/services/meetingLogService";
+import { MeetingLogDetail } from "@/features/pod-d/components/MeetingLogDetail";
+import { createClient } from "@/lib/supabase/client";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
-const AudioRecorderDynamic = dynamic(() => import('@/features/pod-d/components/AudioRecorder').then(mod => mod.AudioRecorder), {
-  ssr: false,
-});
+const AudioRecorderDynamic = dynamic(
+  () =>
+    import("@/features/pod-d/components/AudioRecorder").then(
+      (mod) => mod.AudioRecorder,
+    ),
+  {
+    ssr: false,
+  },
+);
 
 export default function VoicePage() {
   const [logs, setLogs] = useState<any[]>([]);
@@ -25,20 +44,22 @@ export default function VoicePage() {
 
   const fetchLogs = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
-        window.location.href = '/login';
+        window.location.href = "/login";
         return;
       }
 
       const userId = user.id;
       const data = await listMeetingLogs(userId);
-      
+
       // Update logs list with real data
       setLogs(data);
     } catch (error) {
-      console.error('Failed to fetch logs:', error);
+      console.error("Failed to fetch logs:", error);
     } finally {
       setLoading(false);
     }
@@ -68,7 +89,7 @@ export default function VoicePage() {
     if (selectedIds.size === logs.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(logs.map(log => log.id)));
+      setSelectedIds(new Set(logs.map((log) => log.id)));
     }
   };
 
@@ -83,8 +104,8 @@ export default function VoicePage() {
       setIsDeleteMode(false);
       setSelectedIds(new Set());
     } catch (error) {
-      console.error('Failed to delete logs:', error);
-      alert('삭제 중 오류가 발생했습니다.');
+      console.error("Failed to delete logs:", error);
+      alert("삭제 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }
@@ -92,11 +113,11 @@ export default function VoicePage() {
 
   if (selectedLog) {
     return (
-      <div className="container mx-auto py-12 px-4 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <Button 
-          variant="ghost" 
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <Button
+          variant="ghost"
           onClick={() => setSelectedLog(null)}
-          className="rounded-full gap-2 mb-4 hover:bg-surface"
+          className="rounded-pill px-4 gap-2 mb-4 hover:bg-surface border border-transparent hover:border-background/50 transition-all font-headings font-bold text-sm"
         >
           <ArrowLeft className="w-4 h-4" /> 리스트로 돌아가기
         </Button>
@@ -106,40 +127,38 @@ export default function VoicePage() {
   }
 
   return (
-    <div className="container mx-auto py-12 px-4 space-y-8 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <div className="bg-primary/10 p-4 rounded-md">
-            <Mic2 className="w-8 h-8 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-headings font-bold text-foreground">회의 소통 (Voice)</h1>
-            <p className="text-muted font-body">음성을 녹음하고 AI를 통해 회의록으로 자동 변환하세요.</p>
-          </div>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <header className="space-y-4">
+        <div>
+          <h1 className="text-3xl font-headings font-bold tracking-tight text-text">
+            음성기반 회의록 작성
+          </h1>
+          <p className="text-muted font-headings font-medium mt-1">
+            음성을 녹음하고 AI를 통해 회의록으로 자동 변환하세요.
+          </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => window.open('/api/logs', '_blank')}
-          className="rounded-full text-muted hover:text-text gap-2"
-        >
-          기본 로그 확인
-        </Button>
-      </div>
+      </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
         {/* Recorder Section */}
         <section className="space-y-6 lg:sticky lg:top-24">
-          <div className="flex items-center gap-2 mb-2 px-2">
-            <Mic2 className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-headings font-bold">새 회의 시작하기</h2>
+          <div className="flex items-center gap-3 mb-4 px-2">
+            <div className="bg-primary/10 p-2 rounded-xl">
+              <Mic2 className="w-5 h-5 text-primary" />
+            </div>
+            <h2 className="text-xl font-headings font-bold text-text tracking-tight">
+              새 회의 시작하기
+            </h2>
           </div>
           <AudioRecorderDynamic onComplete={fetchLogs} />
-          
-          <div className="mt-8 p-6 border border-dashed border-background rounded-lg bg-surface/50 text-center">
-            <p className="text-sm text-muted font-body leading-relaxed">
-              회의를 시작하려면 위 버튼을 눌러주세요.<br />
-              변환된 데이터는 옆 히스토리에서 확인 가능합니다.
+
+          <div className="mt-8 p-8 bg-white/50 border border-background/50 rounded-3xl shadow-soft text-center animate-in fade-in slide-in-from-top-4 duration-700">
+            <p className="text-sm text-muted font-medium leading-relaxed">
+              회의를 시작하려면 위{" "}
+              <span className="text-primary font-bold">마이크 버튼</span>을
+              눌러주세요.
+              <br />
+              변환된 데이터는 자동으로 우측 히스토리에 저장됩니다.
             </p>
           </div>
         </section>
@@ -147,19 +166,46 @@ export default function VoicePage() {
         {/* List Section */}
         <section className="space-y-6">
           <div className="flex items-center justify-between mb-2 px-2">
-            <div className="flex items-center gap-2">
-              <History className="w-5 h-5 text-primary" />
-              <h2 className="text-xl font-headings font-bold">최근 회의 기록</h2>
+            <div className="flex items-center gap-3">
+              <div className="bg-primary/10 p-2 rounded-xl">
+                <History className="w-5 h-5 text-primary" />
+              </div>
+              <h2 className="text-xl font-headings font-bold text-text tracking-tight">
+                최근 회의 기록
+              </h2>
             </div>
             {!isDeleteMode ? (
               <div className="flex items-center gap-3">
-                <span className="text-sm text-muted">{logs.length}개의 기록</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="rounded-pill bg-white/50 hover:bg-white h-8 px-3 shadow-sm border border-background/50 text-muted font-bold text-xs"
+                  onClick={fetchLogs}
+                  disabled={loading}
+                >
+                  <RefreshCw
+                    className={cn("h-3 w-3 mr-1.5", loading && "animate-spin")}
+                  />
+                  동기화
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open("/api/logs", "_blank")}
+                  className="rounded-pill h-8 px-4 text-muted hover:text-text gap-1.5 shadow-soft hover:shadow-md transition-all text-xs font-bold"
+                >
+                  로그 확인
+                </Button>
+                <div className="w-px h-4 bg-background mx-1" />
+                <span className="text-sm text-muted">
+                  {logs.length}개의 기록
+                </span>
                 {logs.length > 0 && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={toggleDeleteMode}
-                    className="h-8 w-8 p-0 rounded-full hover:bg-destructive/10 hover:text-destructive"
+                    className="h-8 w-8 p-0 rounded-pill hover:bg-destructive/10 hover:text-destructive transition-all"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -167,14 +213,19 @@ export default function VoicePage() {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" onClick={handleSelectAll} className="h-8 text-xs rounded-full">
-                  {selectedIds.size === logs.length ? '전체 해제' : '전체 선택'}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSelectAll}
+                  className="h-8 text-xs rounded-pill px-3 font-bold"
+                >
+                  {selectedIds.size === logs.length ? "전체 해제" : "전체 선택"}
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={toggleDeleteMode} 
-                  className="h-8 w-8 p-0 rounded-full"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleDeleteMode}
+                  className="h-8 w-8 p-0 rounded-pill"
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -187,12 +238,12 @@ export default function VoicePage() {
               <span className="text-xs font-medium text-destructive">
                 {selectedIds.size}개 선택됨
               </span>
-              <Button 
-                size="sm" 
-                variant="destructive" 
+              <Button
+                size="sm"
+                variant="destructive"
                 disabled={selectedIds.size === 0}
                 onClick={handleBulkDelete}
-                className="h-8 px-4 rounded-full text-xs shadow-soft"
+                className="h-8 px-4 rounded-pill text-xs shadow-soft font-bold"
               >
                 선택 삭제 실행
               </Button>
@@ -201,15 +252,23 @@ export default function VoicePage() {
 
           <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
             {loading ? (
-              <p className="text-center py-12 text-muted animate-pulse font-body">데이터를 불러오는 중...</p>
+              <p className="text-center py-12 text-muted animate-pulse font-body">
+                데이터를 불러오는 중...
+              </p>
             ) : logs.length > 0 ? (
               logs.map((log) => (
-                <Card 
-                  key={log.id} 
-                  onClick={isDeleteMode ? (e) => toggleSelect(e, log.id) : () => setSelectedLog(log)}
+                <Card
+                  key={log.id}
+                  onClick={
+                    isDeleteMode
+                      ? (e) => toggleSelect(e, log.id)
+                      : () => setSelectedLog(log)
+                  }
                   className={cn(
-                    "p-5 bg-surface hover:bg-white transition-all cursor-pointer border-none shadow-soft flex items-center gap-4 group relative",
-                    isDeleteMode && selectedIds.has(log.id) && "ring-2 ring-primary/30 bg-white"
+                    "p-5 bg-white hover:bg-surface transition-all cursor-pointer border border-background shadow-soft flex items-center gap-4 group relative rounded-2xl hover:-translate-y-1 hover:shadow-md",
+                    isDeleteMode &&
+                      selectedIds.has(log.id) &&
+                      "ring-2 ring-primary/30 border-primary/20 shadow-md bg-white",
                   )}
                 >
                   {isDeleteMode && (
@@ -227,25 +286,44 @@ export default function VoicePage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-headings font-bold text-text truncate">
-                        {log.title || `${new Date(log.created_at).toLocaleDateString()} 회의 기록`}
+                        {log.title ||
+                          `${new Date(log.created_at).toLocaleDateString()} 회의 기록`}
                       </h4>
                       {log.is_refined && (
-                        <Badge variant="secondary" className="h-4 text-[10px] px-1.5 bg-success/10 text-success border-none">AI</Badge>
+                        <Badge
+                          variant="secondary"
+                          className="h-4 text-[10px] px-1.5 bg-success/10 text-success border-none"
+                        >
+                          AI
+                        </Badge>
                       )}
                     </div>
                     <p className="text-sm text-muted truncate font-body">
-                      {log.summary || log.stt_text || '변환된 텍스트가 없습니다.'}
+                      {log.summary ||
+                        log.stt_text ||
+                        "변환된 텍스트가 없습니다."}
                     </p>
                   </div>
                   <div className="text-xs text-muted font-body">
-                    {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(log.created_at).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </div>
                 </Card>
               ))
             ) : (
-              <div className="text-center py-20 bg-surface rounded-lg border border-dashed border-muted/30">
-                <p className="text-muted font-body">아직 기록된 회의가 없습니다.</p>
-              </div>
+              <Card className="p-12 text-center bg-white/50 border border-background/50 rounded-3xl shadow-soft animate-in zoom-in-95 duration-500">
+                <div className="mb-4 text-muted/30">
+                  <History className="w-12 h-12 mx-auto opacity-20" />
+                </div>
+                <p className="text-muted font-medium mb-1">
+                  아직 저장된 회의록이 없습니다.
+                </p>
+                <p className="text-xs text-muted/60 leading-relaxed px-8">
+                  회의를 시작하여 팀의 의견을 한곳에 모으세요.
+                </p>
+              </Card>
             )}
           </div>
         </section>
@@ -253,3 +331,4 @@ export default function VoicePage() {
     </div>
   );
 }
+
