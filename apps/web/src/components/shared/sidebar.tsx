@@ -10,14 +10,14 @@ import { User } from "@supabase/supabase-js";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const navItems = [
-  { name: "Home", href: "/", icon: Home },
-  { name: "Documents", href: "/documents", icon: FileText },
-  { name: "Work Assistant", href: "/chat", icon: Bot }, // Pod C: AI Agent
-  { name: "Chatter", href: "/chatter", icon: MessageSquare },
-  { name: "Teammates", href: "/teammates", icon: Users },
-  { name: "Canvas", href: "/canvas", icon: Layout },
-  { name: "Schedules", href: "/schedules", icon: Calendar },
-  { name: "Voice", href: "/voice", icon: Mic }, // Pod D: Meeting Logs
+  { name: "홈", href: "/", icon: Home },
+  { name: "문서", href: "/documents", icon: FileText },
+  { name: "업무 도우미", href: "/chat", icon: Bot }, // Pod C: AI Agent
+  { name: "채터", href: "/chatter", icon: MessageSquare },
+  { name: "팀원", href: "/teammates", icon: Users },
+  { name: "캔버스", href: "/canvas", icon: Layout },
+  { name: "일정", href: "/schedules", icon: Calendar },
+  { name: "음성", href: "/voice", icon: Mic }, // Pod D: Meeting Logs
 ];
 
 export function Sidebar() {
