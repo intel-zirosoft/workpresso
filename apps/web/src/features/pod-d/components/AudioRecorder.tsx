@@ -17,8 +17,8 @@ import { uploadAudio } from "../services/audioStorage";
 import {
   createMeetingLog,
   updateMeetingLogSTT,
-  refineMeetingLog,
 } from "../services/meetingLogService";
+import { refineMeetingLogServer } from "../services/meetingLogAction";
 import { transcribeAudio } from "../services/sttService";
 import { indexKnowledge } from "../../pod-c/services/knowledgeService";
 import { createClient } from "@/lib/supabase/client";
@@ -96,10 +96,10 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onComplete }) => {
         });
         await updateMeetingLogSTT(newLog.id, text);
 
-        // 4. AI Refinement
+        // 4. AI Refinement (Dynamic Config applied via Server Action)
         setProcessingStep("REFINING");
         try {
-          await refineMeetingLog(newLog.id, text);
+          await refineMeetingLogServer(newLog.id, text);
         } catch (refineError) {
           console.error("AI 변환 실패 (무시하고 진행):", refineError);
           // 변환이 실패하더라도 원본 STT는 저장되었으므로 진행합니다.
