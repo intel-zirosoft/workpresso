@@ -14,6 +14,9 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'source_type') THEN
         CREATE TYPE SOURCE_TYPE AS ENUM ('DOCUMENTS', 'MEETING_LOGS');
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+        CREATE TYPE USER_ROLE AS ENUM ('SUPER_ADMIN', 'ORG_ADMIN', 'TEAM_ADMIN', 'USER');
+    END IF;
 END $$;
 
 -- 3. updated_at 자동 갱신을 위한 함수 정의
@@ -27,11 +30,23 @@ $$ language 'plpgsql';
 
 -- 4. 테이블 생성
 
+-- [팀 조직 관리]
+CREATE TABLE IF NOT EXISTS teams (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    deleted_at TIMESTAMP WITH TIME ZONE
+);
+
 -- [사용자 및 조직도]
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR NOT NULL,
     department VARCHAR,
+    role USER_ROLE DEFAULT 'USER'::USER_ROLE,
+    team_id UUID REFERENCES teams(id),
     status USER_STATUS DEFAULT 'OFFLINE',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
