@@ -25,6 +25,9 @@ Thumbs.db
 
 # Custom
 /plan_docs
+*.txt
+*.tsbuildinfo
+next-env.d.ts
 
 # Supabase
 supabase/.temp/

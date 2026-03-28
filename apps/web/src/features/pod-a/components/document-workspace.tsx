@@ -1,109 +1,103 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  type ChangeEvent,
+  type FormEvent,
+  type KeyboardEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  CheckCheck,
-  FileText,
-  Inbox,
-  Loader2,
-  PencilLine,
-  Plus,
-  RefreshCw,
-  Send,
-  ShieldCheck,
-  XCircle,
-} from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { MarkdownContent } from "@/components/shared/markdown-content";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/client";
 import {
+  adjustHeadingSelection,
+  applyLinePrefix,
+  continueMarkdownBlockOnEnter,
+  indentSelectedLines,
+  outdentSelectedLines,
+  replaceSelection,
+  type TextChange,
+} from "@/features/pod-a/components/document-editor";
+import { DocumentDetailDialog } from "@/features/pod-a/components/document-detail-dialog";
+import { DocumentEditorDialog } from "@/features/pod-a/components/document-editor-dialog";
+import {
+  createEditorStateFromDocument,
+  createEmptyEditorState,
+  documentTemplateOptions,
+  type DocumentTemplateId,
+  type EditorStep,
+  type EditorState,
+  type StatusFilter,
+} from "@/features/pod-a/components/document-workspace-shared";
+import { DocumentWorkspaceShell } from "@/features/pod-a/components/document-workspace-shell";
+import {
+  actOnDocument,
   createDocument,
   DocumentApiError,
+  fetchDocument,
   fetchDocuments,
+  fetchDocumentUsers,
+  submitDocument,
   updateDocument,
-  updateDocumentStatus,
 } from "@/features/pod-a/services/document-api";
 import {
   DOCUMENT_CONTENT_MAX_LENGTH,
   DOCUMENT_TITLE_MAX_LENGTH,
-  type DocumentRecord,
-  type DocumentStatus,
+  type ApprovalStepInput,
+  type DocumentScope,
 } from "@/features/pod-a/services/document-schema";
 
-type EditorMode = "create" | "edit";
-type InboxFilter = "ALL" | DocumentStatus;
-
-const statusLabelMap: Record<DocumentStatus, string> = {
-  DRAFT: "초안",
-  PENDING: "결재 대기",
-  APPROVED: "승인 완료",
-  REJECTED: "반려",
+type EditorHistoryEntry = {
+  content: string;
+  selectionStart: number;
+  selectionEnd: number;
 };
 
-const statusBadgeClassMap: Record<DocumentStatus, string> = {
-  DRAFT: "bg-secondary/70 text-text",
-  PENDING: "bg-amber-100 text-amber-700",
-  APPROVED: "bg-emerald-100 text-emerald-700",
-  REJECTED: "bg-rose-100 text-rose-700",
-};
+const NORMAL_EDITOR_MIN_HEIGHT = 420;
+const EXPANDED_EDITOR_MIN_HEIGHT = 640;
 
-const inboxFilters: Array<{ value: InboxFilter; label: string }> = [
-  { value: "ALL", label: "전체" },
-  { value: "PENDING", label: "결재 대기" },
-  { value: "DRAFT", label: "초안" },
-  { value: "APPROVED", label: "승인" },
-  { value: "REJECTED", label: "반려" },
-];
-
-function getStatusActions(status: DocumentStatus) {
-  switch (status) {
-    case "DRAFT":
-      return [
-        { nextStatus: "PENDING" as const, label: "결재 요청", icon: Send },
-      ];
-    case "PENDING":
-      return [
-        { nextStatus: "APPROVED" as const, label: "승인", icon: CheckCheck },
-        { nextStatus: "REJECTED" as const, label: "반려", icon: XCircle },
-      ];
-    case "REJECTED":
-      return [
-        { nextStatus: "PENDING" as const, label: "재결재 요청", icon: Send },
-      ];
-    default:
-      return [];
+function getErrorMessage(error: unknown) {
+  if (error instanceof DocumentApiError) {
+    return error.message;
   }
-}
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("ko-KR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return null;
 }
 
 export function DocumentWorkspace() {
   const queryClient = useQueryClient();
-  const [authorId, setAuthorId] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const pendingSelectionRef = useRef<{ start: number; end: number } | null>(
+    null,
+  );
+  const historyRef = useRef<EditorHistoryEntry[]>([]);
+  const historyIndexRef = useRef(-1);
+
+  const [currentUserId, setCurrentUserId] = useState("");
   const [authMessage, setAuthMessage] = useState("");
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [editorMode, setEditorMode] = useState<EditorMode>("create");
-  const [inboxFilter, setInboxFilter] = useState<InboxFilter>("PENDING");
+  const [scope, setScope] = useState<DocumentScope>("authored");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
     null,
+  );
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editorDocumentId, setEditorDocumentId] = useState<string | null>(null);
+  const [editorStep, setEditorStep] = useState<EditorStep>("template");
+  const [selectedTemplateId, setSelectedTemplateId] =
+    useState<DocumentTemplateId>("skip");
+  const [isPreviewVisible, setIsPreviewVisible] = useState(false);
+  const [isExpandedContentView, setIsExpandedContentView] = useState(false);
+  const [editorState, setEditorState] = useState<EditorState>(
+    createEmptyEditorState(),
   );
 
   useEffect(() => {
@@ -126,7 +120,7 @@ export function DocumentWorkspace() {
         return;
       }
 
-      setAuthorId(user.id);
+      setCurrentUserId(user.id);
       setAuthMessage("");
       setIsAuthLoading(false);
     }
@@ -138,652 +132,869 @@ export function DocumentWorkspace() {
     };
   }, []);
 
+  const usersQuery = useQuery({
+    queryKey: ["document-users"],
+    queryFn: fetchDocumentUsers,
+    enabled: Boolean(currentUserId),
+  });
+
   const documentsQuery = useQuery({
-    queryKey: ["documents", authorId],
-    queryFn: () => fetchDocuments(),
-    enabled: Boolean(authorId),
+    queryKey: [
+      "documents",
+      scope,
+      statusFilter === "ALL" ? "ALL" : statusFilter,
+      currentUserId,
+    ],
+    queryFn: () =>
+      fetchDocuments({
+        scope,
+        status: statusFilter === "ALL" ? undefined : statusFilter,
+      }),
+    enabled: Boolean(currentUserId),
   });
 
-  const createDocumentMutation = useMutation({
-    mutationFn: createDocument,
-    onSuccess: (createdDocument) => {
-      queryClient.setQueryData<DocumentRecord[]>(
-        ["documents", authorId],
-        (currentDocuments = []) => [createdDocument, ...currentDocuments],
-      );
-      setSelectedDocumentId(createdDocument.id);
-      setTitle(createdDocument.title);
-      setContent(createdDocument.content);
-      setEditorMode("edit");
-    },
-  });
-
-  const updateDocumentMutation = useMutation({
-    mutationFn: ({
-      documentId,
-      nextTitle,
-      nextContent,
-    }: {
-      documentId: string;
-      nextTitle: string;
-      nextContent: string;
-    }) =>
-      updateDocument(documentId, { title: nextTitle, content: nextContent }),
-    onSuccess: (updatedDocument) => {
-      queryClient.setQueryData<DocumentRecord[]>(
-        ["documents", authorId],
-        (currentDocuments = []) =>
-          currentDocuments.map((document) =>
-            document.id === updatedDocument.id ? updatedDocument : document,
-          ),
-      );
-      setSelectedDocumentId(updatedDocument.id);
-      setTitle(updatedDocument.title);
-      setContent(updatedDocument.content);
-      setEditorMode("edit");
-    },
-  });
-
-  const updateDocumentStatusMutation = useMutation({
-    mutationFn: ({
-      documentId,
-      nextStatus,
-    }: {
-      documentId: string;
-      nextStatus: DocumentStatus;
-    }) => updateDocumentStatus(documentId, nextStatus),
-    onMutate: async ({ documentId, nextStatus }) => {
-      await queryClient.cancelQueries({ queryKey: ["documents", authorId] });
-
-      const previousDocuments =
-        queryClient.getQueryData<DocumentRecord[]>(["documents", authorId]) ??
-        [];
-
-      queryClient.setQueryData<DocumentRecord[]>(
-        ["documents", authorId],
-        previousDocuments.map((document) =>
-          document.id === documentId
-            ? {
-                ...document,
-                status: nextStatus,
-                updatedAt: new Date().toISOString(),
-              }
-            : document,
-        ),
-      );
-
-      return { previousDocuments };
-    },
-    onError: (_error, _variables, context) => {
-      if (!context) {
-        return;
-      }
-
-      queryClient.setQueryData(
-        ["documents", authorId],
-        context.previousDocuments,
-      );
-    },
-    onSuccess: (updatedDocument) => {
-      queryClient.setQueryData<DocumentRecord[]>(
-        ["documents", authorId],
-        (currentDocuments = []) =>
-          currentDocuments.map((document) =>
-            document.id === updatedDocument.id ? updatedDocument : document,
-          ),
-      );
-    },
-    onSettled: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["documents", authorId],
-      });
-    },
+  const selectedDocumentQuery = useQuery({
+    queryKey: ["document", selectedDocumentId],
+    queryFn: () => fetchDocument(selectedDocumentId as string),
+    enabled: Boolean(selectedDocumentId),
   });
 
   useEffect(() => {
-    if (selectedDocumentId || !documentsQuery.data?.length) {
+    if (selectedDocumentId || (documentsQuery.data?.length ?? 0) === 0) {
       return;
     }
 
-    startEditingDocument(documentsQuery.data[0]);
+    setSelectedDocumentId(documentsQuery.data?.[0]?.id ?? null);
   }, [documentsQuery.data, selectedDocumentId]);
 
-  const selectedDocument =
-    documentsQuery.data?.find(
-      (document) => document.id === selectedDocumentId,
-    ) ?? null;
-  const filteredDocuments =
-    inboxFilter === "ALL"
-      ? (documentsQuery.data ?? [])
-      : (documentsQuery.data ?? []).filter(
-          (document) => document.status === inboxFilter,
-        );
+  useEffect(() => {
+    if (!selectedDocumentId && isDetailOpen) {
+      setIsDetailOpen(false);
+    }
+  }, [isDetailOpen, selectedDocumentId]);
 
-  const isSubmitting =
-    createDocumentMutation.isPending || updateDocumentMutation.isPending;
+  const queryErrorMessage = useMemo(
+    () =>
+      getErrorMessage(documentsQuery.error) ??
+      getErrorMessage(selectedDocumentQuery.error) ??
+      getErrorMessage(usersQuery.error),
+    [documentsQuery.error, selectedDocumentQuery.error, usersQuery.error],
+  );
 
-  const submitError =
-    createDocumentMutation.error instanceof DocumentApiError
-      ? createDocumentMutation.error
-      : updateDocumentMutation.error instanceof DocumentApiError
-        ? updateDocumentMutation.error
-        : updateDocumentStatusMutation.error instanceof DocumentApiError
-          ? updateDocumentStatusMutation.error
-          : null;
+  function invalidateDocumentQueries(documentId?: string) {
+    void queryClient.invalidateQueries({
+      queryKey: ["documents"],
+    });
 
-  const canSubmit =
-    Boolean(authorId) &&
-    title.trim().length > 0 &&
-    title.trim().length <= DOCUMENT_TITLE_MAX_LENGTH &&
-    content.length <= DOCUMENT_CONTENT_MAX_LENGTH &&
-    !isSubmitting;
-
-  function resetEditor() {
-    setEditorMode("create");
-    setTitle("");
-    setContent("");
+    if (documentId) {
+      void queryClient.invalidateQueries({
+        queryKey: ["document", documentId],
+      });
+    }
   }
 
-  function startEditingDocument(document: DocumentRecord) {
-    setSelectedDocumentId(document.id);
-    setEditorMode("edit");
-    setTitle(document.title);
-    setContent(document.content);
+  function openDetail(documentId: string) {
+    setSelectedDocumentId(documentId);
+    setIsDetailOpen(true);
   }
 
-  function handleStatusChange(documentId: string, nextStatus: DocumentStatus) {
-    updateDocumentStatusMutation.mutate({ documentId, nextStatus });
+  function resetEditorHistory(
+    content: string,
+    selectionStart = 0,
+    selectionEnd = selectionStart,
+  ) {
+    historyRef.current = [
+      {
+        content,
+        selectionStart,
+        selectionEnd,
+      },
+    ];
+    historyIndexRef.current = 0;
   }
 
-  function handleSubmitDocument(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function openEditorForCreate() {
+    setScope("authored");
+    setStatusFilter("ALL");
+    setIsDetailOpen(false);
+    setEditorDocumentId(null);
+    setEditorStep("template");
+    setSelectedTemplateId("skip");
+    setIsPreviewVisible(false);
+    setIsExpandedContentView(false);
+    setEditorState(createEmptyEditorState());
+    resetEditorHistory("");
+    setIsEditorOpen(true);
+  }
 
-    if (!authorId) {
+  function openEditorForDocument(documentId: string) {
+    const document = selectedDocumentQuery.data;
+
+    if (
+      !document ||
+      document.id !== documentId ||
+      !document.permissions.canEdit
+    ) {
       return;
     }
 
-    if (editorMode === "edit" && selectedDocumentId) {
-      updateDocumentMutation.mutate({
-        documentId: selectedDocumentId,
-        nextTitle: title,
-        nextContent: content,
+    setEditorDocumentId(document.id);
+    setEditorStep("content");
+    setSelectedTemplateId("skip");
+    setIsPreviewVisible(false);
+    setIsExpandedContentView(false);
+    setEditorState(createEditorStateFromDocument(document));
+    resetEditorHistory(document.content);
+    setIsDetailOpen(false);
+    setIsEditorOpen(true);
+  }
+
+  function closeEditor(reopenDetail: boolean) {
+    setIsEditorOpen(false);
+    setEditorDocumentId(null);
+    setEditorStep("template");
+    setSelectedTemplateId("skip");
+    setIsPreviewVisible(false);
+    setIsExpandedContentView(false);
+
+    if (reopenDetail && selectedDocumentId) {
+      setIsDetailOpen(true);
+    }
+  }
+
+  const createMutation = useMutation({
+    mutationFn: createDocument,
+    onSuccess: (document) => {
+      queryClient.setQueryData(["document", document.id], document);
+      setScope("authored");
+      setSelectedDocumentId(document.id);
+      setIsEditorOpen(false);
+      setEditorDocumentId(null);
+      setIsDetailOpen(true);
+      invalidateDocumentQueries(document.id);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({
+      documentId,
+      payload,
+    }: {
+      documentId: string;
+      payload: {
+        title: string;
+        content: string;
+        approvalSteps: ApprovalStepInput[];
+        ccRecipientIds: string[];
+      };
+    }) => updateDocument(documentId, payload),
+    onSuccess: (document) => {
+      queryClient.setQueryData(["document", document.id], document);
+      setSelectedDocumentId(document.id);
+      setIsEditorOpen(false);
+      setEditorDocumentId(null);
+      setIsDetailOpen(true);
+      invalidateDocumentQueries(document.id);
+    },
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: submitDocument,
+    onSuccess: (document) => {
+      queryClient.setQueryData(["document", document.id], document);
+      setSelectedDocumentId(document.id);
+      setIsDetailOpen(true);
+      invalidateDocumentQueries(document.id);
+    },
+  });
+
+  const approvalMutation = useMutation({
+    mutationFn: ({
+      documentId,
+      action,
+      comment,
+    }: {
+      documentId: string;
+      action: "APPROVE" | "REJECT";
+      comment?: string;
+    }) => actOnDocument(documentId, { action, comment }),
+    onSuccess: (document) => {
+      queryClient.setQueryData(["document", document.id], document);
+      setSelectedDocumentId(document.id);
+      setIsDetailOpen(true);
+      invalidateDocumentQueries(document.id);
+    },
+  });
+
+  const isMutating =
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    submitMutation.isPending ||
+    approvalMutation.isPending;
+
+  const mutationErrorMessage =
+    getErrorMessage(createMutation.error) ??
+    getErrorMessage(updateMutation.error) ??
+    getErrorMessage(submitMutation.error) ??
+    getErrorMessage(approvalMutation.error);
+
+  const availableUsers = (usersQuery.data ?? []).filter(
+    (user) => user.id !== currentUserId,
+  );
+
+  const selectedDocument = selectedDocumentQuery.data ?? null;
+
+  const canSaveDraft =
+    Boolean(currentUserId) &&
+    editorState.title.trim().length > 0 &&
+    editorState.title.trim().length <= DOCUMENT_TITLE_MAX_LENGTH &&
+    editorState.content.length <= DOCUMENT_CONTENT_MAX_LENGTH &&
+    editorState.approvalSteps.length > 0 &&
+    editorState.approvalSteps.every(
+      (step) => step.stepLabel.trim().length > 0 && step.approverId,
+    ) &&
+    !isMutating;
+  const canProceedFromContentStep =
+    editorState.title.trim().length > 0 &&
+    editorState.title.trim().length <= DOCUMENT_TITLE_MAX_LENGTH &&
+    editorState.content.length <= DOCUMENT_CONTENT_MAX_LENGTH;
+
+  function updateEditorState<K extends keyof EditorState>(
+    key: K,
+    value: EditorState[K],
+  ) {
+    setEditorState((current) => ({
+      ...current,
+      [key]: value,
+    }));
+  }
+
+  function resizeEditorTextarea() {
+    const textarea = textareaRef.current;
+
+    if (!textarea) {
+      return;
+    }
+
+    const minHeight =
+      isExpandedContentView && editorStep === "content"
+        ? EXPANDED_EDITOR_MIN_HEIGHT
+        : NORMAL_EDITOR_MIN_HEIGHT;
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.max(textarea.scrollHeight, minHeight)}px`;
+  }
+
+  function scheduleTextareaSelection(start: number, end: number) {
+    pendingSelectionRef.current = { start, end };
+
+    requestAnimationFrame(() => {
+      const textarea = textareaRef.current;
+      const pendingSelection = pendingSelectionRef.current;
+
+      if (!textarea || !pendingSelection) {
+        return;
+      }
+
+      textarea.focus();
+      textarea.setSelectionRange(pendingSelection.start, pendingSelection.end);
+      pendingSelectionRef.current = null;
+      resizeEditorTextarea();
+    });
+  }
+
+  function pushEditorHistory(
+    content: string,
+    selectionStart: number,
+    selectionEnd: number,
+  ) {
+    const currentSnapshot = historyRef.current[historyIndexRef.current];
+
+    if (
+      currentSnapshot?.content === content &&
+      currentSnapshot.selectionStart === selectionStart &&
+      currentSnapshot.selectionEnd === selectionEnd
+    ) {
+      return;
+    }
+
+    const nextHistory = historyRef.current.slice(
+      0,
+      historyIndexRef.current + 1,
+    );
+
+    nextHistory.push({
+      content,
+      selectionStart,
+      selectionEnd,
+    });
+    historyRef.current = nextHistory;
+    historyIndexRef.current = nextHistory.length - 1;
+  }
+
+  function applyEditorChange(change: TextChange) {
+    updateEditorState("content", change.nextValue);
+    pushEditorHistory(
+      change.nextValue,
+      change.selectionStart,
+      change.selectionEnd,
+    );
+    scheduleTextareaSelection(change.selectionStart, change.selectionEnd);
+  }
+
+  function restoreHistorySnapshot(direction: "undo" | "redo") {
+    const nextIndex =
+      direction === "undo"
+        ? historyIndexRef.current - 1
+        : historyIndexRef.current + 1;
+    const snapshot = historyRef.current[nextIndex];
+
+    if (!snapshot) {
+      return;
+    }
+
+    historyIndexRef.current = nextIndex;
+    updateEditorState("content", snapshot.content);
+    scheduleTextareaSelection(snapshot.selectionStart, snapshot.selectionEnd);
+  }
+
+  function updateApprovalStep(
+    localId: string,
+    key: "stepLabel" | "approverId",
+    value: string,
+  ) {
+    setEditorState((current) => ({
+      ...current,
+      approvalSteps: current.approvalSteps.map((step) =>
+        step.localId === localId ? { ...step, [key]: value } : step,
+      ),
+    }));
+  }
+
+  function addApprovalStep() {
+    setEditorState((current) => ({
+      ...current,
+      approvalSteps: [
+        ...current.approvalSteps,
+        {
+          localId: `step-${crypto.randomUUID()}`,
+          stepLabel: `추가 단계 ${current.approvalSteps.length + 1}`,
+          approverId: "",
+        },
+      ],
+    }));
+  }
+
+  function removeApprovalStep(localId: string) {
+    setEditorState((current) => ({
+      ...current,
+      approvalSteps:
+        current.approvalSteps.length === 1
+          ? current.approvalSteps
+          : current.approvalSteps.filter((step) => step.localId !== localId),
+    }));
+  }
+
+  function toggleCcRecipient(recipientId: string) {
+    setEditorState((current) => ({
+      ...current,
+      ccRecipientIds: current.ccRecipientIds.includes(recipientId)
+        ? current.ccRecipientIds.filter((id) => id !== recipientId)
+        : [...current.ccRecipientIds, recipientId],
+    }));
+  }
+
+  function applyTextTransform(
+    transform: (selectedText: string) => {
+      text: string;
+      selectionStart?: number;
+      selectionEnd?: number;
+    },
+  ) {
+    const textarea = textareaRef.current;
+
+    if (!textarea) {
+      return;
+    }
+
+    const selectionStart = textarea.selectionStart;
+    const selectionEnd = textarea.selectionEnd;
+    const change = replaceSelection(
+      editorState.content,
+      selectionStart,
+      selectionEnd,
+      transform,
+    );
+
+    applyEditorChange(change);
+  }
+
+  function handleIndentSelection() {
+    const textarea = textareaRef.current;
+
+    if (!textarea) {
+      return;
+    }
+
+    const change = indentSelectedLines(
+      editorState.content,
+      textarea.selectionStart,
+      textarea.selectionEnd,
+    );
+
+    applyEditorChange(change);
+  }
+
+  function handleOutdentSelection() {
+    const textarea = textareaRef.current;
+
+    if (!textarea) {
+      return;
+    }
+
+    const change = outdentSelectedLines(
+      editorState.content,
+      textarea.selectionStart,
+      textarea.selectionEnd,
+    );
+
+    applyEditorChange(change);
+  }
+
+  function adjustHeadingLevel(direction: "increase" | "decrease") {
+    const textarea = textareaRef.current;
+
+    if (!textarea) {
+      return;
+    }
+
+    const change = adjustHeadingSelection(
+      editorState.content,
+      textarea.selectionStart,
+      textarea.selectionEnd,
+      direction,
+    );
+
+    applyEditorChange(change);
+  }
+
+  function handleEditorContentChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    updateEditorState("content", event.target.value);
+    pushEditorHistory(
+      event.target.value,
+      event.target.selectionStart,
+      event.target.selectionEnd,
+    );
+  }
+
+  function handleEditorKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    const isMeta = event.metaKey || event.ctrlKey;
+
+    if (event.key === "Tab") {
+      event.preventDefault();
+      if (event.shiftKey) {
+        handleOutdentSelection();
+        return;
+      }
+
+      handleIndentSelection();
+      return;
+    }
+
+    if (event.key === "Enter") {
+      const change = continueMarkdownBlockOnEnter(
+        editorState.content,
+        event.currentTarget.selectionStart,
+        event.currentTarget.selectionEnd,
+      );
+
+      if (!change) {
+        return;
+      }
+
+      event.preventDefault();
+      applyEditorChange(change);
+      return;
+    }
+
+    if (!isMeta) {
+      return;
+    }
+
+    const normalizedKey = event.key.toLowerCase();
+
+    if (normalizedKey === "z") {
+      event.preventDefault();
+      restoreHistorySnapshot(event.shiftKey ? "redo" : "undo");
+      return;
+    }
+
+    if (normalizedKey === "y") {
+      event.preventDefault();
+      restoreHistorySnapshot("redo");
+      return;
+    }
+
+    if (normalizedKey === "b") {
+      event.preventDefault();
+      applyTextTransform((selectedText) => {
+        const text = selectedText || "굵은 텍스트";
+
+        return {
+          text: `**${text}**`,
+          selectionStart: selectedText ? undefined : 2,
+          selectionEnd: selectedText ? undefined : 2 + text.length,
+        };
       });
       return;
     }
 
-    createDocumentMutation.mutate({
-      authorId,
-      title,
-      content,
+    if (normalizedKey === "i") {
+      event.preventDefault();
+      applyTextTransform((selectedText) => {
+        const text = selectedText || "기울임 텍스트";
+
+        return {
+          text: `*${text}*`,
+          selectionStart: selectedText ? undefined : 1,
+          selectionEnd: selectedText ? undefined : 1 + text.length,
+        };
+      });
+      return;
+    }
+
+    if (normalizedKey === "k") {
+      event.preventDefault();
+      applyTextTransform((selectedText) => {
+        const text = selectedText || "링크 텍스트";
+
+        return {
+          text: `[${text}](https://)`,
+          selectionStart: selectedText ? undefined : 1,
+          selectionEnd: selectedText ? undefined : 1 + text.length,
+        };
+      });
+      return;
+    }
+
+    if (event.key === "]") {
+      event.preventDefault();
+      adjustHeadingLevel("increase");
+      return;
+    }
+
+    if (event.key === "[") {
+      event.preventDefault();
+      adjustHeadingLevel("decrease");
+    }
+  }
+
+  useEffect(() => {
+    if (historyIndexRef.current !== -1 || !isEditorOpen) {
+      return;
+    }
+
+    resetEditorHistory(editorState.content);
+  }, [editorState.content, isEditorOpen]);
+
+  useEffect(() => {
+    if (!isEditorOpen || editorStep !== "content" || isPreviewVisible) {
+      return;
+    }
+
+    resizeEditorTextarea();
+  }, [
+    editorState.content,
+    editorStep,
+    isEditorOpen,
+    isPreviewVisible,
+    isExpandedContentView,
+  ]);
+
+  useEffect(() => {
+    if (!isEditorOpen || editorStep !== "content") {
+      return;
+    }
+
+    function handleWindowKeyDown(event: globalThis.KeyboardEvent) {
+      const isMeta = event.metaKey || event.ctrlKey;
+
+      if (!isMeta || !event.shiftKey || event.key.toLowerCase() !== "v") {
+        return;
+      }
+
+      event.preventDefault();
+      setIsPreviewVisible((current) => !current);
+    }
+
+    window.addEventListener("keydown", handleWindowKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleWindowKeyDown);
+    };
+  }, [editorStep, isEditorOpen]);
+
+  useEffect(() => {
+    if (!isEditorOpen || editorStep !== "content" || isPreviewVisible) {
+      return;
+    }
+
+    function handleWindowResize() {
+      resizeEditorTextarea();
+    }
+
+    window.addEventListener("resize", handleWindowResize);
+
+    return () => {
+      window.removeEventListener("resize", handleWindowResize);
+    };
+  }, [editorStep, isEditorOpen, isPreviewVisible, isExpandedContentView]);
+
+  function handleSaveDocument(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!currentUserId || !canSaveDraft) {
+      return;
+    }
+
+    const payload = {
+      title: editorState.title,
+      content: editorState.content,
+      approvalSteps: editorState.approvalSteps.map(
+        ({ stepLabel, approverId }) => ({
+          stepLabel,
+          approverId,
+        }),
+      ),
+      ccRecipientIds: editorState.ccRecipientIds,
+    };
+
+    if (editorDocumentId) {
+      updateMutation.mutate({
+        documentId: editorDocumentId,
+        payload,
+      });
+      return;
+    }
+
+    createMutation.mutate({
+      authorId: currentUserId,
+      ...payload,
     });
   }
 
+  function handleSubmitDocument() {
+    if (!selectedDocument?.permissions.canSubmit || !selectedDocumentId) {
+      return;
+    }
+
+    submitMutation.mutate(selectedDocumentId);
+  }
+
+  function handleApprovalAction(action: "APPROVE" | "REJECT") {
+    if (!selectedDocument?.permissions.canApprove || !selectedDocumentId) {
+      return;
+    }
+
+    approvalMutation.mutate({
+      documentId: selectedDocumentId,
+      action,
+    });
+  }
+
+  function handleCancelEditing() {
+    if (isMutating) {
+      return;
+    }
+
+    const reopenDetail = Boolean(editorDocumentId && selectedDocumentId);
+
+    if (editorDocumentId && selectedDocument) {
+      setEditorState(createEditorStateFromDocument(selectedDocument));
+      resetEditorHistory(selectedDocument.content);
+    } else {
+      setEditorState(createEmptyEditorState());
+      resetEditorHistory("");
+    }
+
+    closeEditor(reopenDetail);
+  }
+
+  function handleEditorStepChange(nextStep: EditorStep) {
+    if (nextStep === "workflow" && !canProceedFromContentStep) {
+      return;
+    }
+
+    if (nextStep !== "content") {
+      setIsExpandedContentView(false);
+    }
+
+    setEditorStep(nextStep);
+  }
+
+  function handleTemplateSelect(templateId: DocumentTemplateId) {
+    const template = documentTemplateOptions.find(
+      (item) => item.id === templateId,
+    );
+
+    if (!template) {
+      return;
+    }
+
+    setSelectedTemplateId(templateId);
+    setIsPreviewVisible(false);
+    setIsExpandedContentView(false);
+    setEditorState((current) => ({
+      ...current,
+      title: template.title,
+      content: template.content,
+    }));
+    resetEditorHistory(template.content);
+  }
+
   return (
-    <div className="space-y-8">
-      <section className="flex flex-col gap-4 rounded-md bg-surface px-8 py-7 shadow-soft lg:flex-row lg:items-end lg:justify-between">
-        <div className="space-y-3">
-          {/* <div className="inline-flex items-center gap-2 rounded-pill bg-primary/10 px-4 py-2 text-sm font-headings font-medium text-primary">
-            <FileText className="h-4 w-4" />
-            Pod A Part 2
-          </div> */}
-          <div className="space-y-2">
-            <h1 className="text-4xl font-headings font-semibold tracking-tight text-text">
-              결재 상태를 바꾸고 승인 흐름까지 이어가세요.
-            </h1>
-            <p className="max-w-3xl text-base leading-7 text-text/80">
-              문서 작성, 상태 변경 API, 결재 인박스, 승인 후 지식 인덱싱
-              연결까지 한 화면에서 관리할 수 있습니다.
-            </p>
-          </div>
-        </div>
+    <div className="mx-auto max-w-6xl space-y-8">
+      <DocumentWorkspaceShell
+        currentUserId={currentUserId}
+        isMutating={isMutating}
+        isAuthLoading={isAuthLoading}
+        authMessage={authMessage}
+        errorMessage={queryErrorMessage}
+        scope={scope}
+        statusFilter={statusFilter}
+        documents={documentsQuery.data ?? []}
+        isDocumentsLoading={documentsQuery.isLoading}
+        isDocumentsError={documentsQuery.isError}
+        isRefreshing={documentsQuery.isFetching}
+        selectedDocumentId={selectedDocumentId}
+        onNewDocument={openEditorForCreate}
+        onRefresh={() => {
+          void documentsQuery.refetch();
+          if (selectedDocumentId) {
+            void selectedDocumentQuery.refetch();
+          }
+        }}
+        onScopeChange={setScope}
+        onStatusFilterChange={setStatusFilter}
+        onSelectDocument={openDetail}
+      />
 
-        <div className="rounded-md bg-background/80 px-5 py-4 shadow-soft">
-          <div className="flex items-center gap-2 text-sm font-semibold text-text">
-            <ShieldCheck className="h-4 w-4 text-primary" />
-            본인 문서만 조회
-          </div>
-          <p className="mt-1 text-sm text-text/70">
-            API는 로그인 사용자와 `author_id` 일치 여부를 검사합니다.
-          </p>
-        </div>
-      </section>
+      <DocumentDetailDialog
+        isOpen={isDetailOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsDetailOpen(false);
+          }
+        }}
+        document={selectedDocument}
+        isLoading={selectedDocumentQuery.isLoading}
+        errorMessage={queryErrorMessage ?? mutationErrorMessage}
+        onEdit={() => {
+          if (!selectedDocumentId) {
+            return;
+          }
 
-      <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card className="overflow-hidden rounded-md border-none bg-surface shadow-soft">
-          <CardHeader className="space-y-2 border-b border-background/70 bg-background/40">
-            <CardTitle className="text-2xl font-headings text-text">
-              {editorMode === "edit" ? "문서 수정" : "새 문서 작성"}
-            </CardTitle>
-            <CardDescription className="font-body text-text/70">
-              제목과 Markdown 본문을 입력하고 저장하거나 기존 문서를 수정할 수
-              있습니다.
-            </CardDescription>
-          </CardHeader>
+          openEditorForDocument(selectedDocumentId);
+        }}
+        onSubmit={handleSubmitDocument}
+        onApprove={() => handleApprovalAction("APPROVE")}
+        onReject={() => handleApprovalAction("REJECT")}
+        submitPending={submitMutation.isPending}
+        approvalPending={approvalMutation.isPending}
+      />
 
-          <CardContent className="p-6">
-            <form className="space-y-6" onSubmit={handleSubmitDocument}>
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-background/55 px-4 py-3">
-                <div className="text-sm text-text/70">
-                  {editorMode === "edit"
-                    ? "선택한 문서를 편집 중입니다."
-                    : "새로운 초안을 작성 중입니다."}
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="rounded-pill"
-                  onClick={resetEditor}
-                  disabled={isSubmitting}
-                >
-                  <Plus className="h-4 w-4" />새 초안
-                </Button>
-              </div>
+      <DocumentEditorDialog
+        isOpen={isEditorOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleCancelEditing();
+          }
+        }}
+        mode={editorDocumentId ? "edit" : "create"}
+        currentUserId={currentUserId}
+        isMutating={isMutating}
+        canSaveDraft={canSaveDraft}
+        canProceedFromContentStep={canProceedFromContentStep}
+        errorMessage={mutationErrorMessage}
+        editorState={editorState}
+        availableUsers={availableUsers}
+        isUsersLoading={usersQuery.isLoading}
+        textareaRef={textareaRef}
+        currentStep={editorStep}
+        selectedTemplateId={selectedTemplateId}
+        isPreviewVisible={isPreviewVisible}
+        isExpandedContentView={isExpandedContentView}
+        onStepChange={handleEditorStepChange}
+        onTemplateSelect={handleTemplateSelect}
+        onTogglePreview={() => setIsPreviewVisible((current) => !current)}
+        onShowEditor={() => setIsPreviewVisible(false)}
+        onShowPreview={() => setIsPreviewVisible(true)}
+        onToggleExpandedContentView={() =>
+          setIsExpandedContentView((current) => !current)
+        }
+        onSubmit={handleSaveDocument}
+        onCancel={handleCancelEditing}
+        onTitleChange={(value) => updateEditorState("title", value)}
+        onUpdateApprovalStep={updateApprovalStep}
+        onAddApprovalStep={addApprovalStep}
+        onRemoveApprovalStep={removeApprovalStep}
+        onToggleCcRecipient={toggleCcRecipient}
+        onContentChange={handleEditorContentChange}
+        onContentKeyDown={handleEditorKeyDown}
+        onApplyBold={() =>
+          applyTextTransform((selectedText) => {
+            const text = selectedText || "굵은 텍스트";
 
-              <div className="space-y-2">
-                <label
-                  htmlFor="document-title"
-                  className="text-sm font-bold text-text"
-                >
-                  제목
-                </label>
-                <Input
-                  id="document-title"
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                  maxLength={DOCUMENT_TITLE_MAX_LENGTH}
-                  placeholder="예: 2026년 2분기 협업 운영 계획"
-                  className="h-12 rounded-md border-background bg-background/70"
-                  disabled={!authorId || isSubmitting}
-                />
-                <p className="text-xs text-text/55">
-                  {title.trim().length}/{DOCUMENT_TITLE_MAX_LENGTH}
-                </p>
-              </div>
+            return {
+              text: `**${text}**`,
+              selectionStart: selectedText ? undefined : 2,
+              selectionEnd: selectedText ? undefined : 2 + text.length,
+            };
+          })
+        }
+        onApplyItalic={() =>
+          applyTextTransform((selectedText) => {
+            const text = selectedText || "기울임 텍스트";
 
-              <Tabs defaultValue="editor" className="space-y-4">
-                <TabsList className="rounded-pill bg-background/80 p-1">
-                  <TabsTrigger value="editor" className="rounded-pill">
-                    에디터
-                  </TabsTrigger>
-                  <TabsTrigger value="preview" className="rounded-pill">
-                    미리보기
-                  </TabsTrigger>
-                </TabsList>
+            return {
+              text: `*${text}*`,
+              selectionStart: selectedText ? undefined : 1,
+              selectionEnd: selectedText ? undefined : 1 + text.length,
+            };
+          })
+        }
+        onApplyLink={() =>
+          applyTextTransform((selectedText) => {
+            const text = selectedText || "링크 텍스트";
 
-                <TabsContent value="editor" className="mt-0">
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="document-content"
-                      className="text-sm font-bold text-text"
-                    >
-                      본문
-                    </label>
-                    <textarea
-                      id="document-content"
-                      value={content}
-                      onChange={(event) => setContent(event.target.value)}
-                      maxLength={DOCUMENT_CONTENT_MAX_LENGTH}
-                      placeholder={`# 문서 초안\n\n필요한 내용을 Markdown으로 작성해 보세요.\n\n- 목적\n- 배경\n- 요청 사항`}
-                      className="min-h-[360px] w-full rounded-md bg-background/80 px-4 py-4 font-body text-sm leading-7 text-text shadow-inner outline-none ring-1 ring-background transition focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-70"
-                      disabled={!authorId || isSubmitting}
-                    />
-                    <div className="flex items-center justify-between text-xs text-text/55">
-                      <span>Markdown 형식으로 작성됩니다.</span>
-                      <span>
-                        {content.length}/
-                        {DOCUMENT_CONTENT_MAX_LENGTH.toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="preview" className="mt-0">
-                  <div className="min-h-[360px] rounded-md bg-background/70 p-6 shadow-inner">
-                    {title.trim() || content.trim() ? (
-                      <article className="prose prose-slate max-w-none font-body prose-headings:font-headings prose-headings:text-text prose-p:text-text prose-li:text-text prose-strong:text-text">
-                        {title.trim() ? <h1>{title.trim()}</h1> : null}
-                        <MarkdownContent>
-                          {content || "_본문이 비어 있습니다._"}
-                        </MarkdownContent>
-                      </article>
-                    ) : (
-                      <div className="flex min-h-[312px] items-center justify-center rounded-md border border-dashed border-primary/20 bg-surface/60 px-6 text-center text-sm leading-6 text-text/60">
-                        제목과 본문을 입력하면 이 영역에 문서 미리보기가
-                        표시됩니다.
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
-              </Tabs>
-
-              <div className="space-y-3">
-                {authMessage ? (
-                  <p className="rounded-md bg-secondary/20 px-4 py-3 text-sm text-text">
-                    {authMessage}
-                  </p>
-                ) : null}
-
-                {submitError ? (
-                  <p className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                    {submitError.message}
-                  </p>
-                ) : null}
-
-                <div className="flex flex-wrap items-center gap-3">
-                  <Button
-                    type="submit"
-                    disabled={!canSubmit}
-                    className="h-12 rounded-pill px-6 font-headings text-base shadow-soft"
-                  >
-                    {isSubmitting ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : editorMode === "edit" ? (
-                      <PencilLine className="h-4 w-4" />
-                    ) : (
-                      <Plus className="h-4 w-4" />
-                    )}
-                    {editorMode === "edit" ? "문서 수정 저장" : "문서 저장"}
-                  </Button>
-                  <p className="text-sm text-text/60">
-                    {editorMode === "edit"
-                      ? "수정해도 현재 상태 값은 유지됩니다."
-                      : "생성 시 기본 상태는 `DRAFT`입니다."}
-                  </p>
-                </div>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-8">
-          <Card className="rounded-md border-none bg-surface shadow-soft">
-            <CardHeader className="border-b border-background/70 bg-background/35">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <CardTitle className="text-2xl font-headings text-text">
-                    결재 인박스
-                  </CardTitle>
-                  <CardDescription className="font-body text-text/70">
-                    상태별 문서를 모아 보고, 버튼으로 바로 결재 흐름을 진행할 수
-                    있습니다.
-                  </CardDescription>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-full"
-                  onClick={() => documentsQuery.refetch()}
-                  disabled={!authorId || documentsQuery.isFetching}
-                >
-                  <RefreshCw
-                    className={`h-4 w-4 ${
-                      documentsQuery.isFetching ? "animate-spin" : ""
-                    }`}
-                  />
-                </Button>
-              </div>
-            </CardHeader>
-
-            <CardContent className="p-4">
-              <div className="mb-4 flex flex-wrap items-center gap-2">
-                {inboxFilters.map((filter) => {
-                  const count =
-                    filter.value === "ALL"
-                      ? (documentsQuery.data?.length ?? 0)
-                      : (documentsQuery.data?.filter(
-                          (document) => document.status === filter.value,
-                        ).length ?? 0);
-                  const isActive = inboxFilter === filter.value;
-
-                  return (
-                    <Button
-                      key={filter.value}
-                      type="button"
-                      variant={isActive ? "default" : "ghost"}
-                      className="rounded-pill"
-                      onClick={() => setInboxFilter(filter.value)}
-                    >
-                      <Inbox className="h-4 w-4" />
-                      {filter.label}
-                      <span
-                        className={`rounded-pill px-2 py-0.5 text-xs ${
-                          isActive
-                            ? "bg-white/20 text-white"
-                            : "bg-primary/10 text-primary"
-                        }`}
-                      >
-                        {count}
-                      </span>
-                    </Button>
-                  );
-                })}
-              </div>
-
-              {isAuthLoading ? (
-                <div className="flex items-center justify-center gap-2 py-10 text-sm text-text/60">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  사용자 정보를 확인하고 있습니다.
-                </div>
-              ) : null}
-
-              {!isAuthLoading && documentsQuery.isLoading ? (
-                <div className="flex items-center justify-center gap-2 py-10 text-sm text-text/60">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  문서를 불러오는 중입니다.
-                </div>
-              ) : null}
-
-              {!isAuthLoading && documentsQuery.isError ? (
-                <p className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                  {documentsQuery.error instanceof Error
-                    ? documentsQuery.error.message
-                    : "문서 목록을 가져오지 못했습니다."}
-                </p>
-              ) : null}
-
-              {!isAuthLoading &&
-              !documentsQuery.isLoading &&
-              !documentsQuery.isError &&
-              filteredDocuments.length === 0 ? (
-                <div className="rounded-md bg-background/60 px-5 py-8 text-center text-sm leading-6 text-text/60">
-                  현재 필터에 해당하는 문서가 없습니다. 왼쪽 에디터에서 초안을
-                  만들거나 다른 상태 탭을 확인해 보세요.
-                </div>
-              ) : null}
-
-              <div className="space-y-3">
-                {filteredDocuments.map((document) => {
-                  const isSelected = document.id === selectedDocumentId;
-                  const statusActions = getStatusActions(document.status);
-                  const isStatusUpdating =
-                    updateDocumentStatusMutation.isPending &&
-                    updateDocumentStatusMutation.variables?.documentId ===
-                      document.id;
-
-                  return (
-                    <div
-                      key={document.id}
-                      className={`w-full rounded-md px-4 py-4 text-left transition-all ${
-                        isSelected
-                          ? "bg-primary text-white shadow-soft"
-                          : "bg-background/70 text-text hover:bg-background"
-                      }`}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => startEditingDocument(document)}
-                        className="w-full text-left"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="truncate font-headings text-base font-semibold">
-                              {document.title}
-                            </p>
-                            <p
-                              className={`mt-1 text-xs ${
-                                isSelected ? "text-white/80" : "text-text/55"
-                              }`}
-                            >
-                              {formatDate(document.updatedAt)}
-                            </p>
-                          </div>
-                          <span
-                            className={`rounded-pill px-3 py-1 text-xs font-semibold ${
-                              isSelected
-                                ? "bg-white/20 text-white"
-                                : statusBadgeClassMap[document.status]
-                            }`}
-                          >
-                            {statusLabelMap[document.status]}
-                          </span>
-                        </div>
-                        <div className="mt-3 flex justify-end">
-                          <span
-                            className={`text-xs font-medium ${
-                              isSelected ? "text-white/85" : "text-text/55"
-                            }`}
-                          >
-                            클릭하여 상세 보기
-                          </span>
-                        </div>
-                      </button>
-
-                      {statusActions.length ? (
-                        <div
-                          className={`mt-3 flex flex-wrap gap-2 border-t pt-3 ${
-                            isSelected
-                              ? "border-white/20"
-                              : "border-background/70"
-                          }`}
-                        >
-                          {statusActions.map((action) => {
-                            const ActionIcon = action.icon;
-
-                            return (
-                              <Button
-                                key={action.nextStatus}
-                                type="button"
-                                variant={
-                                  action.nextStatus === "REJECTED"
-                                    ? "destructive"
-                                    : isSelected
-                                      ? "secondary"
-                                      : "outline"
-                                }
-                                className="rounded-pill"
-                                disabled={isStatusUpdating}
-                                onClick={() =>
-                                  handleStatusChange(
-                                    document.id,
-                                    action.nextStatus,
-                                  )
-                                }
-                              >
-                                {isStatusUpdating ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <ActionIcon className="h-4 w-4" />
-                                )}
-                                {action.label}
-                              </Button>
-                            );
-                          })}
-                        </div>
-                      ) : null}
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-md border-none bg-surface shadow-soft">
-            <CardHeader className="border-b border-background/70 bg-background/35">
-              <CardTitle className="text-2xl font-headings text-text">
-                선택한 문서
-              </CardTitle>
-              <CardDescription className="font-body text-text/70">
-                저장된 문서를 확인하고 현재 상태에 맞는 다음 액션을 수행합니다.
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="p-6">
-              {selectedDocument ? (
-                <article className="prose prose-slate max-w-none font-body prose-headings:font-headings prose-headings:text-text prose-p:text-text prose-li:text-text prose-strong:text-text">
-                  <div className="mb-6 flex flex-wrap items-center gap-2">
-                    <span
-                      className={`rounded-pill px-3 py-1 text-xs font-semibold ${statusBadgeClassMap[selectedDocument.status]}`}
-                    >
-                      {statusLabelMap[selectedDocument.status]}
-                    </span>
-                    <span className="text-xs text-text/55">
-                      생성 {formatDate(selectedDocument.createdAt)}
-                    </span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="ml-auto rounded-pill"
-                      onClick={() => startEditingDocument(selectedDocument)}
-                    >
-                      <PencilLine className="h-4 w-4" />이 문서 편집
-                    </Button>
-                  </div>
-                  {getStatusActions(selectedDocument.status).length ? (
-                    <div className="mb-6 flex flex-wrap gap-2">
-                      {getStatusActions(selectedDocument.status).map(
-                        (action) => {
-                          const ActionIcon = action.icon;
-                          const isStatusUpdating =
-                            updateDocumentStatusMutation.isPending &&
-                            updateDocumentStatusMutation.variables
-                              ?.documentId === selectedDocument.id;
-
-                          return (
-                            <Button
-                              key={action.nextStatus}
-                              type="button"
-                              variant={
-                                action.nextStatus === "REJECTED"
-                                  ? "destructive"
-                                  : "outline"
-                              }
-                              className="rounded-pill"
-                              disabled={isStatusUpdating}
-                              onClick={() =>
-                                handleStatusChange(
-                                  selectedDocument.id,
-                                  action.nextStatus,
-                                )
-                              }
-                            >
-                              {isStatusUpdating ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <ActionIcon className="h-4 w-4" />
-                              )}
-                              {action.label}
-                            </Button>
-                          );
-                        },
-                      )}
-                    </div>
-                  ) : null}
-                  <h1>{selectedDocument.title}</h1>
-                  <MarkdownContent>
-                    {selectedDocument.content || "_본문이 비어 있습니다._"}
-                  </MarkdownContent>
-                </article>
-              ) : (
-                <div className="rounded-md bg-background/60 px-5 py-8 text-center text-sm leading-6 text-text/60">
-                  오른쪽 목록에서 문서를 선택하면 저장된 Markdown 내용을 확인할
-                  수 있습니다.
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+            return {
+              text: `[${text}](https://)`,
+              selectionStart: selectedText ? undefined : 1,
+              selectionEnd: selectedText ? undefined : 1 + text.length,
+            };
+          })
+        }
+        onApplyBulletList={() =>
+          applyTextTransform((selectedText) => ({
+            text: applyLinePrefix(selectedText || "목록 항목", "- "),
+          }))
+        }
+        onApplyOrderedList={() =>
+          applyTextTransform((selectedText) => ({
+            text: (selectedText || "목록 항목")
+              .split("\n")
+              .map((line, index) => `${index + 1}. ${line}`)
+              .join("\n"),
+          }))
+        }
+        onApplyQuote={() =>
+          applyTextTransform((selectedText) => ({
+            text: applyLinePrefix(selectedText || "인용문", "> "),
+          }))
+        }
+        onIncreaseHeading={() => adjustHeadingLevel("increase")}
+        onDecreaseHeading={() => adjustHeadingLevel("decrease")}
+      />
     </div>
   );
 }
