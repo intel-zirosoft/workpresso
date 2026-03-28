@@ -16,10 +16,10 @@ export default async function IntegrationsPage() {
   let slackConfig = { config: { webhookUrl: '' }, is_active: false };
   let jiraConfig = { 
     config: { 
-      domain: 'workpresso.atlassian.net', 
-      email: 'polly.saids@gmail.com', 
-      projectKey: 'KAN', 
-      apiToken: 'ATATT3xFfGF0Qjtmkk4Fz3F4til-5sl4darcVOCFLYiOTvg-DEAbon0wXe92GwrmIe0OTbMQMoxqPw_6Nq8iw-E4q_AJ-JNKcLu8wyZQUNKOUDEePF5y4FbpreUm6CRDjAB28c2YKIlnX1m2n2SVkp6u-ApHBp4uIPAOI8APXtoXSf4z82GzDFc=4BCFBE91' 
+      domain: '', 
+      email: '', 
+      projectKey: '', 
+      apiToken: '' 
     }, 
     is_active: false 
   };
