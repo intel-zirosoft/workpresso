@@ -116,12 +116,74 @@ STT 데이터: ${sttText}
   // 5. Slack 알림 연동 (조직 전체 통제)
   if (isSlackActive && slackConfig?.webhookUrl) {
     try {
+      // 슬랙 Blocks 레이아웃 구성
+      const blocks = [
+        {
+          type: "header",
+          text: {
+            type: "plain_text",
+            text: "📝 AI 회의 브리핑 도착",
+            emoji: true
+          }
+        },
+        {
+          type: "section",
+          fields: [
+            {
+              type: "mrkdwn",
+              text: `*회의 제목*\n${refinedData.title}`
+            },
+            {
+              type: "mrkdwn",
+              text: `*작성자*\n${ownerName}`
+            }
+          ]
+        },
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: `*AI 요약*\n${refinedData.summary}`
+          }
+        }
+      ];
+
+      // 액션 아이템이 있으면 추가
+      if (refinedData.action_items && refinedData.action_items.length > 0) {
+        const actionItemsText = refinedData.action_items
+          .map((item: any) => `• [${item.assignee || '미정'}] ${item.task}`)
+          .join('\n');
+        
+        blocks.push({
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: `*주요 할 일*\n${actionItemsText}`
+          }
+        } as any);
+      }
+
+      // 상세보기 버튼 추가
+      blocks.push({
+        type: "actions",
+        elements: [
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "회의록 상세보기",
+              emoji: true
+            },
+            url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://workpresso.app'}/voice/${id}`,
+            style: "primary"
+          }
+        ]
+      } as any);
+
       await fetch(slackConfig.webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: `🔔 *새로운 회의록 생성 완료*\n*제목:* ${refinedData.title}\n*작성자:* ${ownerName}\n*요약:* ${refinedData.summary}\n\n<${process.env.NEXT_PUBLIC_SITE_URL || 'https://workpresso.app'}/voice/${id}|회의록 상세보기>`
-        })
+        body: JSON.stringify({ blocks })
       });
     } catch (e) {
       console.error('Slack 알림 전송 실패:', e);
@@ -130,4 +192,21 @@ STT 데이터: ${sttText}
   
   revalidatePath('/voice');
   return { success: true };
+}
+
+/**
+ * 특정 할 일(Action Item)을 Jira 이슈로 전송합니다.
+ */
+export async function syncActionItemToJiraServer(task: string, assignee?: string, dueDate?: string) {
+  try {
+    const { createJiraIssue } = await import('@/features/settings/services/extensionAction');
+    
+    const summary = `[회의록 할 일] ${task}`;
+    const description = `담당자: ${assignee || '미정'}\n기한: ${dueDate || '없음'}\n\nWorkPresso 회의록에서 자동 생성된 할 일입니다.`;
+
+    const result = await createJiraIssue({ summary, description });
+    return result;
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : 'Jira 동기화 중 오류가 발생했습니다.');
+  }
 }

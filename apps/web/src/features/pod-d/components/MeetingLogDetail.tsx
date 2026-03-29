@@ -18,12 +18,15 @@ import {
   X,
   Plus,
   Trash2,
+  Zap,
+  ExternalLink,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { updateMeetingLog } from "../services/meetingLogService";
+import { syncActionItemToJiraServer } from "../services/meetingLogAction";
 
 interface MeetingLogDetailProps {
   log: {
@@ -47,6 +50,31 @@ export const MeetingLogDetail: React.FC<MeetingLogDetailProps> = ({
   const [isEditing, setIsEditing] = React.useState(false);
   const [editedLog, setEditedLog] = React.useState(initialLog);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [syncingIndex, setSyncingIndex] = React.useState<number | null>(null);
+
+  const handleSyncToJira = async (index: number, item: any) => {
+    try {
+      setSyncingIndex(index);
+      const result = await syncActionItemToJiraServer(item.task, item.assignee, item.due_date);
+      
+      if (result.success) {
+        // 성공 시 로컬 상태 업데이트 (Jira 링크 저장)
+        const newItems = [...(log.action_items || [])];
+        newItems[index] = { ...newItems[index], jira_key: result.issueKey, jira_url: result.issueUrl };
+        
+        // DB 업데이트
+        await updateMeetingLog(log.id, { action_items: newItems });
+        setLog({ ...log, action_items: newItems });
+        
+        alert(`Jira 이슈 생성 성공: ${result.issueKey}`);
+      }
+    } catch (error) {
+      console.error("Jira sync failed:", error);
+      alert(error instanceof Error ? error.message : "Jira 동기화에 실패했습니다.");
+    } finally {
+      setSyncingIndex(null);
+    }
+  };
 
   const handleSave = async () => {
     try {
@@ -366,23 +394,55 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
               log.action_items.map((item: any, i) => (
                 <div
                   key={i}
-                  className="flex items-start gap-4 p-5 bg-white rounded-2xl border border-background shadow-sm hover:shadow-md transition-all active:scale-[0.99]"
+                  className="flex items-center justify-between gap-4 p-5 bg-white rounded-2xl border border-background shadow-sm hover:shadow-md transition-all active:scale-[0.99]"
                 >
-                  <div className="mt-1 w-4 h-4 rounded-full border-2 border-primary/30" />
-                  <div className="flex-1">
-                    <p className="font-medium">{item.task}</p>
-                    <div className="flex gap-4 mt-1">
-                      {item.assignee && (
-                        <span className="text-xs text-muted flex items-center gap-1">
-                          <UserIcon className="w-3 h-3" /> 담당: {item.assignee}
-                        </span>
-                      )}
-                      {item.due_date && (
-                        <span className="text-xs text-muted flex items-center gap-1">
-                          <Calendar className="w-3 h-3" /> 기한: {item.due_date}
-                        </span>
-                      )}
+                  <div className="flex items-start gap-4 flex-1">
+                    <div className="mt-1 w-4 h-4 rounded-full border-2 border-primary/30" />
+                    <div className="flex-1">
+                      <p className="font-medium">{item.task}</p>
+                      <div className="flex gap-4 mt-1">
+                        {item.assignee && (
+                          <span className="text-xs text-muted flex items-center gap-1">
+                            <UserIcon className="w-3 h-3" /> 담당: {item.assignee}
+                          </span>
+                        )}
+                        {item.due_date && (
+                          <span className="text-xs text-muted flex items-center gap-1">
+                            <Calendar className="w-3 h-3" /> 기한: {item.due_date}
+                          </span>
+                        )}
+                      </div>
                     </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {item.jira_key ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                        className="text-xs text-primary font-bold hover:bg-primary/5 h-8 gap-1.5"
+                      >
+                        <a href={item.jira_url} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="w-3 h-3" /> {item.jira_key}
+                        </a>
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={syncingIndex === i}
+                        onClick={() => handleSyncToJira(i, item)}
+                        className="text-xs border-primary/30 hover:bg-primary/5 h-8 gap-1.5 font-bold rounded-full transition-all"
+                      >
+                        {syncingIndex === i ? (
+                          <span className="animate-spin text-sm">⏳</span>
+                        ) : (
+                          <Zap className="w-3 h-3 text-primary fill-primary" />
+                        )}
+                        Jira 전송
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))
