@@ -55,18 +55,28 @@ export const MeetingLogDetail: React.FC<MeetingLogDetailProps> = ({
   const handleSyncToJira = async (index: number, item: any) => {
     try {
       setSyncingIndex(index);
-      const result = await syncActionItemToJiraServer(item.task, item.assignee, item.due_date);
-      
+
+      // 서버에서 Jira 생성 + DB 저장을 원자적으로 처리
+      const result = await syncActionItemToJiraServer(
+        log.id,
+        index,
+        item.task,
+        item.assignee,
+        item.due_date,
+      );
+
       if (result.success) {
-        // 성공 시 로컬 상태 업데이트 (Jira 링크 저장)
-        const newItems = [...(log.action_items || [])];
-        newItems[index] = { ...newItems[index], jira_key: result.issueKey, jira_url: result.issueUrl };
-        
-        // DB 업데이트
-        await updateMeetingLog(log.id, { action_items: newItems });
-        setLog({ ...log, action_items: newItems });
-        
-        alert(`Jira 이슈 생성 성공: ${result.issueKey}`);
+        if (result.alreadySynced) {
+          alert(`이미 연결된 Jira 이슈입니다: ${result.issueKey}`);
+        } else {
+          alert(`Jira 이슈 생성 완료: ${result.issueKey}`);
+        }
+
+        // 서버가 반환한 최신 items로 로컬 상태만 업데이트 (DB 저장은 이미 완료)
+        setLog((prev) => ({
+          ...prev,
+          action_items: result.updatedItems ?? prev.action_items,
+        }));
       }
     } catch (error) {
       console.error("Jira sync failed:", error);
