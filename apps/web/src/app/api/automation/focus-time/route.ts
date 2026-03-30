@@ -116,7 +116,12 @@ export async function POST() {
     const { issues: highPriorityIssues } = await getHighPriorityJiraIssues();
 
     const created: { title: string; start: string; end: string }[] = [];
-    let currentSchedules = [...(existingSchedules ?? [])];
+    let currentSchedules: { start_time: string; end_time: string }[] = [
+      ...((existingSchedules ?? []).map((schedule) => ({
+        start_time: schedule.start_time,
+        end_time: schedule.end_time,
+      })) ?? []),
+    ];
 
     for (const issue of highPriorityIssues) {
       if (created.length + existingFocusCount >= MAX_FOCUS_BLOCKS_PER_DAY) break;
