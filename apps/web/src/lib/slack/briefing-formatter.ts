@@ -152,32 +152,8 @@ export function buildBriefingPayload(
   return { blocks };
 }
 
-/**
- * Slack Webhook URL로 브리핑 메시지를 실제 전송합니다.
- * SLACK_WEBHOOK_URL 환경변수가 없으면 콘솔 출력으로 대체합니다.
- */
+import { sendSlackMessage } from "./client";
+
 export async function sendSlackBriefing(payload: { blocks: any[] }) {
-  const webhookUrl = process.env.SLACK_WEBHOOK_URL;
-
-  if (!webhookUrl) {
-    // 더미 모드: 실제 전송 없이 콘솔에 출력
-    console.log(
-      "[Slack Briefing - DUMMY MODE] 전송 페이로드:",
-      JSON.stringify(payload, null, 2)
-    );
-    return { ok: true, mode: "dummy", message: "콘솔에 출력되었습니다." };
-  }
-
-  // 실제 Slack Webhook 전송
-  const res = await fetch(webhookUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    throw new Error(`Slack 전송 실패: ${res.status} ${await res.text()}`);
-  }
-
-  return { ok: true, mode: "live" };
+  return await sendSlackMessage(payload);
 }

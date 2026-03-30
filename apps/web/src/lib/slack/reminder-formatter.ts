@@ -138,29 +138,11 @@ export function buildReminderPayload({
   return { blocks };
 }
 
+import { sendSlackMessage } from "./client";
+
 /**
  * Slack Webhook 또는 콘솔(더미 모드)로 리마인더를 전송합니다.
  */
 export async function sendReminderMessage(payload: { blocks: any[] }) {
-  const webhookUrl = process.env.SLACK_WEBHOOK_URL;
-
-  if (!webhookUrl) {
-    console.log(
-      "[Meeting Reminder - DUMMY MODE] 전송 페이로드:",
-      JSON.stringify(payload, null, 2)
-    );
-    return { ok: true, mode: "dummy" };
-  }
-
-  const res = await fetch(webhookUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    throw new Error(`Slack 전송 실패: ${res.status} ${await res.text()}`);
-  }
-
-  return { ok: true, mode: "live" };
+  return await sendSlackMessage(payload);
 }
