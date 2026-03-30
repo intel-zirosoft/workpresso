@@ -7,9 +7,9 @@ import {
 import { z } from "zod";
 
 import {
-  buildScheduleKnowledgeContent,
-  upsertKnowledgeSource,
-} from "@/features/pod-c/services/knowledge-sync";
+  createScheduleToolSchema,
+  createScheduleViaPodBApi,
+} from "@/features/pod-b/services/pod-b-schedule-api-adapter";
 import { getChatLanguageModel } from "@/lib/ai/chat";
 import { createEmbedding } from "@/lib/ai/embeddings";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -29,13 +29,7 @@ const chatRequestSchema = z.object({
     .min(1, "최소 1개 이상의 메시지가 필요합니다."),
 });
 
-const createScheduleSchema = z.object({
-  title: z.string().describe("일정 제목"),
-  start_time: z.string().describe("시작 시간"),
-  end_time: z.string().describe("종료 시간"),
-});
-
-type CreateScheduleArgs = z.infer<typeof createScheduleSchema>;
+type CreateScheduleArgs = z.infer<typeof createScheduleToolSchema>;
 type NormalizedChatMessage = Omit<Message, "id">;
 
 function extractMessageText(content: unknown): string {
@@ -110,51 +104,38 @@ export async function POST(req: Request) {
     }
 
     const chatModel = await getChatLanguageModel();
+    const now = new Date();
+    const currentTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const result = await streamText({
       model: chatModel,
-      system: `당신은 워크프레소의 업무 비서입니다. 한국어로 친절하게 답변하세요. 내부 지식: ${contextText}`,
+      system: `당신은 워크프레소의 업무 비서입니다. 한국어로 친절하게 답변하세요.
+현재 시각: ${now.toISOString()}
+기준 시간대: ${currentTimeZone}
+내부 지식: ${contextText}
+
+규칙:
+- 일정 생성은 반드시 Pod-B API(/api/schedules) 기반 tool 호출로만 처리하세요.
+- 일정 생성 전에 title, start_time, end_time을 확정할 근거가 부족하면 tool을 호출하지 말고 먼저 짧게 재질문하세요.
+- 상대시간 표현(예: 오늘, 내일, 다음 주)은 현재 시각과 시간대를 기준으로 해석하세요.
+- 참석자 식별이 모호하면 attendee_ids를 추정하지 말고 후보를 제시하거나 다시 물어보세요.
+- 일정 생성 후에는 생성 결과와 링크를 함께 안내하세요.`,
       messages: convertToCoreMessages(normalizedMessages),
       maxSteps: 2,
       tools: {
         create_schedule: tool({
-          description: "일정 등록",
-          parameters: createScheduleSchema,
-          execute: async ({
-            title,
-            start_time,
-            end_time,
-          }: CreateScheduleArgs) => {
-            const { data, error } = await adminSupabase
-              .from("schedules")
-              .insert([{ title, start_time, end_time, user_id: userId }])
-              .select()
-              .single();
-            if (error) throw new Error(error.message);
+          description:
+            "Pod-B 일정 생성 API 호출. start_time/end_time이 확정된 ISO 8601일 때만 호출하세요. 불충분하면 먼저 재질문하세요.",
+          parameters: createScheduleToolSchema,
+          execute: async (payload: CreateScheduleArgs) => {
+            const createdSchedule = await createScheduleViaPodBApi({
+              payload,
+              request: req,
+            });
 
-            try {
-              await upsertKnowledgeSource({
-                sourceType: "SCHEDULES",
-                sourceId: data.id,
-                title: data.title,
-                content: buildScheduleKnowledgeContent({
-                  title: data.title,
-                  startTime: data.start_time,
-                  endTime: data.end_time,
-                  type: data.type,
-                }),
-                metadata: {
-                  user_id: userId,
-                  start_time: data.start_time,
-                  end_time: data.end_time,
-                  type: data.type ?? null,
-                },
-              });
-            } catch (syncError) {
-              console.error("schedule knowledge sync failed:", syncError);
-              return `일정 '${title}' 등록 완료. 다만 RAG 동기화는 재시도가 필요합니다.`;
-            }
-
-            return `일정 '${title}' 등록 완료.`;
+            return {
+              message: `일정 '${createdSchedule.title}' 등록 완료`,
+              schedule: createdSchedule,
+            };
           },
         }),
       },
