@@ -6,6 +6,7 @@ import {
 } from "@/features/pod-a/services/document-schema";
 import {
   getDocumentDetailForViewer,
+  deleteWorkflowDocument,
   updateWorkflowDocument,
 } from "@/features/pod-a/services/document-server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -121,6 +122,47 @@ export async function PATCH(
       {
         message:
           error instanceof Error ? error.message : "문서를 수정하지 못했습니다.",
+      },
+      { status: 400 },
+    );
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: { id: string } },
+) {
+  const supabase = await createClient();
+  const adminSupabase = createAdminClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return unauthorizedResponse();
+  }
+
+  try {
+    const deleted = await deleteWorkflowDocument({
+      adminSupabase,
+      viewerId: user.id,
+      documentId: params.id,
+    });
+
+    if (!deleted) {
+      return NextResponse.json(
+        { message: "삭제할 문서를 찾지 못했습니다." },
+        { status: 404 },
+      );
+    }
+
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        message:
+          error instanceof Error ? error.message : "문서를 삭제하지 못했습니다.",
       },
       { status: 400 },
     );

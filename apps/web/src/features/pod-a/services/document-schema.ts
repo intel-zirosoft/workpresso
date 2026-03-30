@@ -171,6 +171,7 @@ export const documentPermissionsSchema = z.object({
   canSubmit: z.boolean(),
   canApprove: z.boolean(),
   canReject: z.boolean(),
+  canDelete: z.boolean(),
 });
 
 export const documentSummarySchema = documentBaseSchema.extend({

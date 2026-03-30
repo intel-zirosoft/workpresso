@@ -255,7 +255,10 @@ export function DocumentEditorDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[calc(100vh-1rem)] max-h-[calc(100vh-1rem)] w-[calc(100vw-1rem)] max-w-7xl flex-row gap-0 overflow-hidden border-none bg-white p-0 shadow-2xl sm:h-[95vh]">
+      <DialogContent
+        hideCloseButton
+        className="flex h-[calc(100vh-1rem)] max-h-[calc(100vh-1rem)] w-[calc(100vw-1rem)] max-w-7xl flex-row gap-0 overflow-hidden border-none bg-white p-0 shadow-2xl sm:h-[95vh]"
+      >
         {/* Left Sidebar */}
         <aside className="w-[280px] bg-slate-50 border-r border-slate-100 flex flex-col p-8 shrink-0">
           <div className="mb-12">

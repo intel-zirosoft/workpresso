@@ -36,6 +36,7 @@ import { DocumentWorkspaceShell } from "@/features/pod-a/components/document-wor
 import {
   actOnDocument,
   createDocument,
+  deleteDocument,
   DocumentApiError,
   fetchDocument,
   fetchDocuments,
@@ -326,17 +327,38 @@ export function DocumentWorkspace() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: deleteDocument,
+    onSuccess: (_data, documentId) => {
+      queryClient.setQueriesData(
+        { queryKey: ["documents"] },
+        (current: unknown) =>
+          Array.isArray(current)
+            ? current.filter((document) => document?.id !== documentId)
+            : current,
+      );
+      queryClient.removeQueries({
+        queryKey: ["document", documentId],
+      });
+      setIsDetailOpen(false);
+      setSelectedDocumentId(null);
+      invalidateDocumentQueries();
+    },
+  });
+
   const isMutating =
     createMutation.isPending ||
     updateMutation.isPending ||
     submitMutation.isPending ||
-    approvalMutation.isPending;
+    approvalMutation.isPending ||
+    deleteMutation.isPending;
 
   const mutationErrorMessage =
     getErrorMessage(createMutation.error) ??
     getErrorMessage(updateMutation.error) ??
     getErrorMessage(submitMutation.error) ??
-    getErrorMessage(approvalMutation.error);
+    getErrorMessage(approvalMutation.error) ??
+    getErrorMessage(deleteMutation.error);
 
   const availableUsers = (usersQuery.data ?? []).filter(
     (user) => user.id !== currentUserId,
@@ -802,6 +824,22 @@ export function DocumentWorkspace() {
     });
   }
 
+  function handleDeleteDocument() {
+    if (!selectedDocument?.permissions.canDelete || !selectedDocumentId) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "이 문서를 삭제하시겠습니까? 삭제 후에는 문서 목록에서 사라집니다.",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    deleteMutation.mutate(selectedDocumentId);
+  }
+
   function handleCancelEditing() {
     if (isMutating) {
       return;
@@ -899,8 +937,10 @@ export function DocumentWorkspace() {
         onSubmit={handleSubmitDocument}
         onApprove={() => handleApprovalAction("APPROVE")}
         onReject={() => handleApprovalAction("REJECT")}
+        onDelete={handleDeleteDocument}
         submitPending={submitMutation.isPending}
         approvalPending={approvalMutation.isPending}
+        deletePending={deleteMutation.isPending}
       />
 
       <DocumentEditorDialog

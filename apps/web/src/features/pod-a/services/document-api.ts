@@ -147,3 +147,15 @@ export async function actOnDocument(
 
   return documentResponseSchema.parse(data).document;
 }
+
+export async function deleteDocument(documentId: string): Promise<void> {
+  const response = await fetch(`/api/documents/${documentId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+
+    throw new DocumentApiError(data?.message ?? "문서를 삭제하지 못했습니다.");
+  }
+}

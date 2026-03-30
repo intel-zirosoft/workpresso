@@ -10,6 +10,7 @@ const {
   mockUpdateWorkflowDocument,
   mockSubmitWorkflowDocument,
   mockActOnWorkflowDocument,
+  mockDeleteWorkflowDocument,
 } = vi.hoisted(() => ({
   mockGetUser: vi.fn(),
   mockCreateClient: vi.fn(),
@@ -20,6 +21,7 @@ const {
   mockUpdateWorkflowDocument: vi.fn(),
   mockSubmitWorkflowDocument: vi.fn(),
   mockActOnWorkflowDocument: vi.fn(),
+  mockDeleteWorkflowDocument: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -37,10 +39,15 @@ vi.mock("@/features/pod-a/services/document-server", () => ({
   updateWorkflowDocument: mockUpdateWorkflowDocument,
   submitWorkflowDocument: mockSubmitWorkflowDocument,
   actOnWorkflowDocument: mockActOnWorkflowDocument,
+  deleteWorkflowDocument: mockDeleteWorkflowDocument,
 }));
 
 import { GET as getDocuments, POST as postDocument } from "@/app/api/documents/route";
-import { GET as getDocument, PATCH as patchDocument } from "@/app/api/documents/[id]/route";
+import {
+  DELETE as deleteDocumentRoute,
+  GET as getDocument,
+  PATCH as patchDocument,
+} from "@/app/api/documents/[id]/route";
 import { POST as postSubmitDocument } from "@/app/api/documents/[id]/submit/route";
 import { POST as postApprovalAction } from "@/app/api/documents/[id]/approval/route";
 
@@ -126,6 +133,7 @@ function createDetailDocument(overrides?: Partial<Record<string, unknown>>) {
       canSubmit: true,
       canApprove: false,
       canReject: false,
+      canDelete: true,
     },
     ...overrides,
   };
@@ -169,6 +177,7 @@ describe("Pod A document routes", () => {
     mockUpdateWorkflowDocument.mockReset();
     mockSubmitWorkflowDocument.mockReset();
     mockActOnWorkflowDocument.mockReset();
+    mockDeleteWorkflowDocument.mockReset();
 
     mockCreateClient.mockResolvedValue({
       auth: {
@@ -291,6 +300,7 @@ describe("Pod A document routes", () => {
           canSubmit: false,
           canApprove: true,
           canReject: true,
+          canDelete: false,
         },
       }),
     );
@@ -419,6 +429,7 @@ describe("Pod A document routes", () => {
           canSubmit: false,
           canApprove: false,
           canReject: false,
+          canDelete: false,
         },
       }),
     );
@@ -443,5 +454,31 @@ describe("Pod A document routes", () => {
       comment: undefined,
     });
     expect(body.document.status).toBe("APPROVED");
+  });
+
+  it("routes document deletion through the workflow delete endpoint", async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: {
+          id: "00000000-0000-4000-8000-000000000010",
+        },
+      },
+      error: null,
+    });
+    mockDeleteWorkflowDocument.mockResolvedValue(true);
+
+    const response = await deleteDocumentRoute(
+      new Request("http://localhost:3000/api/documents/0001", {
+        method: "DELETE",
+      }),
+      { params: { id: "0001" } },
+    );
+
+    expect(response.status).toBe(204);
+    expect(mockDeleteWorkflowDocument).toHaveBeenCalledWith({
+      adminSupabase: adminClient,
+      viewerId: "00000000-0000-4000-8000-000000000010",
+      documentId: "0001",
+    });
   });
 });

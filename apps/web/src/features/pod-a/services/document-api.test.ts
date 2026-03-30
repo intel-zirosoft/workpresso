@@ -4,6 +4,7 @@ import { ZodError } from "zod";
 import {
   actOnDocument,
   createDocument,
+  deleteDocument,
   DocumentApiError,
   fetchDocuments,
   submitDocument,
@@ -137,6 +138,7 @@ describe("document-api", () => {
               canSubmit: false,
               canApprove: false,
               canReject: false,
+              canDelete: false,
             },
           },
         }),
@@ -187,6 +189,7 @@ describe("document-api", () => {
               canSubmit: false,
               canApprove: false,
               canReject: false,
+              canDelete: false,
             },
           },
         }),
@@ -212,5 +215,18 @@ describe("document-api", () => {
       },
     );
     expect(document.status).toBe("APPROVED");
+  });
+
+  it("sends document deletion requests to the detail endpoint", async () => {
+    mockFetch.mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await deleteDocument("00000000-0000-4000-8000-000000000001");
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      "/api/documents/00000000-0000-4000-8000-000000000001",
+      {
+        method: "DELETE",
+      },
+    );
   });
 });
