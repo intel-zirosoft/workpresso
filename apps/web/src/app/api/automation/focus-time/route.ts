@@ -19,7 +19,7 @@
 
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getDummyJiraIssues } from "@/lib/dummy-data/jira";
+import { getHighPriorityJiraIssues } from "@/lib/jira/client";
 import { startOfDay, endOfDay, addMinutes } from "date-fns";
 
 const FOCUS_BLOCK_DURATION_MINUTES = 90;
@@ -112,11 +112,8 @@ export async function POST() {
       });
     }
 
-    // 3. Jira 이슈 중 높은 우선순위만 필터
-    const allIssues = getDummyJiraIssues();
-    const highPriorityIssues = allIssues.filter(
-      (issue) => issue.priority === "Highest" || issue.priority === "High"
-    );
+    // 3. 높은 우선순위 Jira 이슈 가져오기 (실제 API — 실패 시 더미 폴백)
+    const { issues: highPriorityIssues } = await getHighPriorityJiraIssues();
 
     const created: { title: string; start: string; end: string }[] = [];
     let currentSchedules = [...(existingSchedules ?? [])];

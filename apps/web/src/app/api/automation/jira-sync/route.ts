@@ -21,7 +21,7 @@
 
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getDummyJiraIssues } from "@/lib/dummy-data/jira";
+import { getJiraIssuesDueToday } from "@/lib/jira/client";
 import { startOfDay, endOfDay } from "date-fns";
 
 export async function POST() {
@@ -35,8 +35,8 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 1. Jira 이슈 목록 가져오기 (현재: 더미 데이터)
-    const jiraIssues = getDummyJiraIssues();
+    // 1. Jira 이슈 목록 가져오기 (실제 API — 실패 시 더미 폴백)
+    const { issues: jiraIssues, isDummy } = await getJiraIssuesDueToday();
 
     const results: { key: string; status: "created" | "skipped" | "error"; title?: string }[] = [];
 

@@ -57,7 +57,9 @@
 - [x] **Slack (Interaction)**: **10분 전 맥락 리마인더 & RSVP** 인터랙티브 버튼 구현 (더미 모드 완료)
   - 회의 시작 전 관련 문서(Pod A) 및 회의록(Pod D) 컨텐츠를 포함한 알림 전송 및 Slack 내 즉시 응답
   - `GET /api/automation/meeting-reminder` 엔드포인트 구현 완료 (10~15분 이내 MEETING 일정 감지, RSVP 버튼 페이로드 생성)
-- [ ] **Jira (Sync)**: **Jira Due Date ↔ WorkPresso 캘린더** 양방향 동기화
+- [x] **Jira (Sync)**: **Jira Due Date ↔ WorkPresso 캘린더** 양방향 동기화 (더미 모드 완료)
   - 본인에게 할당된 Jira 티켓의 마감일을 캘린더에 자동 표시
-- [ ] **Jira (Automation)**: **포커스 타임(Focus Time) 자동 방어** 로직 구현
+  - `POST /api/automation/jira-sync` 엔드포인트 구현 완료 (중복 방지 포함)
+- [x] **Jira (Automation)**: **포커스 타임(Focus Time) 자동 방어** 로직 구현 (더미 모드 완료)
   - 우선순위 높은 Jira 티켓 처리를 위한 빈 시간 스케줄 자동 생성 및 상태 업데이트
+  - `POST /api/automation/focus-time` 엔드포인트 구현 완료 (90분 블록, 하루 최대 3개)
