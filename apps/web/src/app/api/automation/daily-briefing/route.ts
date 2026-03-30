@@ -41,7 +41,7 @@ export async function GET() {
     if (error) throw error;
 
     // 2. Jira 이슈 가져오기 (실제 API 연동 — 실패 시 자동 더미 폴백)
-    const { issues: jiraIssues, isDummy } = await getJiraIssuesDueToday();
+    const { issues: jiraIssues, isDummy, error: jiraError } = await getJiraIssuesDueToday();
 
     // 3. Slack Block Kit 페이로드 생성
     const payload = buildBriefingPayload(schedules ?? [], jiraIssues, isDummy);
@@ -52,7 +52,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       mode: result.mode,
-      previewPayload: payload, // 개발 중 UI에서 페이로드 미리보기 가능
+      previewPayload: payload,
     });
   } catch (err: any) {
     console.error("[daily-briefing] Error:", err);

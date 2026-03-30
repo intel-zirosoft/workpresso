@@ -51,6 +51,7 @@ function mapPriority(jiraPriority: string): JiraIssue["priority"] {
 export async function getJiraIssuesDueToday(): Promise<{
   issues: JiraIssue[];
   isDummy: boolean;
+  error?: string;
 }> {
   if (!isJiraConfigured()) {
     console.log("[Jira Client] 환경변수가 없어 더미 데이터를 사용합니다.");
@@ -62,29 +63,31 @@ export async function getJiraIssuesDueToday(): Promise<{
   const projectKey = process.env.JIRA_PROJECT_KEY;
   const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
-  // JQL: assignee = currentUser() 는 서버사이드 토큰에서 동작하지 않으므로 이메일 직접 지정
-  const jql = encodeURIComponent(
-    `project = ${projectKey} AND assignee = "${email}" AND duedate <= "${today}" AND statusCategory != Done ORDER BY priority ASC`
-  );
-
-  const url = `${baseUrl}/rest/api/3/search?jql=${jql}&fields=summary,status,priority,duedate&maxResults=10`;
+  // [변경] 최신 Jira API 규격에 맞춰 POST /rest/api/3/search/jql 사용
+  const url = `${baseUrl}/rest/api/3/search/jql`;
+  const jqlBody = {
+    jql: `project = ${projectKey} AND assignee = currentUser() AND duedate <= "${today}" AND statusCategory != Done ORDER BY priority ASC`,
+    maxResults: 10,
+    fields: ["summary", "status", "priority", "duedate", "assignee"],
+  };
 
   try {
     const res = await fetch(url, {
+      method: "POST",
       headers: {
         Authorization: getJiraAuthHeader(),
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      // Next.js 캐싱 비활성화 (실시간 데이터)
+      body: JSON.stringify(jqlBody),
       cache: "no-store",
     });
 
     if (!res.ok) {
-      const errorText = await res.text();
-      console.error(`[Jira Client] API 오류 (${res.status}):`, errorText);
-      // API 실패 시 더미 데이터로 폴백
-      return { issues: getDummyJiraIssues(), isDummy: true };
+      const errorData = await res.json().catch(() => ({}));
+      const errorMsg = `Jira API 오류 (${res.status}): ${JSON.stringify(errorData)}`;
+      console.error(`[Jira Client] ${errorMsg}`);
+      return { issues: getDummyJiraIssues(), isDummy: true, error: errorMsg };
     }
 
     const data = await res.json();
@@ -100,9 +103,10 @@ export async function getJiraIssuesDueToday(): Promise<{
     }));
 
     return { issues, isDummy: false };
-  } catch (err) {
-    console.error("[Jira Client] 네트워크 오류:", err);
-    return { issues: getDummyJiraIssues(), isDummy: true };
+  } catch (err: any) {
+    const errorMsg = `네트워크 오류: ${err.message}`;
+    console.error("[Jira Client]", errorMsg);
+    return { issues: getDummyJiraIssues(), isDummy: true, error: errorMsg };
   }
 }
 
@@ -121,19 +125,23 @@ export async function getHighPriorityJiraIssues(): Promise<{
   const email = process.env.JIRA_USER_EMAIL!;
   const projectKey = process.env.JIRA_PROJECT_KEY;
 
-  const jql = encodeURIComponent(
-    `project = ${projectKey} AND assignee = "${email}" AND priority in (Highest, High) AND statusCategory != Done ORDER BY priority ASC`
-  );
-
-  const url = `${baseUrl}/rest/api/3/search?jql=${jql}&fields=summary,status,priority,duedate&maxResults=5`;
+  // [변경] 최신 Jira API 규격에 맞춰 POST /rest/api/3/search/jql 사용
+  const url = `${baseUrl}/rest/api/3/search/jql`;
+  const jqlBody = {
+    jql: `project = ${projectKey} AND assignee = currentUser() AND priority in (Highest, High) AND statusCategory != Done ORDER BY priority ASC`,
+    maxResults: 5,
+    fields: ["summary", "status", "priority", "duedate", "assignee"],
+  };
 
   try {
     const res = await fetch(url, {
+      method: "POST",
       headers: {
         Authorization: getJiraAuthHeader(),
         "Content-Type": "application/json",
         Accept: "application/json",
       },
+      body: JSON.stringify(jqlBody),
       cache: "no-store",
     });
 
