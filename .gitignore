@@ -34,9 +34,10 @@ supabase/.temp/
 supabase/.branches/
 supabase/config.toml
 
-# 일지
-project_report_*.md
-docs/dev-logs/
+# 개발 로그 (로컬 전용 — 원격 미포함)
+dev-logs/
 
 # AI Agents
 .codex/
+workthrough/
+.playwright-cli/

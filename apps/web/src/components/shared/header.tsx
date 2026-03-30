@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
-import { LogOut, Menu } from "lucide-react";
+import { LogOut, Menu, Settings } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getUserProfile } from "@/features/settings/services/userAction";
 import { UserRoleBadge } from "@/features/settings/components/UserRoleBadge";
@@ -97,13 +97,22 @@ export function Header() {
               </div>
             </div>
             <div className="w-[1px] h-8 bg-background/50 mx-1" />
-            <button 
-              onClick={handleSignOut}
-              className="text-muted hover:text-destructive transition-all p-1.5 hover:bg-destructive/10 rounded-full"
-              title="로그아웃"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button 
+                onClick={() => router.push("/settings/profile")}
+                className="text-muted hover:text-primary transition-all p-1.5 hover:bg-primary/10 rounded-full"
+                title="설정"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={handleSignOut}
+                className="text-muted hover:text-destructive transition-all p-1.5 hover:bg-destructive/10 rounded-full"
+                title="로그아웃"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         ) : (
           /* 로그인 필요 UI */

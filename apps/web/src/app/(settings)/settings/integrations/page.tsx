@@ -1,5 +1,5 @@
 import { getUserProfile } from '@/features/settings/services/userAction';
-import { getExtension, upsertExtension } from '@/features/settings/services/extensionAction';
+import { getExtension, upsertExtension, testJiraConnection, testSlackConnection } from '@/features/settings/services/extensionAction';
 import { APIKeyForm } from '@/features/settings/components/APIKeyForm';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
@@ -14,7 +14,15 @@ export default async function IntegrationsPage() {
 
   // Fetch configs (ignoring errors if not found; we handle them in the form)
   let slackConfig = { config: { webhookUrl: '' }, is_active: false };
-  let jiraConfig = { config: { projectKey: '', apiToken: '' }, is_active: false };
+  let jiraConfig = { 
+    config: { 
+      domain: '', 
+      email: '', 
+      projectKey: '', 
+      apiToken: '' 
+    }, 
+    is_active: false 
+  };
 
   try {
     const s = await getExtension('slack');
@@ -35,10 +43,24 @@ export default async function IntegrationsPage() {
 
   async function updateJira(formData: FormData) {
     'use server';
+    const domain = formData.get('domain') as string;
+    const email = formData.get('email') as string;
     const projectKey = formData.get('projectKey') as string;
     const apiToken = formData.get('apiToken') as string;
-    await upsertExtension('jira', { projectKey, apiToken }, !!(projectKey && apiToken));
+    
+    await upsertExtension('jira', { domain, email, projectKey, apiToken }, !!(domain && email && projectKey && apiToken));
     revalidatePath('/settings/integrations');
+  }
+
+  // Client-side testing bridge (Server Actions passed to components)
+  async function handleTestJira(config: any) {
+    'use server';
+    return await testJiraConnection(config);
+  }
+
+  async function handleTestSlack(webhookUrl: string) {
+    'use server';
+    return await testSlackConnection(webhookUrl);
   }
 
   return (
@@ -57,35 +79,76 @@ export default async function IntegrationsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         <APIKeyForm
           title="Slack Webhook"
-          description="중요 알림을 보낼 채널의 웹훅 정보를 입력하세요."
+          description="AI 회의 브리핑 및 실시간 알림을 수신할 채널을 설정합니다."
           isActive={slackConfig.is_active}
-          fields={[{ name: 'webhookUrl', label: 'Slack Webhook URL', type: 'password', defaultValue: slackConfig.config?.webhookUrl }]}
+          fields={[
+            { 
+              name: 'webhookUrl', 
+              label: 'Slack Webhook URL', 
+              type: 'password', 
+              defaultValue: slackConfig.config?.webhookUrl 
+            }
+          ]}
           action={updateSlack}
+          onTest={handleTestSlack}
         />
 
         <APIKeyForm
-          title="Jira Issue Tracking"
-          description="이슈 자동 생성을 위해 프로젝트 키와 토큰을 설정합니다."
+          title="Jira Cloud Integration"
+          description="회의록 액션 아이템을 Jira 티켓으로 자동 생성합니다."
           isActive={jiraConfig.is_active}
           fields={[
-            { name: 'projectKey', label: 'Jira Project Key (예: WP)', type: 'text', defaultValue: jiraConfig.config?.projectKey },
-            { name: 'apiToken', label: 'Jira API Token / Password', type: 'password', defaultValue: jiraConfig.config?.apiToken }
+            { 
+              name: 'domain', 
+              label: 'Jira Domain (e.g. your-domain.atlassian.net)', 
+              type: 'text', 
+              defaultValue: jiraConfig.config?.domain 
+            },
+            { 
+              name: 'email', 
+              label: 'Atlassian Account Email', 
+              type: 'text', 
+              defaultValue: jiraConfig.config?.email 
+            },
+            { 
+              name: 'projectKey', 
+              label: 'Default Project Key', 
+              type: 'text', 
+              defaultValue: jiraConfig.config?.projectKey 
+            },
+            { 
+              name: 'apiToken', 
+              label: 'Atlassian API Token', 
+              type: 'password', 
+              defaultValue: jiraConfig.config?.apiToken 
+            }
           ]}
           action={updateJira}
+          onTest={handleTestJira}
         />
       </div>
 
-      {/* Coming Soon & Guide */}
-      <div className="bg-primary/5 rounded-3xl p-8 border border-primary/10 flex flex-col items-center text-center space-y-4">
-        <div className="bg-white p-4 rounded-full shadow-soft">
-          <Zap className="w-8 h-8 text-primary animate-pulse" />
+      {/* GitHub Integration (Coming Soon Card Design) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-primary/5 rounded-3xl p-8 border border-primary/10 flex flex-col md:flex-row items-center gap-6">
+          <div className="bg-white p-5 rounded-3xl shadow-soft">
+            <Zap className="w-10 h-10 text-primary animate-pulse" />
+          </div>
+          <div className="text-center md:text-left">
+            <h3 className="text-xl font-headings font-bold text-text">지능형 자동화 라이브러리 확장 중</h3>
+            <p className="text-sm text-muted-foreground mt-2 max-w-lg leading-relaxed font-body">
+               GitHub, Notion, Google Calendar 연동이 곧 추가됩니다. 
+               회의록 요약이 자동으로 Notion 페이지에 기록되고, 개발 태스크가 GitHub Issue로 생성되는 미래를 준비하고 있습니다.
+            </p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-lg font-headings font-bold text-text">더 많은 연동 기능이 준비 중입니다</h3>
-          <p className="text-sm text-muted-foreground mt-2 max-w-lg mx-auto leading-relaxed">
-            GitHub, Google Calendar, Notion 등 비즈니스에 핵심적인 도구들을 곧 만나보실 수 있습니다. 
-            필요한 새로운 연동 기능이 있다면 관리자에게 제안해 주세요.
-          </p>
+
+        <div className="bg-white rounded-3xl p-8 border border-background shadow-soft flex flex-col items-center justify-center text-center group cursor-not-allowed">
+          <div className="w-16 h-16 bg-background rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <Github className="w-8 h-8 text-muted" />
+          </div>
+          <h4 className="font-bold text-muted-foreground">GitHub 연동</h4>
+          <p className="text-xs text-muted mt-1 italic">Coming Soon</p>
         </div>
       </div>
     </div>

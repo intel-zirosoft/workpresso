@@ -54,3 +54,35 @@ Details: {
   "hasAudioBlob": true
 }
 --------------------------------------------------
+[2026-03-26T01:30:08.488Z] [ERROR] Meeting processing failed
+Details: {
+  "error": "Gemini API Key is missing. Please check your environment variables.",
+  "stack": "Error: Gemini API Key is missing. Please check your environment variables.\n    at transcribeAudio (webpack-internal:///(app-pages-browser)/./src/features/pod-d/services/sttService.ts:14:15)\n    at handleUpload (webpack-internal:///(app-pages-browser)/./src/features/pod-d/components/AudioRecorder.tsx:81:99)",
+  "status": "stopped",
+  "hasAudioBlob": true
+}
+--------------------------------------------------
+[2026-03-26T01:32:06.039Z] [ERROR] Meeting processing failed
+Details: {
+  "error": "Gemini API Key is missing. Please check your environment variables.",
+  "stack": "Error: Gemini API Key is missing. Please check your environment variables.\n    at transcribeAudio (webpack-internal:///(app-pages-browser)/./src/features/pod-d/services/sttService.ts:14:15)\n    at handleUpload (webpack-internal:///(app-pages-browser)/./src/features/pod-d/components/AudioRecorder.tsx:81:99)",
+  "status": "stopped",
+  "hasAudioBlob": true
+}
+--------------------------------------------------
+[2026-03-26T01:34:59.169Z] [ERROR] Meeting processing failed
+Details: {
+  "error": "Gemini API Error: models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.",
+  "stack": "Error: Gemini API Error: models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\n    at transcribeAudio (webpack-internal:///(app-pages-browser)/./src/features/pod-d/services/sttService.ts:51:15)\n    at async handleUpload (webpack-internal:///(app-pages-browser)/./src/features/pod-d/components/AudioRecorder.tsx:81:24)",
+  "status": "stopped",
+  "hasAudioBlob": true
+}
+--------------------------------------------------
+[2026-03-26T01:35:59.746Z] [ERROR] Meeting processing failed
+Details: {
+  "error": "Gemini API Error: models/gemini-1.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.",
+  "stack": "Error: Gemini API Error: models/gemini-1.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\n    at transcribeAudio (webpack-internal:///(app-pages-browser)/./src/features/pod-d/services/sttService.ts:51:15)\n    at async handleUpload (webpack-internal:///(app-pages-browser)/./src/features/pod-d/components/AudioRecorder.tsx:81:24)",
+  "status": "stopped",
+  "hasAudioBlob": true
+}
+--------------------------------------------------

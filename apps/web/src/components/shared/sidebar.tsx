@@ -13,7 +13,7 @@ const navItems = [
   { name: "업무 도우미", href: "/chat", icon: Bot }, // Pod C: AI Agent
   { name: "채터", href: "/chatter", icon: MessageSquare },
   { name: "팀원", href: "/teammates", icon: Users },
-  { name: "캔버스", href: "/canvas", icon: Layout },
+  // { name: "캔버스", href: "/canvas", icon: Layout },
   { name: "일정", href: "/schedules", icon: Calendar },
   { name: "음성", href: "/voice", icon: Mic }, // Pod D: Meeting Logs
 ];
