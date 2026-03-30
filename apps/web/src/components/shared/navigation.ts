@@ -5,6 +5,7 @@ import {
   Home,
   MessageSquare,
   Mic,
+  Settings2,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -13,6 +14,7 @@ export interface AppNavItem {
   name: string;
   href: string;
   icon: LucideIcon;
+  adminOnly?: boolean;
 }
 
 export const APP_NAV_ITEMS: AppNavItem[] = [
@@ -23,6 +25,15 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
   { name: "팀원", href: "/teammates", icon: Users },
   { name: "일정", href: "/schedules", icon: Calendar },
   { name: "음성", href: "/voice", icon: Mic },
+];
+
+export const ADMIN_NAV_ITEMS: AppNavItem[] = [
+  {
+    name: "설정",
+    href: "/settings/integrations",
+    icon: Settings2,
+    adminOnly: true,
+  },
 ];
 
 export const CHROMELESS_PATH_PREFIXES = ["/login", "/signup"];
@@ -37,5 +48,9 @@ export const isChromelessPath = (pathname: string) =>
 
 export const getCurrentSectionTitle = (pathname: string) => {
   if (pathname.startsWith("/settings")) return "설정";
-  return APP_NAV_ITEMS.find((item) => isActivePath(pathname, item.href))?.name ?? "WorkPresso";
+  const allItems = [...APP_NAV_ITEMS, ...ADMIN_NAV_ITEMS];
+  return (
+    allItems.find((item) => isActivePath(pathname, item.href))?.name ??
+    "WorkPresso"
+  );
 };
