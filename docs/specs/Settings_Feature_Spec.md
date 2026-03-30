@@ -117,7 +117,7 @@ features/settings/
 1. **DB 작업 (백엔드)**: `schema.db` 수정 및 `supabase migration new add_settings_and_roles` 명령어를 통해 마이그레이션 스크립트를 생성하고 위 SQL을 작성합니다.
 2. **타입 적용 (공통)**: `supabase gen types`를 실행하여 갱신된 스키마 타입을 클라이언트에 반영합니다.
 3. **API & Server Actions (백엔드)**: `features/settings/services/` 내부의 로직들을 구현합니다.
-4. **UI 컴포넌트 개발 (프론트엔드)**: `docs/design_theme.txt`를 준수하여 Sidebar, Form, Table 등 개별 컴포넌트를 구축합니다.
+4. **UI 컴포넌트 개발 (프론트엔드)**: `docs/assets/design_theme.txt`를 준수하여 Sidebar, Form, Table 등 개별 컴포넌트를 구축합니다.
 5. **라우트 연결 및 미들웨어 (풀스택)**: `app/(settings)` 경로에 페이지들을 연결하고, `middleware.ts`에 권한 제어 로직을 추가하여 마무리지습니다.
 
 **[승인 대기]** 이 기술 명세서를 바탕으로 실제 개발 작업을 시작할 수 있습니다. 피드백이 완료되었다면 Plan Mode를 종료해 주세요.
