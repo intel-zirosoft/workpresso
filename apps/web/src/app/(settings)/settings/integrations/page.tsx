@@ -2,7 +2,7 @@ import { getUserProfile } from '@/features/settings/services/userAction';
 import { getExtension, upsertExtension, testJiraConnection, testSlackConnection } from '@/features/settings/services/extensionAction';
 import { APIKeyForm } from '@/features/settings/components/APIKeyForm';
 import { SlackIdentityMappingForm } from '@/features/settings/components/SlackIdentityMappingForm';
-import { getSlackIdentityMappings, saveSlackIdentityMappings } from '@/features/settings/services/slackIdentityAction';
+import { getSlackIdentityMappings, getSlackMemberOptions, saveSlackIdentityMappings } from '@/features/settings/services/slackIdentityAction';
 import { getAllUsers } from '@/features/settings/services/userAction';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
@@ -16,7 +16,7 @@ export default async function IntegrationsPage() {
   }
 
   // Fetch configs (ignoring errors if not found; we handle them in the form)
-  let slackConfig = { config: { webhookUrl: '' }, is_active: false };
+  let slackConfig = { config: { webhookUrl: '', botToken: '' }, is_active: false };
   let jiraConfig = { 
     config: { 
       domain: '', 
@@ -37,19 +37,25 @@ export default async function IntegrationsPage() {
     if (j) jiraConfig = { config: j.config as any, is_active: j.is_active };
   } catch(e) {}
 
+  let slackMembers: Array<{ id: string; label: string }> = [];
+  let slackLoadError: string | null = null;
+
   const [users, slackIdentityMappings] = await Promise.all([
     getAllUsers(),
     getSlackIdentityMappings(),
   ]);
 
-  const slackIdentityMap = new Map(
-    slackIdentityMappings.map((mapping) => [mapping.userId, mapping.slackUserId]),
-  );
+  try {
+    slackMembers = await getSlackMemberOptions();
+  } catch (error) {
+    slackLoadError = error instanceof Error ? error.message : 'Slack 사용자 목록을 불러오지 못했습니다.';
+  }
 
   async function updateSlack(formData: FormData) {
     'use server';
     const webhookUrl = formData.get('webhookUrl') as string;
-    await upsertExtension('slack', { webhookUrl }, !!webhookUrl);
+    const botToken = formData.get('botToken') as string;
+    await upsertExtension('slack', { webhookUrl, botToken }, !!webhookUrl);
     revalidatePath('/settings/integrations');
   }
 
@@ -70,20 +76,24 @@ export default async function IntegrationsPage() {
     return await testJiraConnection(config);
   }
 
-  async function handleTestSlack(webhookUrl: string) {
+  async function handleTestSlack(config: { webhookUrl?: string }) {
     'use server';
-    return await testSlackConnection(webhookUrl);
+    return await testSlackConnection(config.webhookUrl ?? '');
   }
 
   async function updateSlackIdentityMappings(formData: FormData) {
     'use server';
 
-    const entries = Array.from(formData.entries())
-      .filter(([key]) => key.startsWith('slackUserId:'))
-      .map(([key, value]) => ({
-        userId: key.replace('slackUserId:', ''),
-        slackUserId: String(value ?? ''),
-      }));
+    const rowIds = new Set(
+      Array.from(formData.keys())
+        .filter((key) => key.startsWith('mappingUserId:') || key.startsWith('mappingSlackUserId:'))
+        .map((key) => key.split(':')[1] ?? ''),
+    );
+
+    const entries = Array.from(rowIds).map((rowId) => ({
+      userId: String(formData.get(`mappingUserId:${rowId}`) ?? ''),
+      slackUserId: String(formData.get(`mappingSlackUserId:${rowId}`) ?? ''),
+    }));
 
     await saveSlackIdentityMappings(entries);
     revalidatePath('/settings/integrations');
@@ -103,21 +113,41 @@ export default async function IntegrationsPage() {
       
       {/* Active Integrations Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        <APIKeyForm
-          title="Slack Webhook"
-          description="AI 회의 브리핑 및 실시간 알림을 수신할 채널을 설정합니다."
-          isActive={slackConfig.is_active}
-          fields={[
-            { 
-              name: 'webhookUrl', 
-              label: 'Slack Webhook URL', 
-              type: 'password', 
-              defaultValue: slackConfig.config?.webhookUrl 
-            }
-          ]}
-          action={updateSlack}
-          onTest={handleTestSlack}
-        />
+        <div className="space-y-4">
+          <APIKeyForm
+            title="Slack Webhook"
+            description="문서 알림 채널과 Slack 멤버 조회용 Bot Token을 함께 설정합니다."
+            isActive={slackConfig.is_active}
+            fields={[
+              { 
+                name: 'webhookUrl', 
+                label: 'Slack Webhook URL', 
+                type: 'password', 
+                defaultValue: slackConfig.config?.webhookUrl 
+              },
+              {
+                name: 'botToken',
+                label: 'Slack Bot Token',
+                type: 'password',
+                defaultValue: slackConfig.config?.botToken,
+              },
+            ]}
+            action={updateSlack}
+            onTest={handleTestSlack}
+          />
+
+          <SlackIdentityMappingForm
+            users={users.map((user: any) => ({
+              id: user.id,
+              name: user.name,
+              department: user.teams?.name || user.department || null,
+            }))}
+            slackMembers={slackMembers}
+            initialMappings={slackIdentityMappings}
+            slackLoadError={slackLoadError}
+            action={updateSlackIdentityMappings}
+          />
+        </div>
 
         <APIKeyForm
           title="Jira Cloud Integration"
@@ -156,18 +186,6 @@ export default async function IntegrationsPage() {
 
       {/* GitHub Integration (Coming Soon Card Design) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-3">
-          <SlackIdentityMappingForm
-            users={users.map((user: any) => ({
-              id: user.id,
-              name: user.name,
-              department: user.teams?.name || user.department || null,
-              slackUserId: slackIdentityMap.get(user.id) ?? '',
-            }))}
-            action={updateSlackIdentityMappings}
-          />
-        </div>
-
         <div className="lg:col-span-2 bg-primary/5 rounded-3xl p-8 border border-primary/10 flex flex-col md:flex-row items-center gap-6">
           <div className="bg-white p-5 rounded-3xl shadow-soft">
             <Zap className="w-10 h-10 text-primary animate-pulse" />
