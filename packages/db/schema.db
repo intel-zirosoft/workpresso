@@ -161,6 +161,13 @@ CREATE TABLE IF NOT EXISTS workspace_extensions (
     deleted_at TIMESTAMP WITH TIME ZONE
 );
 
+CREATE TABLE IF NOT EXISTS user_slack_identities (
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    slack_user_id VARCHAR NOT NULL UNIQUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
 -- 5. 모든 테이블에 updated_at 자동 갱신 트리거 적용
 DO $$
 DECLARE
@@ -201,6 +208,8 @@ ALTER TABLE document_cc_recipients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE document_cc_recipients FORCE ROW LEVEL SECURITY;
 ALTER TABLE document_jira_links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE document_jira_links FORCE ROW LEVEL SECURITY;
+ALTER TABLE user_slack_identities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_slack_identities FORCE ROW LEVEL SECURITY;
 
 DO $$
 BEGIN

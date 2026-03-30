@@ -1,6 +1,9 @@
 import { getUserProfile } from '@/features/settings/services/userAction';
 import { getExtension, upsertExtension, testJiraConnection, testSlackConnection } from '@/features/settings/services/extensionAction';
 import { APIKeyForm } from '@/features/settings/components/APIKeyForm';
+import { SlackIdentityMappingForm } from '@/features/settings/components/SlackIdentityMappingForm';
+import { getSlackIdentityMappings, saveSlackIdentityMappings } from '@/features/settings/services/slackIdentityAction';
+import { getAllUsers } from '@/features/settings/services/userAction';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { Link2, Slack, Github, Zap } from 'lucide-react';
@@ -34,6 +37,15 @@ export default async function IntegrationsPage() {
     if (j) jiraConfig = { config: j.config as any, is_active: j.is_active };
   } catch(e) {}
 
+  const [users, slackIdentityMappings] = await Promise.all([
+    getAllUsers(),
+    getSlackIdentityMappings(),
+  ]);
+
+  const slackIdentityMap = new Map(
+    slackIdentityMappings.map((mapping) => [mapping.userId, mapping.slackUserId]),
+  );
+
   async function updateSlack(formData: FormData) {
     'use server';
     const webhookUrl = formData.get('webhookUrl') as string;
@@ -61,6 +73,20 @@ export default async function IntegrationsPage() {
   async function handleTestSlack(webhookUrl: string) {
     'use server';
     return await testSlackConnection(webhookUrl);
+  }
+
+  async function updateSlackIdentityMappings(formData: FormData) {
+    'use server';
+
+    const entries = Array.from(formData.entries())
+      .filter(([key]) => key.startsWith('slackUserId:'))
+      .map(([key, value]) => ({
+        userId: key.replace('slackUserId:', ''),
+        slackUserId: String(value ?? ''),
+      }));
+
+    await saveSlackIdentityMappings(entries);
+    revalidatePath('/settings/integrations');
   }
 
   return (
@@ -130,6 +156,18 @@ export default async function IntegrationsPage() {
 
       {/* GitHub Integration (Coming Soon Card Design) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-3">
+          <SlackIdentityMappingForm
+            users={users.map((user: any) => ({
+              id: user.id,
+              name: user.name,
+              department: user.teams?.name || user.department || null,
+              slackUserId: slackIdentityMap.get(user.id) ?? '',
+            }))}
+            action={updateSlackIdentityMappings}
+          />
+        </div>
+
         <div className="lg:col-span-2 bg-primary/5 rounded-3xl p-8 border border-primary/10 flex flex-col md:flex-row items-center gap-6">
           <div className="bg-white p-5 rounded-3xl shadow-soft">
             <Zap className="w-10 h-10 text-primary animate-pulse" />
@@ -154,4 +192,3 @@ export default async function IntegrationsPage() {
     </div>
   );
 }
-
