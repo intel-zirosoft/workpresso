@@ -68,7 +68,14 @@ export async function getDecryptedExtensionSecret(
     return null;
   }
 
-  return decryptSecret(row.encrypted_value);
+  try {
+    return decryptSecret(row.encrypted_value);
+  } catch (error) {
+    throw new Error(
+      `${extName}/${secretName} 비밀값을 복호화할 수 없습니다. APP_SECRET_ENCRYPTION_KEY가 저장 시점과 동일한지 확인하거나, 설정 화면에서 API 키를 다시 저장해 주세요.`,
+      { cause: error },
+    );
+  }
 }
 
 export async function getExtensionSecretSummary(input: {
