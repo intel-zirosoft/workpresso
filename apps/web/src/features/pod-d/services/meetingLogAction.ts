@@ -8,20 +8,21 @@ import { generateJsonObject } from "@/lib/ai/chat";
 import { getResolvedAiConfig } from "@/lib/ai/config";
 import { revalidatePath } from "next/cache";
 
+import { 
+  createJiraIssue, 
+  sendSlackMessage, 
+  getExtension 
+} from "@/features/settings/services/extensionAction";
+
 /**
  * DB에서 시스템 설정을 가져와 실제 AI 리파인먼트를 수행합니다. (보안 강화 및 멀티 엔진 지원)
  */
 export async function refineMeetingLogServer(id: string, sttText: string) {
   const supabase = await createClient();
 
-  const { data: slackExt } = await supabase
-    .from("workspace_extensions")
-    .select("*")
-    .eq("ext_name", "slack")
-    .single();
-
-  const slackConfig = slackExt?.config as any;
+  const slackExt = await getExtension("slack");
   const isSlackActive = slackExt?.is_active;
+  
   if (!sttText) return null;
 
   // 2. 맥락 데이터 준비
@@ -79,7 +80,7 @@ STT 데이터: ${sttText}
 
   if (error) throw new Error(error.message);
 
-  // 6. Pod C: 지식 기반 실시간 인덱싱 (비동기 처리 권장하나 서버 액션 내에서 완결성을 위해 await)
+  // 6. Pod C: 지식 기반 실시간 인덱싱
   try {
     const { indexKnowledge } = await import('@/features/pod-c/services/knowledgeService');
     const indexText = buildMeetingLogKnowledgeContent({
@@ -96,13 +97,11 @@ STT 데이터: ${sttText}
     });
   } catch (idxError) {
     console.error('[Pod D -> C Integration] Indexing failed:', idxError);
-    // 인덱싱 실패가 정제 완료 사용자 경험을 방해하지 않도록 에러는 로깅만 수행
   }
 
-  // 5. Slack 알림 연동 (조직 전체 통제)
-  if (isSlackActive && slackConfig?.webhookUrl) {
+  // 5. Slack 알림 연동 (범용 유틸리티 사용)
+  if (isSlackActive) {
     try {
-      // 슬랙 Blocks 레이아웃 구성
       const blocks = [
         {
           type: "header",
@@ -134,7 +133,6 @@ STT 데이터: ${sttText}
         }
       ];
 
-      // 액션 아이템이 있으면 추가
       if (refinedData.action_items && refinedData.action_items.length > 0) {
         const actionItemsText = refinedData.action_items
           .map((item: any) => `• [${item.assignee || '미정'}] ${item.task}`)
@@ -149,7 +147,6 @@ STT 데이터: ${sttText}
         } as any);
       }
 
-      // 상세보기 버튼 추가
       blocks.push({
         type: "actions",
         elements: [
@@ -166,13 +163,7 @@ STT 데이터: ${sttText}
         ]
       } as any);
 
-      await fetch(slackConfig.webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: `🔔 *새로운 회의록 생성 완료*\n*제목:* ${refinedData.title ?? "제목 미정"}\n*작성자:* ${ownerName}\n*요약:* ${refinedData.summary ?? ""}\n\n<${process.env.NEXT_PUBLIC_SITE_URL || "https://workpresso.app"}/voice/${id}|회의록 상세보기>`,
-        }),
-      });
+      await sendSlackMessage(`🔔 새로운 회의록: ${refinedData.title ?? "제목 미정"}`, blocks);
     } catch (e) {
       console.error("Slack 알림 전송 실패:", e);
     }
@@ -184,7 +175,6 @@ STT 데이터: ${sttText}
 
 /**
  * 특정 할 일(Action Item)을 Jira 이슈로 전송하고, DB에 이슈 키를 영구 저장합니다.
- * - Jira 생성 + DB 저장을 서버에서 원자적으로 처리하여 클라이언트 의존성을 제거합니다.
  */
 export async function syncActionItemToJiraServer(
   meetingLogId: string,
@@ -206,7 +196,6 @@ export async function syncActionItemToJiraServer(
 
   const currentItems: any[] = logData?.action_items || [];
 
-  // 이미 Jira 이슈가 연결된 경우 중복 방지
   if (currentItems[itemIndex]?.jira_key) {
     return {
       success: true,
@@ -216,15 +205,13 @@ export async function syncActionItemToJiraServer(
     };
   }
 
-  // 2. Jira 이슈 생성
-  const { createJiraIssue } = await import('@/features/settings/services/extensionAction');
-
+  // 2. Jira 이슈 생성 (범용 유틸리티 사용)
   const summary = `[회의록 할 일] ${task}`;
   const description = `담당자: ${assignee || '미정'}\n기한: ${dueDate || '없음'}\n\nWorkPresso 회의록에서 자동 생성된 할 일입니다.\n회의록 ID: ${meetingLogId}`;
 
   const jiraResult = await createJiraIssue({ summary, description });
 
-  // 3. action_items 배열에 Jira 정보 반영 후 DB 저장 (서버에서 직접 처리)
+  // 3. action_items 배열에 Jira 정보 반영 후 DB 저장
   const updatedItems = [...currentItems];
   updatedItems[itemIndex] = {
     ...updatedItems[itemIndex],
