@@ -51,15 +51,15 @@
 
 **목표:** Jira 및 Slack 연동을 통해 WorkPresso의 일정을 외부 도구와 동기화하고 지능형 알림 생태계 구축
 
-- [x] **Slack (Integration)**: **Daily 스마트 모닝 브리핑** 기능 구현 (더미 모드 완료)
+- [x] **Slack (Integration)**: **Daily 스마트 모닝 브리핑** 기능 구현 ✅ 실제 Slack 전송 완료
   - 매일 아침 설정된 시간에 오늘 일정 및 Jira 할 일을 AI가 요약하여 Slack 메시지로 전송
-  - `GET /api/automation/daily-briefing` 엔드포인트 구현 완료 (더미 Jira 데이터, 실제 일정 DB 연동)
-- [x] **Slack (Interaction)**: **10분 전 맥락 리마인더 & RSVP** 인터랙티브 버튼 구현 (더미 모드 완료)
+  - `GET /api/automation/daily-briefing` — 실제 Supabase 일정 + 실제 Jira API, Slack Webhook 전송
+- [x] **Slack (Interaction)**: **10분 전 맥락 리마인더 & RSVP** 인터랙티브 버튼 구현 ✅ 실제 Slack 전송 완료
   - 회의 시작 전 관련 문서(Pod A) 및 회의록(Pod D) 컨텐츠를 포함한 알림 전송 및 Slack 내 즉시 응답
-  - `GET /api/automation/meeting-reminder` 엔드포인트 구현 완료 (10~15분 이내 MEETING 일정 감지, RSVP 버튼 페이로드 생성)
-- [x] **Jira (Sync)**: **Jira Due Date ↔ WorkPresso 캘린더** 양방향 동기화 (더미 모드 완료)
+  - `GET /api/automation/meeting-reminder` — 10~15분 이내 MEETING 감지, RSVP Block Kit 페이로드 실전 전송
+- [x] **Jira (Sync)**: **Jira Due Date ↔ WorkPresso 캘린더** 양방향 동기화 ✅ 실제 Jira API 연동 완료
   - 본인에게 할당된 Jira 티켓의 마감일을 캘린더에 자동 표시
-  - `POST /api/automation/jira-sync` 엔드포인트 구현 완료 (중복 방지 포함)
-- [x] **Jira (Automation)**: **포커스 타임(Focus Time) 자동 방어** 로직 구현 (더미 모드 완료)
+  - `POST /api/automation/jira-sync` — 실제 `workpresso.atlassian.net` KAN 프로젝트 이슈 동기화, 중복 방지
+- [x] **Jira (Automation)**: **포커스 타임(Focus Time) 자동 방어** 로직 구현 ✅ 실제 Jira API 연동 완료
   - 우선순위 높은 Jira 티켓 처리를 위한 빈 시간 스케줄 자동 생성 및 상태 업데이트
-  - `POST /api/automation/focus-time` 엔드포인트 구현 완료 (90분 블록, 하루 최대 3개)
+  - `POST /api/automation/focus-time` — 실제 Jira Highest/High 이슈 기반 90분 블록, 하루 최대 3개
