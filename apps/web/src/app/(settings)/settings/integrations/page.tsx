@@ -1,65 +1,99 @@
-import { getUserProfile } from '@/features/settings/services/userAction';
-import { getExtension, upsertExtension, testJiraConnection, testSlackConnection } from '@/features/settings/services/extensionAction';
-import { APIKeyForm } from '@/features/settings/components/APIKeyForm';
-import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
-import { Link2, Slack, Github, Zap } from 'lucide-react';
+import { getUserProfile } from "@/features/settings/services/userAction";
+import {
+  getSystemLlmSecretSummary,
+  upsertSystemLlmApiKey,
+  getExtension,
+  upsertExtension,
+  testJiraConnection,
+  testSlackConnection,
+  testLLMConnection,
+  getIntegrationsStatus,
+} from "@/features/settings/services/extensionAction";
+import { APIKeyForm } from "@/features/settings/components/APIKeyForm";
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { cn } from "@/lib/utils";
+import { Activity, Cpu, MessageSquare, Link2, Github, Zap } from "lucide-react";
 
 export default async function IntegrationsPage() {
   const profile = await getUserProfile();
-  
-  if (profile.role !== 'SUPER_ADMIN' && profile.role !== 'ORG_ADMIN') {
-    redirect('/settings/profile');
+
+  if (profile.role !== "SUPER_ADMIN" && profile.role !== "ORG_ADMIN") {
+    redirect("/settings/profile");
   }
 
-  // Fetch configs (ignoring errors if not found; we handle them in the form)
-  let slackConfig = { config: { webhookUrl: '' }, is_active: false };
-  let jiraConfig = { 
-    config: { 
-      domain: '', 
-      email: '', 
-      projectKey: '', 
-      apiToken: '' 
-    }, 
-    is_active: false 
+  const [llmSecret, slack, jira, llm, status] = await Promise.all([
+    getSystemLlmSecretSummary(),
+    getExtension("slack"),
+    getExtension("jira"),
+    getExtension("system_llm"),
+    getIntegrationsStatus(),
+  ]);
+
+  const stats = [
+    {
+      name: "Slack 연동",
+      status: status.slack.is_active,
+      icon: MessageSquare,
+      color: "text-[#4A154B]",
+      bg: "bg-[#4A154B]/5",
+      updatedAt: 'updated_at' in status.slack ? status.slack.updated_at : null,
+    },
+    {
+      name: "Jira 연동",
+      status: status.jira.is_active,
+      icon: Activity,
+      color: "text-[#0052CC]",
+      bg: "bg-[#0052CC]/5",
+      updatedAt: 'updated_at' in status.jira ? status.jira.updated_at : null,
+    },
+    {
+      name: "AI 엔진 (OpenRouter)",
+      status: status.llm.is_active,
+      icon: Cpu,
+      color: "text-primary",
+      bg: "bg-primary/5",
+      updatedAt: 'updated_at' in status.llm ? status.llm.updated_at : null,
+    },
+  ];
+
+  // 폼에서 사용할 설정 데이터 추출 및 기본값 처리
+  const slackConfig = { config: (slack?.config as any) || { webhookUrl: "" }, is_active: slack?.is_active || false };
+  const jiraConfig = { 
+    config: (jira?.config as any) || { domain: "", email: "", projectKey: "", apiToken: "" }, 
+    is_active: jira?.is_active || false 
   };
 
-  try {
-    const s = await getExtension('slack');
-    if (s) slackConfig = { config: s.config as any, is_active: s.is_active };
-  } catch(e) {}
-
-  try {
-    const j = await getExtension('jira');
-    if (j) jiraConfig = { config: j.config as any, is_active: j.is_active };
-  } catch(e) {}
-
   async function updateSlack(formData: FormData) {
-    'use server';
-    const webhookUrl = formData.get('webhookUrl') as string;
-    await upsertExtension('slack', { webhookUrl }, !!webhookUrl);
-    revalidatePath('/settings/integrations');
+    "use server";
+    const webhookUrl = formData.get("webhookUrl") as string;
+    await upsertExtension("slack", { webhookUrl }, !!webhookUrl);
+    revalidatePath("/settings/integrations");
   }
 
   async function updateJira(formData: FormData) {
-    'use server';
-    const domain = formData.get('domain') as string;
-    const email = formData.get('email') as string;
-    const projectKey = formData.get('projectKey') as string;
-    const apiToken = formData.get('apiToken') as string;
-    
-    await upsertExtension('jira', { domain, email, projectKey, apiToken }, !!(domain && email && projectKey && apiToken));
-    revalidatePath('/settings/integrations');
+    "use server";
+    const domain = formData.get("domain") as string;
+    const email = formData.get("email") as string;
+    const projectKey = formData.get("projectKey") as string;
+    const apiToken = formData.get("apiToken") as string;
+
+    await upsertExtension(
+      "jira",
+      { domain, email, projectKey, apiToken },
+      !!(domain && email && projectKey && apiToken),
+    );
+    revalidatePath("/settings/integrations");
   }
 
   // Client-side testing bridge (Server Actions passed to components)
   async function handleTestJira(config: any) {
-    'use server';
+    "use server";
     return await testJiraConnection(config);
   }
 
   async function handleTestSlack(webhookUrl: string) {
-    'use server';
+    "use server";
     return await testSlackConnection(webhookUrl);
   }
 
@@ -74,7 +108,7 @@ export default async function IntegrationsPage() {
           조직에서 사용하는 협업 도구들을 연결하여 업무 효율을 극대화합니다.
         </p>
       </div>
-      
+
       {/* Active Integrations Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         <APIKeyForm
@@ -82,12 +116,12 @@ export default async function IntegrationsPage() {
           description="AI 회의 브리핑 및 실시간 알림을 수신할 채널을 설정합니다."
           isActive={slackConfig.is_active}
           fields={[
-            { 
-              name: 'webhookUrl', 
-              label: 'Slack Webhook URL', 
-              type: 'password', 
-              defaultValue: slackConfig.config?.webhookUrl 
-            }
+            {
+              name: "webhookUrl",
+              label: "Slack Webhook URL",
+              type: "password",
+              defaultValue: slackConfig.config?.webhookUrl,
+            },
           ]}
           action={updateSlack}
           onTest={handleTestSlack}
@@ -98,30 +132,30 @@ export default async function IntegrationsPage() {
           description="회의록 액션 아이템을 Jira 티켓으로 자동 생성합니다."
           isActive={jiraConfig.is_active}
           fields={[
-            { 
-              name: 'domain', 
-              label: 'Jira Domain (e.g. your-domain.atlassian.net)', 
-              type: 'text', 
-              defaultValue: jiraConfig.config?.domain 
+            {
+              name: "domain",
+              label: "Jira Domain (e.g. your-domain.atlassian.net)",
+              type: "text",
+              defaultValue: jiraConfig.config?.domain,
             },
-            { 
-              name: 'email', 
-              label: 'Atlassian Account Email', 
-              type: 'text', 
-              defaultValue: jiraConfig.config?.email 
+            {
+              name: "email",
+              label: "Atlassian Account Email",
+              type: "text",
+              defaultValue: jiraConfig.config?.email,
             },
-            { 
-              name: 'projectKey', 
-              label: 'Default Project Key', 
-              type: 'text', 
-              defaultValue: jiraConfig.config?.projectKey 
+            {
+              name: "projectKey",
+              label: "Default Project Key",
+              type: "text",
+              defaultValue: jiraConfig.config?.projectKey,
             },
-            { 
-              name: 'apiToken', 
-              label: 'Atlassian API Token', 
-              type: 'password', 
-              defaultValue: jiraConfig.config?.apiToken 
-            }
+            {
+              name: "apiToken",
+              label: "Atlassian API Token",
+              type: "password",
+              defaultValue: jiraConfig.config?.apiToken,
+            },
           ]}
           action={updateJira}
           onTest={handleTestJira}
@@ -135,10 +169,13 @@ export default async function IntegrationsPage() {
             <Zap className="w-10 h-10 text-primary animate-pulse" />
           </div>
           <div className="text-center md:text-left">
-            <h3 className="text-xl font-headings font-bold text-text">지능형 자동화 라이브러리 확장 중</h3>
+            <h3 className="text-xl font-headings font-bold text-text">
+              지능형 자동화 라이브러리 확장 중
+            </h3>
             <p className="text-sm text-muted-foreground mt-2 max-w-lg leading-relaxed font-body">
-               GitHub, Notion, Google Calendar 연동이 곧 추가됩니다. 
-               회의록 요약이 자동으로 Notion 페이지에 기록되고, 개발 태스크가 GitHub Issue로 생성되는 미래를 준비하고 있습니다.
+              GitHub, Notion, Google Calendar 연동이 곧 추가됩니다. 회의록
+              요약이 자동으로 Notion 페이지에 기록되고, 개발 태스크가 GitHub
+              Issue로 생성되는 미래를 준비하고 있습니다.
             </p>
           </div>
         </div>
@@ -154,4 +191,3 @@ export default async function IntegrationsPage() {
     </div>
   );
 }
-
