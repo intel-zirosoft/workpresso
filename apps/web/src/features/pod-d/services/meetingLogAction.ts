@@ -113,6 +113,20 @@ STT 데이터: ${sttText}
 
   if (error) throw new Error(error.message);
 
+  // 6. Pod C: 지식 기반 실시간 인덱싱 (비동기 처리 권장하나 서버 액션 내에서 완결성을 위해 await)
+  try {
+    const { indexKnowledge } = await import('@/features/pod-c/services/knowledgeService');
+    const indexText = `제목: ${refinedData.title}\n요약: ${refinedData.summary}`;
+    
+    await indexKnowledge(id, 'MEETING_LOGS', indexText, {
+      title: refinedData.title,
+      owner_id: logData?.owner_id
+    });
+  } catch (idxError) {
+    console.error('[Pod D -> C Integration] Indexing failed:', idxError);
+    // 인덱싱 실패가 정제 완료 사용자 경험을 방해하지 않도록 에러는 로깅만 수행
+  }
+
   // 5. Slack 알림 연동 (조직 전체 통제)
   if (isSlackActive && slackConfig?.webhookUrl) {
     try {

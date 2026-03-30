@@ -2,10 +2,6 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";     -- UUID 생성용
 CREATE EXTENSION IF NOT EXISTS "vector";        -- AI 벡터 저장용 (pgvector)
 
--- 1. 필수 확장 프로그램 활성화
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";     -- UUID 생성용
-CREATE EXTENSION IF NOT EXISTS "vector";        -- AI 벡터 저장용 (pgvector)
-
 -- 2. 공통 ENUM 타입 정의 (상태값 엄격 관리)
 DO $$ 
 BEGIN
@@ -25,6 +21,11 @@ BEGIN
         CREATE TYPE USER_ROLE AS ENUM ('SUPER_ADMIN', 'ORG_ADMIN', 'TEAM_ADMIN', 'USER');
     END IF;
 END $$;
+
+-- 3. 공통 함수 정의 (updated_at 자동 갱신용)
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
     NEW.updated_at = now();
     RETURN NEW;
 END;
@@ -112,6 +113,11 @@ CREATE TABLE IF NOT EXISTS meeting_logs (
     owner_id UUID REFERENCES users(id),
     audio_url VARCHAR,
     stt_text TEXT,
+    is_refined BOOLEAN DEFAULT false,
+    title VARCHAR,
+    summary TEXT,
+    action_items JSONB DEFAULT '[]'::jsonb,
+    participants JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     deleted_at TIMESTAMP WITH TIME ZONE
@@ -125,7 +131,8 @@ CREATE TABLE IF NOT EXISTS knowledge_vectors (
     embedding VECTOR(1536), -- OpenAI text-embedding-3-small 등 대응
     metadata JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    CONSTRAINT knowledge_vectors_source_unique UNIQUE (source_type, source_id)
 );
 
 -- [익스텐션 스토어]

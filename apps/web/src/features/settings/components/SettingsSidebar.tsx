@@ -20,11 +20,13 @@ export function SettingsSidebar({ userRole }: SettingsSidebarProps) {
     { name: '시스템 설정', href: '/settings/system', icon: SettingsIcon, allowedRoles: ['SUPER_ADMIN'] },
   ];
 
-  const filteredItems = navItems.filter(item => item.allowedRoles.includes(userRole));
+  // 권한 문자열 정규화 (공백 제거, 대문자 변환)
+  const normalizedRole = (userRole || 'USER').trim().toUpperCase();
+  const filteredItems = navItems.filter(item => item.allowedRoles.includes(normalizedRole));
 
   return (
-    <nav className="flex flex-col gap-2 w-64 min-h-[calc(100vh-4rem)] p-6 bg-background border-r border-background/50">
-      <h2 className="text-xl font-headings font-bold text-text tracking-tight mb-8 px-2">설정</h2>
+    <nav className="flex flex-col gap-2 w-64 min-h-[calc(100vh-4rem)] p-6 bg-white border-r border-gray-100">
+      <h2 className="text-xl font-headings font-bold text-gray-900 tracking-tight mb-8 px-2">설정</h2>
       <div className="flex flex-col gap-2">
         {filteredItems.map(item => {
           const isActive = pathname.startsWith(item.href);
