@@ -168,6 +168,22 @@ CREATE TABLE IF NOT EXISTS user_slack_identities (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS document_side_effect_jobs (
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+    document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    job_type VARCHAR NOT NULL,
+    status VARCHAR NOT NULL DEFAULT 'PENDING',
+    payload JSONB DEFAULT '{}'::jsonb,
+    attempt_count INTEGER NOT NULL DEFAULT 0,
+    last_error TEXT,
+    available_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    locked_at TIMESTAMP WITH TIME ZONE,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    CONSTRAINT document_side_effect_jobs_unique_job UNIQUE (document_id, job_type)
+);
+
 -- 5. 모든 테이블에 updated_at 자동 갱신 트리거 적용
 DO $$
 DECLARE
@@ -197,6 +213,7 @@ CREATE INDEX IF NOT EXISTS idx_document_cc_recipients_document_id ON document_cc
 CREATE INDEX IF NOT EXISTS idx_document_cc_recipients_recipient_id ON document_cc_recipients (recipient_id);
 CREATE INDEX IF NOT EXISTS idx_document_jira_links_document_id ON document_jira_links (document_id);
 CREATE INDEX IF NOT EXISTS idx_document_jira_links_issue_key ON document_jira_links (issue_key);
+CREATE INDEX IF NOT EXISTS idx_document_side_effect_jobs_status_available_at ON document_side_effect_jobs (status, available_at);
 
 -- 7. RLS 설정 (Pod A - documents)
 -- Supabase Auth 사용자 UUID와 public.users.id가 동일하다는 전제하에 정책을 적용한다.
@@ -210,6 +227,8 @@ ALTER TABLE document_jira_links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE document_jira_links FORCE ROW LEVEL SECURITY;
 ALTER TABLE user_slack_identities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_slack_identities FORCE ROW LEVEL SECURITY;
+ALTER TABLE document_side_effect_jobs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE document_side_effect_jobs FORCE ROW LEVEL SECURITY;
 
 DO $$
 BEGIN

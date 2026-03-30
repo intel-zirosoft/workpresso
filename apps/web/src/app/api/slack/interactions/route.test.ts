@@ -59,13 +59,13 @@ describe("Slack interactions route", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
+    expect(body.text).toContain("다음 결재 단계로 넘겼습니다");
     expect(mockActOnWorkflowDocument).toHaveBeenCalledWith({
       adminSupabase: adminClient,
       viewerId: "00000000-0000-4000-8000-000000000011",
       documentId: "00000000-0000-4000-8000-000000000001",
       action: "APPROVE",
     });
-    expect(body.text).toContain("다음 결재 단계로 넘겼습니다");
   });
 
   it("returns an ephemeral error message for invalid payloads", async () => {

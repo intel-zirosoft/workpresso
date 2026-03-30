@@ -148,8 +148,9 @@ Auth: Supabase Auth 세션 기반 (`Bearer Token` 사용 권장)
   - 마지막 단계 승인 시 문서 상태는 `APPROVED`, `finalApprovedAt`는 승인 시각으로 갱신됩니다.
   - `REJECT` 시 문서 상태는 `REJECTED`가 되며 작성자가 다시 편집할 수 있습니다.
   - 반려 코멘트는 `REJECT`일 때만 저장됩니다.
-  - 최종 승인 시 Pod C 지식 동기화가 비동기적으로 호출될 수 있습니다.
-  - 제출/승인/반려 시 Slack Webhook이 설정되어 있으면 Pod A 문서 상태 알림이 비동기로 발송될 수 있습니다.
+  - 최종 승인 시 Pod C 지식 동기화는 `document_side_effect_jobs` outbox에 적재되고, 문서 API 요청 흐름에서 순차 처리될 수 있습니다.
+  - 제출/승인/반려 시 Slack 연동이 설정되어 있으면 Pod A 문서 상태 알림이 비동기로 발송될 수 있습니다.
+  - `SUBMITTED`, `APPROVED_STEP` 시점에는 현재 결재자의 Slack 매핑이 있으면 DM을 우선 시도하고, 실패하거나 매핑이 없으면 Webhook 알림으로 fallback 합니다.
 
 ### [POST] /api/slack/interactions
 
@@ -167,6 +168,9 @@ Auth: Supabase Auth 세션 기반 (`Bearer Token` 사용 권장)
 - 비고:
   - 현재 구현은 Slack 버튼 payload에 포함된 `documentId`, `approverId`, `action`을 사용합니다.
   - 실제 승인 권한 검증은 기존 Pod A 워크플로우 엔진에서 다시 수행합니다.
+  - Slack 인터랙션 라우트는 승인 상태 전이를 동기 처리하고, 무거운 후처리인 지식 동기화는 outbox 큐로 분리합니다.
+  - Slack App의 `Interactivity Request URL`은 실제로 외부에서 접근 가능한 현재 서버 주소를 가리켜야 합니다. 로컬 개발 환경에서 외부 기기/Slack 클라이언트를 함께 사용할 경우, 현재 활성 터널 또는 배포 URL로 수시 갱신해야 합니다.
+  - `localhost`, 종료된 터널 URL, 이전 포트를 바라보는 경우 Slack 버튼 클릭 시 승인 요청이 404 또는 미반영 상태로 보일 수 있습니다.
   - 현재는 Signing Secret 검증 없이 동작하는 개발용 모드입니다.
   - 운영 환경에서는 Slack Signing Secret 검증을 반드시 추가해야 합니다.
 
@@ -224,6 +228,8 @@ Auth: Supabase Auth 세션 기반 (`Bearer Token` 사용 권장)
 - 문서 선택 시 읽기 전용 상세는 페이지 내 패널이 아니라 모달 오버레이로 노출됩니다.
 - 새 문서 작성과 수정은 대형 편집 오버레이에서 수행합니다.
 - 편집기는 `템플릿 선택 → 제목/본문 → 결재선/공람` 멀티 스텝 구조를 사용합니다.
+- 설정의 `/settings/integrations` 화면에서는 Slack Webhook, Bot Token, WorkPresso 사용자 ↔ Slack 사용자 매핑을 함께 관리합니다.
+- 승인 후 Pod C 지식 동기화는 직접 inline 처리하지 않고 outbox 기반 후처리로 전환되었습니다.
 - `프로젝트 승인 요청서` 템플릿은 Jira 자동 생성을 돕기 위해 `기능 명세`, `작업 체크리스트` 기본 섹션을 포함합니다.
 - 본문 미리보기는 상시 노출이 아니라 토글 방식이며 `Ctrl/Cmd+Shift+V` 단축키를 지원합니다.
 - content step에서는 `크게보기` 집중 모드를 제공하며, 집중 모드 안에서도 `편집 / 미리보기` 전환을 유지합니다.

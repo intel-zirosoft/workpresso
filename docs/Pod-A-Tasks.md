@@ -13,13 +13,15 @@
   - 멀티 스텝 편집기(템플릿 선택 → 본문 작성 → 결재선/공람) 및 집중 보기(`크게보기`) 오버레이 구현
   - `내 문서 Grid`, `내 결재함`, `공람 문서` 분리 UI 및 탐색 컨테이너 내부 스크롤 구현
   - 문서 제출 / 승인 / 반려 시 Slack 상태 알림 연동 구현
+  - Slack Bot Token + 사용자 매핑 기반 결재자 DM 전송 구현 (매핑 실패 시 Webhook fallback)
+  - 최종 승인 후 지식 동기화를 `document_side_effect_jobs` outbox로 분리해 승인 경로를 경량화
   - 승인 완료 문서의 Jira 이슈 생성, 링크 저장, 상태 위젯 연동 구현
   - `프로젝트 승인 요청서` 템플릿의 Jira 추출 친화 섹션(`기능 명세`, `작업 체크리스트`) 보강
   - Pod A unit test 19건 및 `apps/web` 기준 `npm run type-check` 통과
 - 남은 확인:
-  - Supabase에 신규 마이그레이션 실제 적용 전 integration 기준 검증 필요
   - 수동 QA 미완료
-  - Slack 양방향 승인(Slack App/Bot 기반)과 Jira 부분 실패 요약 반환은 후속 확장 범위
+  - Slack Signing Secret 검증은 아직 미구현
+  - Jira 부분 실패 요약 반환은 후속 확장 범위
 
 ## 🧑‍💻 Part 1: 마크다운 에디터 및 문서 CRUD
 
@@ -130,7 +132,7 @@
 - [x] **문서 워크플로우 API**: `submit`, `approval`, 상태 전이, 다단계 결재선이 이미 구현되어 있음
 - [x] **외부 연동 설정 저장소**: `workspace_extensions` 기반 Slack/Jira 설정 저장 및 활성화 구조가 있음
 - [x] **Jira 단건 생성 유틸**: `createJiraIssue` 서버 액션이 있어 단건 티켓 생성 베이스를 재사용할 수 있음
-- [ ] **Slack 양방향 승인 인프라**: 현재는 Webhook 중심이며, Block Kit 인터랙션 처리용 Slack App/Bot 인프라는 아직 없음
+- [x] **Slack 양방향 승인 인프라**: Slack App Interactivity, Bot Token, 결재자 DM fallback 구조까지 1차 구현 완료
 - [x] **문서-외부 이슈 매핑 저장소**: `document_jira_links` 기반 문서별 Jira 이슈 링크/상태 저장 구조 추가
 
 ### Phase 1. Slack 알림 파이프라인 구축
@@ -150,11 +152,14 @@
 
 - [x] **Settings Schema**: 1차는 기존 Webhook + Slack Interactivity 조합으로 진행하고, Bot Token / Signing Secret은 후속 확장으로 분리
 - [x] **Backend (API)**: Slack 인터랙션 콜백 엔드포인트 추가
-- [ ] **Authorization**: Slack 액션 수행자가 현재 `PENDING` 단계 approver인지 기존 Pod A 권한 규칙으로 재검증
+- [x] **Authorization**: Slack 액션 수행자가 현재 `PENDING` 단계 approver인지 기존 Pod A 권한 규칙으로 재검증
 - [x] **Workflow Bridge**: Slack 버튼 액션이 기존 `POST /api/documents/[id]/approval` 로직과 동일한 워크플로우 엔진을 재사용하도록 연결
 - [x] **Idempotency**: 이미 처리된 문서/단계에 대한 중복 승인 요청은 기존 Pod A 권한/상태 검증으로 거절
 - [ ] **Comment Flow**: 반려 사유 입력 UX는 1차에서는 고정 사유 또는 링크 이동으로 단순화하고, 자유 입력은 후속 확장으로 분리
+- [x] **Response Handling**: Slack 인터랙션 경로에서는 승인 상태 전이만 동기 처리하고, 무거운 후처리는 outbox로 분리
+- [x] **Slack Delivery**: 1차 결재 요청과 단계 승인 후 다음 결재자 알림은 DM 우선, 실패 시 Webhook fallback으로 전달
 - [ ] **QA**: Slack에서 승인, 반려, 권한 없음, 만료 액션 시나리오 수동 검증
+- [ ] **Ops Note**: 로컬 개발 서버를 외부에서 사용할 때는 Slack App `Interactivity Request URL`을 현재 노출 중인 터널/배포 주소로 반드시 갱신해야 함. 로컬 포트가 바뀌거나 예전 터널 주소를 바라보면 승인 버튼이 정상 동작하지 않을 수 있음
 
 ### Phase 3. Jira 기획-실행 브릿지
 
@@ -173,7 +178,8 @@
 
 **목표:** 단순 상태 알림을 넘어 실제 협업 응답 속도를 높이는 세부 기능 확장
 
-- [ ] **DB/Schema**: WorkPresso 사용자와 Slack 사용자 식별자 매핑 저장 방식 정의
+- [x] **DB/Schema**: WorkPresso 사용자와 Slack 사용자 식별자 매핑 저장 방식 정의
+- [x] **DB/Schema**: 승인 후 지식 동기화 재시도용 `document_side_effect_jobs` outbox 저장소 추가
 - [ ] **Backend (Parser)**: 문서 본문 코멘트/멘션 이벤트 추출 규칙 정의
 - [ ] **Slack Delivery**: 문서 멘션 시 채널 알림이 아닌 대상자 중심 알림 또는 DM 발송 전략 추가
 - [ ] **Notification Policy**: 동일 문서에서 과도한 중복 알림이 발생하지 않도록 디바운스/묶음 정책 정의
@@ -187,7 +193,7 @@
 
 ### 선행 확인 사항
 
-- [x] Slack 1차 스코프는 Webhook + Interactivity 기준으로 진행하고, Bot Token / Signing Secret은 후속 보강 대상으로 분리
+- [x] Slack 1차 스코프는 Webhook + Interactivity + Bot Token + 사용자 매핑 기준으로 진행하고, Signing Secret은 후속 보강 대상으로 분리
 - [ ] Jira 자동 생성 대상 문서 템플릿(PRD 한정 여부) 확정
 - [ ] Epic/Story 생성 규칙과 기본 Jira 프로젝트 키 사용 정책 확정
 - [ ] 문서별 Jira 상태 동기화를 실시간 조회 중심으로 갈지, 저장형 캐시를 둘지 확정

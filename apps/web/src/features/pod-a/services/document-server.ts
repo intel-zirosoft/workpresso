@@ -73,6 +73,23 @@ type RawDocumentJiraLinkRow = {
   deleted_at: string | null;
 };
 
+type DocumentSideEffectJobType = "DOCUMENT_KNOWLEDGE_SYNC";
+
+type DocumentSideEffectJobStatus =
+  | "PENDING"
+  | "PROCESSING"
+  | "SUCCEEDED"
+  | "FAILED";
+
+type RawDocumentSideEffectJobRow = {
+  id: string;
+  document_id: string;
+  job_type: DocumentSideEffectJobType;
+  status: DocumentSideEffectJobStatus;
+  payload: Record<string, unknown> | null;
+  attempt_count: number;
+};
+
 function buildPermissions(
   document: DocumentBase,
   approvalSteps: ApprovalStep[],
@@ -361,6 +378,148 @@ async function fetchWorkspaceExtension(
   return (data as RawWorkspaceExtensionRow | null) ?? null;
 }
 
+async function enqueueDocumentKnowledgeSyncJob(params: {
+  adminSupabase: SupabaseClient;
+  documentId: string;
+}) {
+  const { adminSupabase, documentId } = params;
+  const now = new Date().toISOString();
+  const { error } = await adminSupabase
+    .from("document_side_effect_jobs")
+    .upsert(
+      {
+        document_id: documentId,
+        job_type: "DOCUMENT_KNOWLEDGE_SYNC",
+        status: "PENDING",
+        payload: {},
+        attempt_count: 0,
+        last_error: null,
+        available_at: now,
+        locked_at: null,
+        completed_at: null,
+        updated_at: now,
+      },
+      { onConflict: "document_id,job_type" },
+    );
+
+  if (error) {
+    throw new Error("문서 후처리 작업을 큐에 적재하지 못했습니다.");
+  }
+}
+
+async function processDocumentKnowledgeSyncJob(params: {
+  adminSupabase: SupabaseClient;
+  documentId: string;
+}) {
+  const { adminSupabase, documentId } = params;
+  const documents = await fetchDocumentRowsByIds(adminSupabase, [documentId]);
+  const document = documents[0];
+
+  if (!document || document.status !== "APPROVED") {
+    return;
+  }
+
+  const [detail] = await buildDocumentDetails(
+    adminSupabase,
+    [document],
+    document.authorId,
+  );
+
+  if (!detail) {
+    return;
+  }
+
+  await syncDocumentKnowledge(detail);
+}
+
+export async function processPendingDocumentSideEffectJobs(params: {
+  adminSupabase: SupabaseClient;
+  limit?: number;
+}) {
+  const { adminSupabase, limit = 1 } = params;
+  const now = new Date().toISOString();
+  const { data, error } = await adminSupabase
+    .from("document_side_effect_jobs")
+    .select("id, document_id, job_type, status, payload, attempt_count")
+    .in("status", ["PENDING", "FAILED"])
+    .lte("available_at", now)
+    .order("created_at", { ascending: true })
+    .limit(limit);
+
+  if (error) {
+    throw new Error("문서 후처리 작업 목록을 불러오지 못했습니다.");
+  }
+
+  const jobs = (data ?? []) as RawDocumentSideEffectJobRow[];
+
+  for (const job of jobs) {
+    const processingAt = new Date().toISOString();
+    const { data: claimedRows, error: claimError } = await adminSupabase
+      .from("document_side_effect_jobs")
+      .update({
+        status: "PROCESSING",
+        attempt_count: job.attempt_count + 1,
+        locked_at: processingAt,
+        last_error: null,
+      })
+      .eq("id", job.id)
+      .in("status", ["PENDING", "FAILED"])
+      .select("id");
+
+    if (claimError) {
+      throw new Error("문서 후처리 작업을 잠그지 못했습니다.");
+    }
+
+    if (!claimedRows || claimedRows.length === 0) {
+      continue;
+    }
+
+    try {
+      if (job.job_type === "DOCUMENT_KNOWLEDGE_SYNC") {
+        await processDocumentKnowledgeSyncJob({
+          adminSupabase,
+          documentId: job.document_id,
+        });
+      }
+
+      const { error: completeError } = await adminSupabase
+        .from("document_side_effect_jobs")
+        .update({
+          status: "SUCCEEDED",
+          completed_at: new Date().toISOString(),
+          locked_at: null,
+          last_error: null,
+        })
+        .eq("id", job.id);
+
+      if (completeError) {
+        throw new Error("문서 후처리 작업 완료 상태를 기록하지 못했습니다.");
+      }
+    } catch (jobError) {
+      const nextAvailableAt = new Date(Date.now() + 60_000).toISOString();
+      const { error: failError } = await adminSupabase
+        .from("document_side_effect_jobs")
+        .update({
+          status: "FAILED",
+          locked_at: null,
+          available_at: nextAvailableAt,
+          last_error:
+            jobError instanceof Error
+              ? jobError.message
+              : "문서 후처리 작업 처리 중 오류가 발생했습니다.",
+        })
+        .eq("id", job.id);
+
+      if (failError) {
+        console.error(
+          "document side effect job failure bookkeeping failed:",
+          failError,
+        );
+      }
+    }
+  }
+}
+
 function resolveSlackWebhookUrl(extension: RawWorkspaceExtensionRow | null) {
   const envWebhookUrl = process.env.WORKPRESSO_SLACK_WEBHOOK_URL?.trim() ?? "";
   const config = extension?.config ?? {};
@@ -379,6 +538,115 @@ function resolveSlackWebhookUrl(extension: RawWorkspaceExtensionRow | null) {
   return webhookUrl;
 }
 
+function resolveSlackBotToken(extension: RawWorkspaceExtensionRow | null) {
+  const envBotToken = process.env.WORKPRESSO_SLACK_BOT_TOKEN?.trim() ?? "";
+  const config = extension?.config ?? {};
+  const configuredBotToken =
+    typeof config.botToken === "string" ? config.botToken.trim() : "";
+  const botToken = configuredBotToken || envBotToken;
+
+  if (!botToken) {
+    return null;
+  }
+
+  if (extension) {
+    return extension.is_active ? botToken : null;
+  }
+
+  return botToken;
+}
+
+async function fetchSlackUserIdByUserId(
+  adminSupabase: SupabaseClient,
+  userId: string,
+) {
+  const { data, error } = await adminSupabase
+    .from("user_slack_identities")
+    .select("slack_user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error("Slack 사용자 매핑 정보를 불러오지 못했습니다.");
+  }
+
+  const slackUserId =
+    typeof data?.slack_user_id === "string" ? data.slack_user_id.trim() : "";
+
+  return slackUserId || null;
+}
+
+async function openSlackDirectMessageChannel(params: {
+  botToken: string;
+  slackUserId: string;
+}) {
+  const { botToken, slackUserId } = params;
+  const response = await fetch("https://slack.com/api/conversations.open", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${botToken}`,
+      "Content-Type": "application/json; charset=utf-8",
+    },
+    body: JSON.stringify({
+      users: slackUserId,
+    }),
+  });
+
+  const data = (await response.json().catch(() => null)) as
+    | {
+        ok?: boolean;
+        error?: string;
+        channel?: { id?: string };
+      }
+    | null;
+
+  if (!response.ok || !data?.ok || !data.channel?.id) {
+    throw new Error(
+      data?.error
+        ? `Slack DM 채널 열기 실패: ${data.error}`
+        : "Slack DM 채널을 열지 못했습니다.",
+    );
+  }
+
+  return data.channel.id;
+}
+
+async function postSlackBotMessage(params: {
+  botToken: string;
+  channel: string;
+  text: string;
+  blocks: Array<Record<string, unknown>>;
+}) {
+  const { botToken, channel, text, blocks } = params;
+  const response = await fetch("https://slack.com/api/chat.postMessage", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${botToken}`,
+      "Content-Type": "application/json; charset=utf-8",
+    },
+    body: JSON.stringify({
+      channel,
+      text,
+      blocks,
+    }),
+  });
+
+  const data = (await response.json().catch(() => null)) as
+    | {
+        ok?: boolean;
+        error?: string;
+      }
+    | null;
+
+  if (!response.ok || !data?.ok) {
+    throw new Error(
+      data?.error
+        ? `Slack DM 발송 실패: ${data.error}`
+        : "Slack DM 발송에 실패했습니다.",
+    );
+  }
+}
+
 async function sendDocumentSlackNotification(params: {
   adminSupabase: SupabaseClient;
   document: DocumentDetail;
@@ -389,8 +657,9 @@ async function sendDocumentSlackNotification(params: {
   const { adminSupabase, document, event, actor, previousApprover } = params;
   const extension = await fetchWorkspaceExtension(adminSupabase, "slack");
   const webhookUrl = resolveSlackWebhookUrl(extension);
+  const botToken = resolveSlackBotToken(extension);
 
-  if (!webhookUrl) {
+  if (!webhookUrl && !botToken) {
     return;
   }
 
@@ -532,15 +801,51 @@ async function sendDocumentSlackNotification(params: {
     },
   ];
 
+  const messagePayload = {
+    text: `[Pod A] ${copy.title} - ${document.title}`,
+    blocks,
+  };
+  const shouldTryDirectMessage =
+    (event === "SUBMITTED" || event === "APPROVED_STEP") &&
+    Boolean(document.currentApprover);
+
+  if (shouldTryDirectMessage && document.currentApprover && botToken) {
+    try {
+      const slackUserId = await fetchSlackUserIdByUserId(
+        adminSupabase,
+        document.currentApprover.id,
+      );
+
+      if (slackUserId) {
+        const channelId = await openSlackDirectMessageChannel({
+          botToken,
+          slackUserId,
+        });
+
+        await postSlackBotMessage({
+          botToken,
+          channel: channelId,
+          text: messagePayload.text,
+          blocks: messagePayload.blocks,
+        });
+
+        return;
+      }
+    } catch (error) {
+      console.error("document direct Slack notification failed:", error);
+    }
+  }
+
+  if (!webhookUrl) {
+    return;
+  }
+
   const response = await fetch(webhookUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      text: `[Pod A] ${copy.title} - ${document.title}`,
-      blocks,
-    }),
+    body: JSON.stringify(messagePayload),
   });
 
   if (!response.ok) {
@@ -1606,9 +1911,18 @@ export async function actOnWorkflowDocument(params: {
 
   if (nextDetail.status === "APPROVED") {
     try {
-      await syncDocumentKnowledge(nextDetail);
-    } catch (syncError) {
-      console.error("document-knowledge-sync failed:", syncError);
+      await enqueueDocumentKnowledgeSyncJob({
+        adminSupabase,
+        documentId: nextDetail.id,
+      });
+    } catch (enqueueError) {
+      console.error("document-knowledge-sync enqueue failed:", enqueueError);
+
+      try {
+        await syncDocumentKnowledge(nextDetail);
+      } catch (syncError) {
+        console.error("document-knowledge-sync fallback failed:", syncError);
+      }
     }
   }
 

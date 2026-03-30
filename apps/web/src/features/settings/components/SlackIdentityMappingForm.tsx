@@ -4,7 +4,6 @@ import { useMemo, useState, useTransition } from 'react';
 import { Plus, RefreshCw, Save, Slack, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 
 type SlackIdentityUserRow = {
   id: string;
@@ -26,9 +25,20 @@ type MappingRow = {
   slackUserId: string;
 };
 
+function createLocalId() {
+  if (
+    typeof globalThis.crypto !== 'undefined' &&
+    typeof globalThis.crypto.randomUUID === 'function'
+  ) {
+    return globalThis.crypto.randomUUID();
+  }
+
+  return `mapping-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function createEmptyRow(): MappingRow {
   return {
-    localId: crypto.randomUUID(),
+    localId: createLocalId(),
     userId: '',
     slackUserId: '',
   };
@@ -45,7 +55,7 @@ export function SlackIdentityMappingForm({
   const [rows, setRows] = useState<MappingRow[]>(
     initialMappings.length > 0
       ? initialMappings.map((mapping) => ({
-          localId: crypto.randomUUID(),
+          localId: createLocalId(),
           userId: mapping.userId,
           slackUserId: mapping.slackUserId,
         }))
@@ -121,21 +131,21 @@ export function SlackIdentityMappingForm({
           </div>
         ) : null}
 
-        <div className="space-y-4">
+        <div className="space-y-2">
+          <div className="hidden md:grid md:grid-cols-[1fr_1fr_auto] md:items-center md:gap-4 px-1 text-xs font-bold text-muted">
+            <span>WorkPresso 사용자</span>
+            <span>Slack 사용자</span>
+            <span className="sr-only">삭제</span>
+          </div>
+
           {rows.map((row) => (
             <div
               key={row.localId}
-              className="rounded-[24px] border border-background bg-background/30 p-4"
+              className="rounded-[24px] border border-background bg-background/30 p-2"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label
-                      htmlFor={`mappingUserId:${row.localId}`}
-                      className="text-xs font-bold text-muted px-1"
-                    >
-                      WorkPresso 사용자
-                    </Label>
                     <select
                       id={`mappingUserId:${row.localId}`}
                       name={`mappingUserId:${row.localId}`}
@@ -155,12 +165,6 @@ export function SlackIdentityMappingForm({
                   </div>
 
                   <div className="space-y-2">
-                    <Label
-                      htmlFor={`mappingSlackUserId:${row.localId}`}
-                      className="text-xs font-bold text-muted px-1"
-                    >
-                      Slack 사용자
-                    </Label>
                     <select
                       id={`mappingSlackUserId:${row.localId}`}
                       name={`mappingSlackUserId:${row.localId}`}
