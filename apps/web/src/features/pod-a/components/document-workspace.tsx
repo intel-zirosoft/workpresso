@@ -42,6 +42,7 @@ import {
   fetchDocuments,
   fetchDocumentUsers,
   submitDocument,
+  syncDocumentToJira,
   updateDocument,
 } from "@/features/pod-a/services/document-api";
 import {
@@ -346,19 +347,31 @@ export function DocumentWorkspace() {
     },
   });
 
+  const jiraSyncMutation = useMutation({
+    mutationFn: syncDocumentToJira,
+    onSuccess: (document) => {
+      queryClient.setQueryData(["document", document.id], document);
+      setSelectedDocumentId(document.id);
+      setIsDetailOpen(true);
+      invalidateDocumentQueries(document.id);
+    },
+  });
+
   const isMutating =
     createMutation.isPending ||
     updateMutation.isPending ||
     submitMutation.isPending ||
     approvalMutation.isPending ||
-    deleteMutation.isPending;
+    deleteMutation.isPending ||
+    jiraSyncMutation.isPending;
 
   const mutationErrorMessage =
     getErrorMessage(createMutation.error) ??
     getErrorMessage(updateMutation.error) ??
     getErrorMessage(submitMutation.error) ??
     getErrorMessage(approvalMutation.error) ??
-    getErrorMessage(deleteMutation.error);
+    getErrorMessage(deleteMutation.error) ??
+    getErrorMessage(jiraSyncMutation.error);
 
   const availableUsers = (usersQuery.data ?? []).filter(
     (user) => user.id !== currentUserId,
@@ -840,6 +853,14 @@ export function DocumentWorkspace() {
     deleteMutation.mutate(selectedDocumentId);
   }
 
+  function handleSyncDocumentToJira() {
+    if (!selectedDocument?.permissions.canSyncJira || !selectedDocumentId) {
+      return;
+    }
+
+    jiraSyncMutation.mutate(selectedDocumentId);
+  }
+
   function handleCancelEditing() {
     if (isMutating) {
       return;
@@ -938,9 +959,11 @@ export function DocumentWorkspace() {
         onApprove={() => handleApprovalAction("APPROVE")}
         onReject={() => handleApprovalAction("REJECT")}
         onDelete={handleDeleteDocument}
+        onSyncToJira={handleSyncDocumentToJira}
         submitPending={submitMutation.isPending}
         approvalPending={approvalMutation.isPending}
         deletePending={deleteMutation.isPending}
+        jiraSyncPending={jiraSyncMutation.isPending}
       />
 
       <DocumentEditorDialog

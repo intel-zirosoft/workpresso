@@ -95,6 +95,21 @@ CREATE TABLE IF NOT EXISTS document_cc_recipients (
     CONSTRAINT document_cc_recipients_unique_recipient UNIQUE (document_id, recipient_id)
 );
 
+CREATE TABLE IF NOT EXISTS document_jira_links (
+    id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
+    document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    issue_key VARCHAR NOT NULL,
+    issue_url VARCHAR NOT NULL,
+    issue_type VARCHAR NOT NULL,
+    summary VARCHAR NOT NULL,
+    status VARCHAR NOT NULL DEFAULT 'To Do',
+    synced_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    deleted_at TIMESTAMP WITH TIME ZONE,
+    CONSTRAINT document_jira_links_unique_issue UNIQUE (document_id, issue_key)
+);
+
 -- [업무 일정 - Pod B]
 CREATE TABLE IF NOT EXISTS schedules (
     id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
@@ -173,6 +188,8 @@ CREATE INDEX IF NOT EXISTS idx_document_approval_steps_document_id ON document_a
 CREATE INDEX IF NOT EXISTS idx_document_approval_steps_approver_status ON document_approval_steps (approver_id, status);
 CREATE INDEX IF NOT EXISTS idx_document_cc_recipients_document_id ON document_cc_recipients (document_id);
 CREATE INDEX IF NOT EXISTS idx_document_cc_recipients_recipient_id ON document_cc_recipients (recipient_id);
+CREATE INDEX IF NOT EXISTS idx_document_jira_links_document_id ON document_jira_links (document_id);
+CREATE INDEX IF NOT EXISTS idx_document_jira_links_issue_key ON document_jira_links (issue_key);
 
 -- 7. RLS 설정 (Pod A - documents)
 -- Supabase Auth 사용자 UUID와 public.users.id가 동일하다는 전제하에 정책을 적용한다.
@@ -182,6 +199,8 @@ ALTER TABLE document_approval_steps ENABLE ROW LEVEL SECURITY;
 ALTER TABLE document_approval_steps FORCE ROW LEVEL SECURITY;
 ALTER TABLE document_cc_recipients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE document_cc_recipients FORCE ROW LEVEL SECURITY;
+ALTER TABLE document_jira_links ENABLE ROW LEVEL SECURITY;
+ALTER TABLE document_jira_links FORCE ROW LEVEL SECURITY;
 
 DO $$
 BEGIN
@@ -370,6 +389,95 @@ BEGIN
     ) THEN
         CREATE POLICY document_cc_recipients_update_author
         ON document_cc_recipients
+        FOR UPDATE
+        USING (
+            EXISTS (
+                SELECT 1
+                FROM documents d
+                WHERE d.id = document_id
+                  AND d.author_id = auth.uid()
+                  AND d.deleted_at IS NULL
+            )
+        )
+        WITH CHECK (
+            EXISTS (
+                SELECT 1
+                FROM documents d
+                WHERE d.id = document_id
+                  AND d.author_id = auth.uid()
+                  AND d.deleted_at IS NULL
+            )
+        );
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_policies
+        WHERE schemaname = 'public'
+          AND tablename = 'document_jira_links'
+          AND policyname = 'document_jira_links_select_related'
+    ) THEN
+        CREATE POLICY document_jira_links_select_related
+        ON document_jira_links
+        FOR SELECT
+        USING (
+            deleted_at IS NULL
+            AND (
+                EXISTS (
+                    SELECT 1
+                    FROM documents d
+                    WHERE d.id = document_id
+                      AND d.deleted_at IS NULL
+                      AND d.author_id = auth.uid()
+                )
+                OR EXISTS (
+                    SELECT 1
+                    FROM document_approval_steps s
+                    WHERE s.document_id = document_id
+                      AND s.deleted_at IS NULL
+                      AND s.approver_id = auth.uid()
+                )
+                OR EXISTS (
+                    SELECT 1
+                    FROM document_cc_recipients c
+                    WHERE c.document_id = document_id
+                      AND c.recipient_id = auth.uid()
+                      AND c.deleted_at IS NULL
+                )
+            )
+        );
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_policies
+        WHERE schemaname = 'public'
+          AND tablename = 'document_jira_links'
+          AND policyname = 'document_jira_links_insert_author'
+    ) THEN
+        CREATE POLICY document_jira_links_insert_author
+        ON document_jira_links
+        FOR INSERT
+        WITH CHECK (
+            EXISTS (
+                SELECT 1
+                FROM documents d
+                WHERE d.id = document_id
+                  AND d.author_id = auth.uid()
+                  AND d.deleted_at IS NULL
+            )
+        );
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_policies
+        WHERE schemaname = 'public'
+          AND tablename = 'document_jira_links'
+          AND policyname = 'document_jira_links_update_author'
+    ) THEN
+        CREATE POLICY document_jira_links_update_author
+        ON document_jira_links
         FOR UPDATE
         USING (
             EXISTS (

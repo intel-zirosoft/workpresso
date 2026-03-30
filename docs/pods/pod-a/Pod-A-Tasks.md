@@ -144,3 +144,74 @@
 - [ ] **Security**: 비작성자 삭제, 승인 완료 문서의 일반 사용자 삭제, URL 직접 호출 삭제 우회 차단 검증
 - [ ] **Docs Sync**: 삭제 API 및 권한 정책 확정 후 `docs/Workpresso_API_명세서.md` 반영
 - [ ] **QA**: 상세 UI와 작성 UI의 시각/동작 일관성, 닫기 버튼 단일화, 삭제 권한 분기 수동 검증
+
+## 🧭 Jira / Slack 연동 기반 Pod A 실행 계획
+
+본 계획은 `docs/Slack, Jira API Integration roadmap.md`의 Pod A 로드맵을 현재 구현 상태에 맞게 실제 작업 단위로 내린 실행안입니다.
+
+### 현재 기반 자산
+
+- [x] **문서 워크플로우 API**: `submit`, `approval`, 상태 전이, 다단계 결재선이 이미 구현되어 있음
+- [x] **외부 연동 설정 저장소**: `workspace_extensions` 기반 Slack/Jira 설정 저장 및 활성화 구조가 있음
+- [x] **Jira 단건 생성 유틸**: `createJiraIssue` 서버 액션이 있어 단건 티켓 생성 베이스를 재사용할 수 있음
+- [ ] **Slack 양방향 승인 인프라**: 현재는 Webhook 중심이며, Block Kit 인터랙션 처리용 Slack App/Bot 인프라는 아직 없음
+- [x] **문서-외부 이슈 매핑 저장소**: `document_jira_links` 기반 문서별 Jira 이슈 링크/상태 저장 구조 추가
+
+### Phase 1. Slack 알림 파이프라인 구축
+
+**목표:** Pod A 문서 상태 변화를 Slack으로 안정적으로 전달하는 최소 기능을 먼저 완성
+
+- [x] **Backend (Integration)**: 문서 `submit`, `approve`, `reject` 시점에 호출할 Slack 알림 서비스 계층 추가
+- [x] **Payload Design**: `DRAFT → PENDING`, `PENDING → APPROVED`, `PENDING → REJECTED`를 현재 도메인 상태값 기준으로 메시지 템플릿화
+- [x] **Settings Reuse**: 기존 `workspace_extensions.ext_name = 'slack'` 설정을 재사용하도록 연결
+- [ ] **Frontend (UX)**: 문서 상세 또는 편집 완료 후 Slack 발송 성공/실패 토스트 처리
+- [x] **Fallback Policy**: Slack 발송 실패가 문서 제출/결재 자체를 막지 않도록 비동기 후처리 또는 soft-fail 정책 정의
+- [x] **Docs Sync**: Slack 알림 트리거 규칙을 `docs/Workpresso_API_명세서.md` 또는 운영 문서에 반영
+
+### Phase 2. Slack 리모트 승인 확장
+
+**목표:** Slack 메시지 안에서 `승인` / `반려`를 눌러 Pod A 결재 액션을 완료
+
+- [ ] **Settings Schema**: 기존 Webhook 설정만으로는 부족하므로 Slack Bot Token, Signing Secret, 기본 채널 정보 저장 규격 확장
+- [ ] **Backend (API)**: Slack 인터랙션 콜백 엔드포인트 추가 및 서명 검증 구현
+- [ ] **Authorization**: Slack 액션 수행자가 현재 `PENDING` 단계 approver인지 기존 Pod A 권한 규칙으로 재검증
+- [ ] **Workflow Bridge**: Slack 버튼 액션이 기존 `POST /api/documents/[id]/approval` 로직을 재사용하도록 연결
+- [ ] **Idempotency**: 이미 처리된 문서/단계에 대해 중복 승인 요청이 와도 안전하게 거절하는 보호 로직 점검
+- [ ] **Comment Flow**: 반려 사유 입력 UX는 1차에서는 고정 사유 또는 링크 이동으로 단순화하고, 자유 입력은 후속 확장으로 분리
+- [ ] **QA**: Slack에서 승인, 반려, 권한 없음, 만료 액션 시나리오 수동 검증
+
+### Phase 3. Jira 기획-실행 브릿지
+
+**목표:** Pod A 문서를 기준으로 Jira 이슈를 생성하고 문서 안에서 진행 상태를 추적
+
+- [x] **DB/Schema**: 문서와 Jira 이슈를 연결하는 `document_jira_links` 성격의 매핑 저장소 추가
+- [x] **Backend (Parser)**: PRD 본문에서 기능 명세표 또는 체크리스트를 추출하는 최소 규칙 정의
+- [x] **Backend (Integration)**: 기존 `createJiraIssue`를 확장해 Epic/Story 타입 분기와 다건 생성 orchestration 추가
+- [ ] **Error Handling**: 일부 이슈만 생성 실패한 경우 성공/실패 결과를 문서 단위로 요약 반환
+- [x] **Frontend (UI)**: 문서 상세에 Jira 생성 실행 버튼과 생성 결과 요약 영역 추가
+- [x] **Frontend (UI)**: 연결된 Jira 이슈 키, 상태, 담당자, 링크를 보여주는 라이브 위젯 영역 추가
+- [x] **Sync Strategy**: 문서 상세 조회 시 Jira 상태를 on-demand 조회하는 1차 전략 적용
+- [x] **Docs Sync**: PRD 템플릿에서 Jira 자동 생성이 가능한 최소 작성 규칙을 문서화
+
+### Phase 4. 문서 멘션 및 알림 정교화
+
+**목표:** 단순 상태 알림을 넘어 실제 협업 응답 속도를 높이는 세부 기능 확장
+
+- [ ] **DB/Schema**: WorkPresso 사용자와 Slack 사용자 식별자 매핑 저장 방식 정의
+- [ ] **Backend (Parser)**: 문서 본문 코멘트/멘션 이벤트 추출 규칙 정의
+- [ ] **Slack Delivery**: 문서 멘션 시 채널 알림이 아닌 대상자 중심 알림 또는 DM 발송 전략 추가
+- [ ] **Notification Policy**: 동일 문서에서 과도한 중복 알림이 발생하지 않도록 디바운스/묶음 정책 정의
+
+### 권장 구현 순서
+
+1. **Phase 1**: 현재 자산 재사용 폭이 가장 크고, 사용자 체감이 빠른 Slack 상태 알림부터 적용
+2. **Phase 2**: Slack App 인프라를 추가해 결재 승인 버튼까지 확장
+3. **Phase 3**: Jira 대량 생성과 라이브 위젯으로 PRD-실행 연결 완성
+4. **Phase 4**: 멘션/DM 최적화로 협업 속도 개선
+
+### 선행 확인 사항
+
+- [ ] Slack Webhook만 사용할지, Slack App(Bot Token + Signing Secret)까지 이번 스코프에 포함할지 확정
+- [ ] Jira 자동 생성 대상 문서 템플릿(PRD 한정 여부) 확정
+- [ ] Epic/Story 생성 규칙과 기본 Jira 프로젝트 키 사용 정책 확정
+- [ ] 문서별 Jira 상태 동기화를 실시간 조회 중심으로 갈지, 저장형 캐시를 둘지 확정
