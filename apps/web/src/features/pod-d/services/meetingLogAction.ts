@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { generateJsonObject } from "@/lib/ai/chat";
 import { getResolvedAiConfig } from "@/lib/ai/config";
+import { getAppBaseUrl } from "@/lib/app-url";
 import { meetingRefinedPayloadSchema } from "@/features/pod-d/services/meeting-refined-contract";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
@@ -82,12 +83,7 @@ STT 데이터: ${sttText}
   // 6. Pod D -> Pod C: meeting-refined 내부 계약 route 호출
   try {
     const requestHeaders = await headers();
-    const forwardedProto = requestHeaders.get("x-forwarded-proto") ?? "http";
-    const forwardedHost =
-      requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
-    const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ??
-      (forwardedHost ? `${forwardedProto}://${forwardedHost}` : null);
+    const baseUrl = getAppBaseUrl({ requestHeaders });
 
     if (!baseUrl) {
       throw new Error("Internal meeting-refined route base URL을 확인할 수 없습니다.");
@@ -189,7 +185,7 @@ STT 데이터: ${sttText}
               text: "회의록 상세보기",
               emoji: true
             },
-            url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://workpresso.app'}/voice/${id}`,
+            url: `${getAppBaseUrl()}/voice/${id}`,
             style: "primary"
           }
         ]

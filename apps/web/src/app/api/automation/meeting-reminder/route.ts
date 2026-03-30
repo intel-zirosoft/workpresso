@@ -18,6 +18,7 @@
 
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getAppBaseUrl } from "@/lib/app-url";
 import {
   buildReminderPayload,
   sendReminderMessage,
@@ -52,7 +53,7 @@ export async function GET() {
 
     if (error) throw error;
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+    const baseUrl = getAppBaseUrl();
     const isDummy = !process.env.SLACK_WEBHOOK_URL;
 
     if (!upcomingMeetings || upcomingMeetings.length === 0) {

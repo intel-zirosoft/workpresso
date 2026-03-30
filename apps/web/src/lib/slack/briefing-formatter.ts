@@ -9,6 +9,7 @@
  * @see https://api.slack.com/block-kit
  */
 
+import { getAppBaseUrl } from "@/lib/app-url";
 import type { JiraIssue } from "@/lib/dummy-data/jira";
 
 type Schedule = {
@@ -59,6 +60,7 @@ export function buildBriefingPayload(
   isDummy = true
 ) {
   const dateString = formatDate();
+  const baseUrl = getAppBaseUrl();
 
   // --- 일정 블록 구성 ---
   const scheduleLines =
@@ -124,13 +126,13 @@ export function buildBriefingPayload(
         {
           type: "button",
           text: { type: "plain_text", text: "📆 캘린더 열기", emoji: true },
-          url: `${process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"}/schedules`,
+          url: `${baseUrl}/schedules`,
           action_id: "open_calendar",
         },
         {
           type: "button",
           text: { type: "plain_text", text: "👥 팀 상태 보기", emoji: true },
-          url: `${process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"}/teammates`,
+          url: `${baseUrl}/teammates`,
           action_id: "open_teammates",
         },
       ],
