@@ -73,6 +73,7 @@ function createDetailDocument(overrides?: Partial<Record<string, unknown>>) {
     currentApprover: null,
     approvalStepCount: 3,
     ccRecipientCount: 1,
+    viewerApprovalStatus: null,
     approvalSteps: [
       {
         id: "00000000-0000-4000-8000-000000000101",
@@ -163,6 +164,7 @@ function createSummaryDocument() {
     },
     approvalStepCount: 3,
     ccRecipientCount: 1,
+    viewerApprovalStatus: "PENDING",
   };
 }
 

@@ -16,6 +16,8 @@ import {
   type DocumentSummary,
 } from "@/features/pod-a/services/document-schema";
 import {
+  approvalStepStatusBadgeClassMap,
+  approvalStepStatusLabelMap,
   formatDate,
   renderUserName,
   scopeConfig,
@@ -175,6 +177,17 @@ export function DocumentWorkspaceShell({
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-1 pb-20">
                 {documents.map((document) => {
                   const isSelected = selectedDocumentId === document.id;
+                  const badgeLabel =
+                    scope === "approvals" && document.viewerApprovalStatus
+                      ? approvalStepStatusLabelMap[document.viewerApprovalStatus]
+                      : statusLabelMap[document.status];
+                  const badgeClassName =
+                    scope === "approvals" && document.viewerApprovalStatus
+                      ? approvalStepStatusBadgeClassMap[
+                          document.viewerApprovalStatus
+                        ]
+                      : statusBadgeClassMap[document.status] ||
+                        "bg-background/80 text-text/60 border-background";
 
                   return (
                     <button
@@ -199,9 +212,9 @@ export function DocumentWorkspaceShell({
                           "px-3 py-1.5 rounded-pill text-[10px] font-black uppercase tracking-wider shadow-sm border",
                           isSelected 
                             ? "bg-white/20 text-white border-white/20" 
-                            : statusBadgeClassMap[document.status] || "bg-background/80 text-text/60 border-background"
+                            : badgeClassName
                         )}>
-                          {statusLabelMap[document.status]}
+                          {badgeLabel}
                         </span>
                       </div>
 

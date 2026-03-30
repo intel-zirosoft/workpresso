@@ -46,6 +46,7 @@ describe("document-api", () => {
               },
               approvalStepCount: 3,
               ccRecipientCount: 1,
+              viewerApprovalStatus: "PENDING",
             },
           ],
         }),
@@ -131,6 +132,7 @@ describe("document-api", () => {
             },
             approvalStepCount: 3,
             ccRecipientCount: 0,
+            viewerApprovalStatus: null,
             approvalSteps: [],
             ccRecipients: [],
             permissions: {
@@ -182,6 +184,7 @@ describe("document-api", () => {
             currentApprover: null,
             approvalStepCount: 3,
             ccRecipientCount: 0,
+            viewerApprovalStatus: null,
             approvalSteps: [],
             ccRecipients: [],
             permissions: {

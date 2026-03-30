@@ -335,6 +335,7 @@ export async function listDocumentsForViewer(params: {
         author: detail.author,
         approvalSteps: detail.approvalSteps,
         ccRecipients: detail.ccRecipients,
+        viewerApprovalStatus: null,
       }),
     );
   }
@@ -342,16 +343,22 @@ export async function listDocumentsForViewer(params: {
   if (scope === "approvals") {
     const { data, error } = await adminSupabase
       .from("document_approval_steps")
-      .select("document_id")
+      .select("document_id, status")
       .eq("approver_id", viewerId)
-      .eq("status", "PENDING")
+      .in("status", ["PENDING", "APPROVED", "REJECTED"])
       .is("deleted_at", null);
 
     if (error) {
       throw new Error("결재 대기 문서를 불러오지 못했습니다.");
     }
 
-    const documentIds = (data ?? []).map((row) => row.document_id as string);
+    const viewerApprovalStatusByDocumentId = new Map<string, ApprovalStepStatus>(
+      (data ?? []).map((row) => [
+        row.document_id as string,
+        row.status as ApprovalStepStatus,
+      ]),
+    );
+    const documentIds = Array.from(viewerApprovalStatusByDocumentId.keys());
     const documents = await fetchDocumentRowsByIds(
       adminSupabase,
       documentIds,
@@ -380,6 +387,8 @@ export async function listDocumentsForViewer(params: {
         author: detail.author,
         approvalSteps: detail.approvalSteps,
         ccRecipients: detail.ccRecipients,
+        viewerApprovalStatus:
+          viewerApprovalStatusByDocumentId.get(detail.id) ?? null,
       }),
     );
   }
@@ -423,6 +432,7 @@ export async function listDocumentsForViewer(params: {
       author: detail.author,
       approvalSteps: detail.approvalSteps,
       ccRecipients: detail.ccRecipients,
+      viewerApprovalStatus: null,
     }),
   );
 }
