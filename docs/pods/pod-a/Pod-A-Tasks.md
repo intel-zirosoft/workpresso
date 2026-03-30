@@ -122,8 +122,8 @@
 - [ ] **UI Test / Manual QA**: `내 문서 Grid`, `내 결재함`, `공람 문서` scope별 노출 검증
 - [ ] **UI Test / Manual QA**: 멀티 스텝 편집기 전환, 템플릿 적용, 미리보기 토글, `크게보기` 집중 모드 동작 점검
 - [ ] **UI Test / Manual QA**: textarea auto-resize와 오버레이 단일 스크롤 동작 점검
-- [ ] **Docs Sync**: API 변경 시 `docs/Workpresso_API_명세서.md`와 관련 협업 문서 동기화
-- [ ] **Dependency Log**: 신규 라이브러리 도입 시 `docs/DEPENDENCIES.md` 즉시 업데이트
+- [ ] **Docs Sync**: API 변경 시 `docs/api/Workpresso_API_명세서.md`와 관련 협업 문서 동기화
+- [ ] **Dependency Log**: 신규 라이브러리 도입 시 `docs/operations/DEPENDENCIES.md` 즉시 업데이트
 - [x] **Unit Test**: `npm test` 기준 Pod A 관련 unit test 통과
 - [ ] **Type Check**: 전체 `npm run type-check` 통과
   현재는 `apps/web/src/app/api/chat/route.ts` 기존 타입 오류로 실패 중

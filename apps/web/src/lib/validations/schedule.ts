@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-const baseScheduleSchema = z.object({
+export const baseScheduleSchema = z.object({
   title: z.string().min(1, "일정 제목을 입력해주세요."),
   start_time: z.string().datetime({ message: "유효한 시작 시간을 입력해주세요 (ISO 8601)." }),
   end_time: z.string().datetime({ message: "유효한 종료 시간을 입력해주세요 (ISO 8601)." }),

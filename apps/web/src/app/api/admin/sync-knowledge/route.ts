@@ -1,57 +1,56 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import fs from 'fs';
-import path from 'path';
-import { createEmbedding } from '@/lib/ai/embeddings';
+import { createHash } from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { NextResponse } from "next/server";
+
+import { upsertKnowledgeSource } from "@/features/pod-c/services/knowledge-sync";
 
 // Node.js 런타임 사용 (파일 시스템 접근 필요)
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
+
+function createDeterministicKnowledgeSourceId(seed: string) {
+  const hash = createHash("sha1").update(seed).digest("hex");
+
+  return [
+    hash.slice(0, 8),
+    hash.slice(8, 12),
+    `5${hash.slice(13, 16)}`,
+    `${((parseInt(hash.slice(16, 18), 16) & 0x3f) | 0x80)
+      .toString(16)
+      .padStart(2, "0")}${hash.slice(18, 20)}`,
+    hash.slice(20, 32),
+  ].join("-");
+}
 
 export async function POST() {
   try {
-    const kbPath = path.join(process.cwd(), 'src/features/pod-c/knowledge-base');
-    const files = fs.readdirSync(kbPath).filter(f => f.endsWith('.md'));
-    
-    const results = [];
+    const kbPath = path.join(process.cwd(), "src/features/pod-c/knowledge-base");
+    const files = fs.readdirSync(kbPath).filter((file) => file.endsWith(".md"));
 
     for (const fileName of files) {
-      const content = fs.readFileSync(path.join(kbPath, fileName), 'utf-8');
-      
-      const { embedding } = await createEmbedding(content);
+      const content = fs.readFileSync(path.join(kbPath, fileName), "utf-8");
 
-      // DB에 동기화 (Upsert: 파일명 기준 중복 방지)
-      const { data, error } = await supabase
-        .from('knowledge_vectors')
-        .upsert({
-          id: undefined, // 새로 생성하거나 덮어씀
-          source_type: 'DOCUMENTS',
-          source_id: '00000000-0000-0000-0000-000000000000', // 시스템 관리자 ID
-          embedding,
-          metadata: {
-            title: fileName,
-            content: content,
-            is_official: true,
-            updated_at: new Date().toISOString()
-          }
-        }, { onConflict: 'id' }) // 실제 운영시엔 고유 식별자(id) 기준 upsert 로직 정교화 필요
-        .select();
-
-      if (error) throw error;
-      results.push(data[0]);
+      await upsertKnowledgeSource({
+        sourceType: "DOCUMENTS",
+        sourceId: createDeterministicKnowledgeSourceId(`official-doc:${fileName}`),
+        title: fileName,
+        content,
+        metadata: {
+          is_official: true,
+          file_name: fileName,
+          sync_origin: "api/admin/sync-knowledge",
+        },
+      });
     }
 
     return NextResponse.json({
       success: true,
       synced_files: files,
-      count: results.length
+      count: files.length,
     });
   } catch (error: any) {
-    console.error('Sync Error:', error);
+    console.error("Sync Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
-  } 
+  }
 }

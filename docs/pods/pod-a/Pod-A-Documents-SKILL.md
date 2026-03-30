@@ -98,7 +98,7 @@
 
 ## 📦 Library Management Protocol
 <!-- 📦 라이브러리 관리 규약 -->
-- **Update Required**: Whenever a new library is installed, the agent MUST update `docs/DEPENDENCIES.md` immediately with the library name, version, and exact Pod A purpose.
+- **Update Required**: Whenever a new library is installed, the agent MUST update `docs/operations/DEPENDENCIES.md` immediately with the library name, version, and exact Pod A purpose.
 - **Bias Toward Existing Stack**: Prefer implementing the Markdown GUI on top of the current textarea and shadcn/ui controls before introducing a new rich-text editor dependency.
 
 ## 📋 Definition of Done

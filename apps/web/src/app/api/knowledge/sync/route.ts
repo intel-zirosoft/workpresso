@@ -1,26 +1,15 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
+import { ZodError } from "zod";
 
 import {
   removeKnowledgeSource,
   upsertKnowledgeSource,
 } from "@/features/pod-c/services/knowledge-sync";
+import {
+  removeKnowledgeSourceInputSchema,
+  upsertKnowledgeSourceInputSchema,
+} from "@/features/pod-c/services/knowledge-contract";
 import { createClient } from "@/lib/supabase/server";
-
-const sourceTypeSchema = z.enum(["DOCUMENTS", "MEETING_LOGS", "SCHEDULES"]);
-
-const upsertSchema = z.object({
-  sourceType: sourceTypeSchema,
-  sourceId: z.string().uuid(),
-  title: z.string().optional(),
-  content: z.string().min(1, "적재할 텍스트가 필요합니다."),
-  metadata: z.record(z.string(), z.unknown()).optional(),
-});
-
-const deleteSchema = z.object({
-  sourceType: sourceTypeSchema,
-  sourceId: z.string().uuid(),
-});
 
 function unauthorizedResponse() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -37,18 +26,16 @@ export async function POST(request: Request) {
   }
 
   try {
-    const payload = upsertSchema.parse(await request.json());
+    const payload = upsertKnowledgeSourceInputSchema.parse(await request.json());
 
-    await upsertKnowledgeSource({
-      sourceType: payload.sourceType,
-      sourceId: payload.sourceId,
-      title: payload.title,
-      content: payload.content,
-      metadata: payload.metadata as Record<string, never> | undefined,
-    });
+    await upsertKnowledgeSource(payload);
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json({ error: error.flatten() }, { status: 400 });
+    }
+
     const message =
       error instanceof Error ? error.message : "지식 동기화에 실패했습니다.";
 
@@ -67,15 +54,18 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const payload = deleteSchema.parse(await request.json());
+    const payload = removeKnowledgeSourceInputSchema.parse(
+      await request.json(),
+    );
 
-    await removeKnowledgeSource({
-      sourceType: payload.sourceType,
-      sourceId: payload.sourceId,
-    });
+    await removeKnowledgeSource(payload);
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json({ error: error.flatten() }, { status: 400 });
+    }
+
     const message =
       error instanceof Error ? error.message : "지식 삭제에 실패했습니다.";
 

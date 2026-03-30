@@ -2,29 +2,21 @@ import "server-only";
 
 import { createEmbedding } from "@/lib/ai/embeddings";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  type JsonValue,
+  type KnowledgeSourceType,
+  type RemoveKnowledgeSourceInput,
+  type UpsertKnowledgeSourceInput,
+  removeKnowledgeSourceInputSchema,
+  upsertKnowledgeSourceInputSchema,
+} from "@/features/pod-c/services/knowledge-contract";
 
-export type KnowledgeSourceType = "DOCUMENTS" | "MEETING_LOGS" | "SCHEDULES";
-
-type JsonValue =
-  | string
-  | number
-  | boolean
-  | null
-  | JsonValue[]
-  | { [key: string]: JsonValue };
-
-interface UpsertKnowledgeSourceInput {
-  sourceType: KnowledgeSourceType;
-  sourceId: string;
-  title?: string | null;
-  content: string;
-  metadata?: Record<string, JsonValue>;
-}
-
-interface RemoveKnowledgeSourceInput {
-  sourceType: KnowledgeSourceType;
-  sourceId: string;
-}
+export type {
+  JsonValue,
+  KnowledgeSourceType,
+  RemoveKnowledgeSourceInput,
+  UpsertKnowledgeSourceInput,
+} from "@/features/pod-c/services/knowledge-contract";
 
 function buildEmbeddingInput(
   title: string | null | undefined,
@@ -88,14 +80,15 @@ export function buildMeetingLogKnowledgeContent(input: {
 }
 
 export async function upsertKnowledgeSource(input: UpsertKnowledgeSourceInput) {
-  const content = input.content.trim();
+  const parsedInput = upsertKnowledgeSourceInputSchema.parse(input);
+  const content = parsedInput.content.trim();
 
   if (!content) {
     return;
   }
 
   const supabase = createAdminClient();
-  const embeddingInput = buildEmbeddingInput(input.title, content);
+  const embeddingInput = buildEmbeddingInput(parsedInput.title, content);
   const { embedding } = await createEmbedding(embeddingInput);
 
   if (!embedding) {
@@ -105,16 +98,16 @@ export async function upsertKnowledgeSource(input: UpsertKnowledgeSourceInput) {
   const syncedAt = new Date().toISOString();
   const { error } = await supabase.from("knowledge_vectors").upsert(
     {
-      source_type: input.sourceType,
-      source_id: input.sourceId,
+      source_type: parsedInput.sourceType,
+      source_id: parsedInput.sourceId,
       embedding,
       metadata: {
-        title: input.title ?? "",
+        title: parsedInput.title ?? "",
         content,
-        source_type: input.sourceType,
-        source_id: input.sourceId,
+        source_type: parsedInput.sourceType,
+        source_id: parsedInput.sourceId,
         synced_at: syncedAt,
-        ...(input.metadata ?? {}),
+        ...(parsedInput.metadata ?? {}),
       },
       updated_at: syncedAt,
     },
@@ -127,12 +120,13 @@ export async function upsertKnowledgeSource(input: UpsertKnowledgeSourceInput) {
 }
 
 export async function removeKnowledgeSource(input: RemoveKnowledgeSourceInput) {
+  const parsedInput = removeKnowledgeSourceInputSchema.parse(input);
   const supabase = createAdminClient();
   const { error } = await supabase
     .from("knowledge_vectors")
     .delete()
-    .eq("source_type", input.sourceType)
-    .eq("source_id", input.sourceId);
+    .eq("source_type", parsedInput.sourceType)
+    .eq("source_id", parsedInput.sourceId);
 
   if (error) {
     throw new Error(`지식 벡터를 삭제하지 못했습니다: ${error.message}`);

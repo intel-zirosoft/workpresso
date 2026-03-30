@@ -4,16 +4,16 @@
 
 ## 1. 기준 문서
 
-- `docs/Pod-A-Tasks.md`
-- `docs/Pod-B-Tasks.md`
-- `docs/Pod-C-Tasks.md`
-- `docs/Pod-D-Tasks.md`
-- `docs/Workpresso_API_명세서.md`
-- `docs/DB설계서_최종본.md`
-- `docs/KANBAN-DONE-LOG.md`
+- `docs/pods/pod-a/Pod-A-Tasks.md`
+- `docs/pods/pod-b/Pod-B-Tasks.md`
+- `docs/pods/pod-c/Pod-C-Tasks.md`
+- `docs/pods/pod-d/Pod-D-Tasks.md`
+- `docs/api/Workpresso_API_명세서.md`
+- `docs/architecture/database/DB설계서_최종본.md`
+- `docs/operations/KANBAN-DONE-LOG.md`
 - `docs/daily_report_20260324.md`
-- `docs/meeting_minutes_20260324.md`
-- 보조 확인: `docs/pod-c-openai.json`
+- `docs/meetings/meeting_minutes_20260324.md`
+- 보조 확인: `docs/api/pod-c-openai.json`
 
 ## 2. 작성 원칙
 
@@ -49,7 +49,7 @@
 - Pod C는 RAG 검색 API가 작업 문서에는 있으나 통합 API 문서에는 `/api/chat`, `/api/admin/sync-knowledge`만 있어 테스트 대상 API를 먼저 확정해야 합니다.
 - Pod C의 Pod B Function Calling payload는 작업 문서상 아직 협의 중이므로 자동화 테스트를 바로 고정하면 회귀 비용이 큽니다.
 - Pod D는 히스토리 목록, Signed URL, 정제 결과 스키마, 단계별 상태 응답이 API 문서에 부족합니다.
-- Pod D Roadmap의 확장 컬럼과 `docs/DB설계서_최종본.md`의 `meeting_logs` 필드가 일치하지 않아 DB 기준 테스트를 먼저 확정해야 합니다.
+- Pod D Roadmap의 확장 컬럼과 `docs/architecture/database/DB설계서_최종본.md`의 `meeting_logs` 필드가 일치하지 않아 DB 기준 테스트를 먼저 확정해야 합니다.
 - Pod A는 신규 마이그레이션 실제 적용 전 검증과 전체 `type-check`가 남아 있으므로 CI 기준 최종 합격선은 아직 닫히지 않았습니다.
 
 ## 6. Pod A 테스트 케이스
@@ -159,7 +159,7 @@
 ### 8.4 모호하거나 충돌하는 항목
 
 - 작업 문서에는 "유사도 높은 문서를 검색해오는 RAG 검색 API"가 있으나 통합 API 문서에는 별도 엔드포인트가 없습니다.
-- `docs/pod-c-openai.json`에는 `/api/debug/seed`가 있으나 다른 통합 문서에는 나타나지 않습니다.
+- `docs/api/pod-c-openai.json`에는 `/api/debug/seed`가 있으나 다른 통합 문서에는 나타나지 않습니다.
 - 채팅 UI는 작업 문서상 미완료인데 `apps/web/tests/full-service.spec.ts`에는 채팅 시나리오가 존재하므로, 현재 테스트는 임시 UI 기준인지 최종 UX 기준인지 확인이 필요합니다.
 - Pod B Function Calling JSON payload 규격이 아직 협의 중이라 자동화 스냅샷을 지금 고정하기 어렵습니다.
 
@@ -196,8 +196,8 @@
 
 ### 9.4 모호하거나 충돌하는 항목
 
-- `docs/Workpresso_API_명세서.md`에는 히스토리 목록 API, Signed URL 발급 API, 상태 조회 계약이 없습니다.
-- `docs/DB설계서_최종본.md`의 `meeting_logs`는 `owner_id`, `audio_url`, `stt_text`만 제시하지만 Pod D 작업 문서는 제목, 요약, 액션 아이템, 참여자, `is_refined` 등을 전제로 합니다.
+- `docs/api/Workpresso_API_명세서.md`에는 히스토리 목록 API, Signed URL 발급 API, 상태 조회 계약이 없습니다.
+- `docs/architecture/database/DB설계서_최종본.md`의 `meeting_logs`는 `owner_id`, `audio_url`, `stt_text`만 제시하지만 Pod D 작업 문서는 제목, 요약, 액션 아이템, 참여자, `is_refined` 등을 전제로 합니다.
 - STT 호출 주체가 Edge Function인지 서버 API인지 문서에 혼재되어 있어 장애 복구 테스트 기준이 다를 수 있습니다.
 
 ## 10. 추천 실행 순서
@@ -209,7 +209,7 @@
 
 ## 11. 바로 다음 액션
 
-- `docs/Workpresso_API_명세서.md`에 Pod B PATCH, Pod C RAG 검색, Pod D 히스토리/정제 응답 스키마를 보강합니다.
+- `docs/api/Workpresso_API_명세서.md`에 Pod B PATCH, Pod C RAG 검색, Pod D 히스토리/정제 응답 스키마를 보강합니다.
 - Pod A의 남은 수동 QA 항목을 체크리스트 기반으로 실제 실행합니다.
 - Pod C Function Calling payload가 확정되면 C-08을 명세 기반 케이스로 승격합니다.
 - Pod D 확장 컬럼이 DB 최종본에 반영되면 D-09 ~ D-11을 DB 계약 기반으로 재검토합니다.

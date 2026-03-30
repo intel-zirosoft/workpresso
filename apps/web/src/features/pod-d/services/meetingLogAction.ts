@@ -1,11 +1,10 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import {
-  buildMeetingLogKnowledgeContent,
-} from "@/features/pod-c/services/knowledge-sync";
 import { generateJsonObject } from "@/lib/ai/chat";
 import { getResolvedAiConfig } from "@/lib/ai/config";
+import { meetingRefinedPayloadSchema } from "@/features/pod-d/services/meeting-refined-contract";
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
 import { 
@@ -80,23 +79,56 @@ STT 데이터: ${sttText}
 
   if (error) throw new Error(error.message);
 
-  // 6. Pod C: 지식 기반 실시간 인덱싱
+  // 6. Pod D -> Pod C: meeting-refined 내부 계약 route 호출
   try {
-    const { indexKnowledge } = await import('@/features/pod-c/services/knowledgeService');
-    const indexText = buildMeetingLogKnowledgeContent({
+    const requestHeaders = await headers();
+    const forwardedProto = requestHeaders.get("x-forwarded-proto") ?? "http";
+    const forwardedHost =
+      requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ??
+      (forwardedHost ? `${forwardedProto}://${forwardedHost}` : null);
+
+    if (!baseUrl) {
+      throw new Error("Internal meeting-refined route base URL을 확인할 수 없습니다.");
+    }
+
+    const payload = meetingRefinedPayloadSchema.parse({
+      meetingLogId: id,
       title: refinedData.title ?? "제목 미정",
       summary: refinedData.summary ?? "",
       participants: refinedData.participants ?? [],
-      actionItems: (refinedData.action_items ?? []) as Array<Record<string, string | number | boolean | null>>,
+      actionItems: refinedData.action_items ?? [],
       transcript: sttText,
+      updatedAt: new Date().toISOString(),
     });
-    
-    await indexKnowledge(id, 'MEETING_LOGS', indexText, {
-      title: refinedData.title ?? "제목 미정",
-      owner_id: logData?.owner_id
+
+    const response = await fetch(`${baseUrl}/api/internal/pod-d/meeting-refined`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(requestHeaders.get("cookie")
+          ? { cookie: requestHeaders.get("cookie") as string }
+          : {}),
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
     });
-  } catch (idxError) {
-    console.error('[Pod D -> C Integration] Indexing failed:', idxError);
+
+    if (!response.ok) {
+      const errorPayload = await response
+        .json()
+        .catch(() => ({ error: "Unknown error" }));
+
+      throw new Error(
+        typeof errorPayload?.error === "string"
+          ? errorPayload.error
+          : "meeting-refined internal route 호출에 실패했습니다.",
+      );
+    }
+  } catch (syncError) {
+    console.error("[Pod D -> C meeting-refined] sync failed:", syncError);
+    // 인덱싱 실패가 정제 완료 사용자 경험을 방해하지 않도록 에러는 로깅만 수행
   }
 
   // 5. Slack 알림 연동 (범용 유틸리티 사용)

@@ -37,8 +37,8 @@
 
 ## 📦 Library Management Protocol
 <!-- 📦 라이브러리 관리 규약 -->
-- **Update Required**: Whenever a new library is installed, the agent MUST update `docs/DEPENDENCIES.md` immediately with the library name, version, and specific purpose for Pod D.
-<!-- - **업데이트 필수**: 새로운 라이브러리 설치 시, 에이전트는 반드시 즉시 `docs/DEPENDENCIES.md`를 업데이트해야 하며, 라이브러리명, 버전 및 파드 D에서의 구체적인 용도를 기록할 것. -->
+- **Update Required**: Whenever a new library is installed, the agent MUST update `docs/operations/DEPENDENCIES.md` immediately with the library name, version, and specific purpose for Pod D.
+<!-- - **업데이트 필수**: 새로운 라이브러리 설치 시, 에이전트는 반드시 즉시 `docs/operations/DEPENDENCIES.md`를 업데이트해야 하며, 라이브러리명, 버전 및 파드 D에서의 구체적인 용도를 기록할 것. -->
 
 ## 🔌 Interfaces (External Integration)
 <!-- 🔌 인터페이스 (외부 연동 규격) -->

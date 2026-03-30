@@ -5,7 +5,7 @@
 - 대상 기능: Pod A 문서 워크플로우 UI/수동 QA 보강
 - 실행 일시: 2026-03-27 16:34 ~ 16:49 (KST)
 - 실행자: Codex
-- 기준 문서: `docs/test-case/pod-a-d-test-cases-2026-03-27.md`, `docs/Pod-A-Tasks.md`
+- 기준 문서: `docs/testing/test-case/pod-a-d-test-cases-2026-03-27.md`, `docs/pods/pod-a/Pod-A-Tasks.md`
 - 실행 도구: `playwright` 스킬 기반 Playwright CLI, `playwright-test-result` 템플릿
 - 전체 케이스 수: 8
 - PASS: 4
