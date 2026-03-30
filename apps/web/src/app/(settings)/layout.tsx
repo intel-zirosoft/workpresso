@@ -16,7 +16,7 @@ export default async function SettingsLayout({
 
   return (
     <div className="flex min-h-screen bg-[#FDFBF7]">
-      <SettingsSidebar userRole={profile.role || 'USER'} />
+      <SettingsSidebar userRole={profile?.role || 'USER'} />
       <main className="flex-1 p-8 overflow-y-auto">
         <div className="max-w-4xl mx-auto bg-white rounded-[24px] shadow-sm p-8 border border-border/50 min-h-full">
           {children}

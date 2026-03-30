@@ -113,6 +113,20 @@ STT 데이터: ${sttText}
 
   if (error) throw new Error(error.message);
 
+  // 6. Pod C: 지식 기반 실시간 인덱싱 (비동기 처리 권장하나 서버 액션 내에서 완결성을 위해 await)
+  try {
+    const { indexKnowledge } = await import('@/features/pod-c/services/knowledgeService');
+    const indexText = `제목: ${refinedData.title}\n요약: ${refinedData.summary}`;
+    
+    await indexKnowledge(id, 'MEETING_LOGS', indexText, {
+      title: refinedData.title,
+      owner_id: logData?.owner_id
+    });
+  } catch (idxError) {
+    console.error('[Pod D -> C Integration] Indexing failed:', idxError);
+    // 인덱싱 실패가 정제 완료 사용자 경험을 방해하지 않도록 에러는 로깅만 수행
+  }
+
   // 5. Slack 알림 연동 (조직 전체 통제)
   if (isSlackActive && slackConfig?.webhookUrl) {
     try {
@@ -195,18 +209,68 @@ STT 데이터: ${sttText}
 }
 
 /**
- * 특정 할 일(Action Item)을 Jira 이슈로 전송합니다.
+ * 특정 할 일(Action Item)을 Jira 이슈로 전송하고, DB에 이슈 키를 영구 저장합니다.
+ * - Jira 생성 + DB 저장을 서버에서 원자적으로 처리하여 클라이언트 의존성을 제거합니다.
  */
-export async function syncActionItemToJiraServer(task: string, assignee?: string, dueDate?: string) {
-  try {
-    const { createJiraIssue } = await import('@/features/settings/services/extensionAction');
-    
-    const summary = `[회의록 할 일] ${task}`;
-    const description = `담당자: ${assignee || '미정'}\n기한: ${dueDate || '없음'}\n\nWorkPresso 회의록에서 자동 생성된 할 일입니다.`;
+export async function syncActionItemToJiraServer(
+  meetingLogId: string,
+  itemIndex: number,
+  task: string,
+  assignee?: string,
+  dueDate?: string,
+) {
+  const supabase = await createClient();
 
-    const result = await createJiraIssue({ summary, description });
-    return result;
-  } catch (error) {
-    throw new Error(error instanceof Error ? error.message : 'Jira 동기화 중 오류가 발생했습니다.');
+  // 1. 현재 meeting_log의 action_items 조회
+  const { data: logData, error: fetchError } = await supabase
+    .from('meeting_logs')
+    .select('action_items')
+    .eq('id', meetingLogId)
+    .single();
+
+  if (fetchError) throw new Error(`회의록 조회 실패: ${fetchError.message}`);
+
+  const currentItems: any[] = logData?.action_items || [];
+
+  // 이미 Jira 이슈가 연결된 경우 중복 방지
+  if (currentItems[itemIndex]?.jira_key) {
+    return {
+      success: true,
+      issueKey: currentItems[itemIndex].jira_key,
+      issueUrl: currentItems[itemIndex].jira_url,
+      alreadySynced: true,
+    };
   }
+
+  // 2. Jira 이슈 생성
+  const { createJiraIssue } = await import('@/features/settings/services/extensionAction');
+
+  const summary = `[회의록 할 일] ${task}`;
+  const description = `담당자: ${assignee || '미정'}\n기한: ${dueDate || '없음'}\n\nWorkPresso 회의록에서 자동 생성된 할 일입니다.\n회의록 ID: ${meetingLogId}`;
+
+  const jiraResult = await createJiraIssue({ summary, description });
+
+  // 3. action_items 배열에 Jira 정보 반영 후 DB 저장 (서버에서 직접 처리)
+  const updatedItems = [...currentItems];
+  updatedItems[itemIndex] = {
+    ...updatedItems[itemIndex],
+    jira_key: jiraResult.issueKey,
+    jira_url: jiraResult.issueUrl,
+  };
+
+  const { error: updateError } = await supabase
+    .from('meeting_logs')
+    .update({ action_items: updatedItems, updated_at: new Date().toISOString() })
+    .eq('id', meetingLogId);
+
+  if (updateError) throw new Error(`Jira 키 DB 저장 실패: ${updateError.message}`);
+
+  revalidatePath(`/voice/${meetingLogId}`);
+
+  return {
+    success: true,
+    issueKey: jiraResult.issueKey,
+    issueUrl: jiraResult.issueUrl,
+    updatedItems,
+  };
 }
