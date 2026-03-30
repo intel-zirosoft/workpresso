@@ -151,6 +151,21 @@ export const documentTemplateOptions: DocumentTemplateOption[] = [
 
 ---
 
+## 기능 명세
+- 사용자 로그인 흐름 개선
+- 문서 승인 알림 자동화
+- Jira 이슈 연동 위젯 추가
+
+---
+
+## 작업 체크리스트
+- [ ] API 명세 확정
+- [ ] UI 시안 검토
+- [ ] 개발 일정 산정
+- [ ] QA 시나리오 준비
+
+---
+
 ## 일정
 - 기획:  
 - 개발:  
