@@ -1,6 +1,14 @@
 "use client";
 
-import { CheckCheck, Loader2, PencilLine, Send, XCircle } from "lucide-react";
+import {
+  CheckCheck,
+  ExternalLink,
+  Loader2,
+  PencilLine,
+  Send,
+  Ticket,
+  XCircle,
+} from "lucide-react";
 
 import { MarkdownContent } from "@/components/shared/markdown-content";
 import { Button } from "@/components/ui/button";
@@ -30,8 +38,10 @@ type DocumentDetailDialogProps = {
   onSubmit: () => void;
   onApprove: () => void;
   onReject: () => void;
+  onSyncToJira: () => void;
   submitPending: boolean;
   approvalPending: boolean;
+  jiraSyncPending: boolean;
 };
 
 export function DocumentDetailDialog({
@@ -44,8 +54,10 @@ export function DocumentDetailDialog({
   onSubmit,
   onApprove,
   onReject,
+  onSyncToJira,
   submitPending,
   approvalPending,
+  jiraSyncPending,
 }: DocumentDetailDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -147,6 +159,81 @@ export function DocumentDetailDialog({
                       ))
                     )}
                   </div>
+                </div>
+
+                <div className="rounded-md bg-background/60 p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div className="text-sm font-semibold text-text">
+                      Jira 연동 현황
+                    </div>
+                    {document.permissions.canSyncJira &&
+                    document.jiraLinks.length === 0 ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="rounded-pill"
+                        onClick={onSyncToJira}
+                        disabled={jiraSyncPending}
+                      >
+                        {jiraSyncPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Ticket className="h-4 w-4" />
+                        )}
+                        Jira 이슈 생성
+                      </Button>
+                    ) : null}
+                  </div>
+
+                  {document.jiraLinks.length === 0 ? (
+                    <div className="text-sm text-text/55">
+                      아직 연결된 Jira 이슈가 없습니다.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {document.jiraLinks.map((link) => (
+                        <div
+                          key={link.id}
+                          className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-surface px-4 py-3"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="rounded-pill bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                                {link.issueKey}
+                              </span>
+                              <span className="text-xs text-text/60">
+                                {link.issueType}
+                              </span>
+                              <span className="text-xs text-text/60">
+                                {link.status}
+                              </span>
+                            </div>
+                            <div className="mt-2 text-sm font-medium text-text">
+                              {link.summary}
+                            </div>
+                            <div className="mt-1 text-xs text-text/55">
+                              최근 동기화 {formatDate(link.syncedAt)}
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="rounded-pill"
+                            asChild
+                          >
+                            <a
+                              href={link.issueUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                              Jira 열기
+                            </a>
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <article className="prose prose-slate max-w-none font-body prose-headings:font-headings prose-headings:text-text prose-p:text-text prose-li:text-text prose-strong:text-text">

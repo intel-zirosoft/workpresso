@@ -129,11 +129,13 @@ describe("document-schema", () => {
         },
       ],
       ccRecipients: [],
+      jiraLinks: [],
       permissions: {
         canEdit: false,
         canSubmit: false,
         canApprove: true,
         canReject: true,
+        canSyncJira: false,
       },
     });
 

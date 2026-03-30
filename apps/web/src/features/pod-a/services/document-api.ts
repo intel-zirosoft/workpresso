@@ -147,3 +147,14 @@ export async function actOnDocument(
 
   return documentResponseSchema.parse(data).document;
 }
+
+export async function syncDocumentToJira(
+  documentId: string,
+): Promise<DocumentDetail> {
+  const response = await fetch(`/api/documents/${documentId}/jira`, {
+    method: "POST",
+  });
+  const data = await parseJson(response);
+
+  return documentResponseSchema.parse(data).document;
+}

@@ -166,11 +166,22 @@ export const ccRecipientSchema = z.object({
   recipient: documentUserSchema,
 });
 
+export const documentJiraLinkSchema = z.object({
+  id: z.string().uuid(),
+  issueKey: z.string(),
+  issueUrl: z.string().url(),
+  issueType: z.string(),
+  summary: z.string(),
+  status: z.string(),
+  syncedAt: z.string().nullable(),
+});
+
 export const documentPermissionsSchema = z.object({
   canEdit: z.boolean(),
   canSubmit: z.boolean(),
   canApprove: z.boolean(),
   canReject: z.boolean(),
+  canSyncJira: z.boolean(),
 });
 
 export const documentSummarySchema = documentBaseSchema.extend({
@@ -184,6 +195,7 @@ export const documentSummarySchema = documentBaseSchema.extend({
 export const documentDetailSchema = documentSummarySchema.extend({
   approvalSteps: z.array(approvalStepSchema),
   ccRecipients: z.array(ccRecipientSchema),
+  jiraLinks: z.array(documentJiraLinkSchema),
   permissions: documentPermissionsSchema,
 });
 
@@ -249,6 +261,7 @@ export function buildDocumentDetail(input: {
   author: DocumentUser;
   approvalSteps: ApprovalStep[];
   ccRecipients: CcRecipient[];
+  jiraLinks?: DocumentJiraLink[];
   permissions: DocumentPermissions;
 }) {
   const summary = buildDocumentSummary({
@@ -262,6 +275,7 @@ export function buildDocumentDetail(input: {
     ...summary,
     approvalSteps: input.approvalSteps,
     ccRecipients: input.ccRecipients,
+    jiraLinks: input.jiraLinks ?? [],
     permissions: input.permissions,
   });
 }
@@ -277,6 +291,7 @@ export type DocumentUser = z.infer<typeof documentUserSchema>;
 export type DocumentBase = z.infer<typeof documentBaseSchema>;
 export type ApprovalStep = z.infer<typeof approvalStepSchema>;
 export type CcRecipient = z.infer<typeof ccRecipientSchema>;
+export type DocumentJiraLink = z.infer<typeof documentJiraLinkSchema>;
 export type DocumentSummary = z.infer<typeof documentSummarySchema>;
 export type DocumentDetail = z.infer<typeof documentDetailSchema>;
 export type DocumentPermissions = z.infer<typeof documentPermissionsSchema>;

@@ -10,6 +10,7 @@ const {
   mockUpdateWorkflowDocument,
   mockSubmitWorkflowDocument,
   mockActOnWorkflowDocument,
+  mockSyncDocumentToJira,
 } = vi.hoisted(() => ({
   mockGetUser: vi.fn(),
   mockCreateClient: vi.fn(),
@@ -20,6 +21,7 @@ const {
   mockUpdateWorkflowDocument: vi.fn(),
   mockSubmitWorkflowDocument: vi.fn(),
   mockActOnWorkflowDocument: vi.fn(),
+  mockSyncDocumentToJira: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -37,12 +39,14 @@ vi.mock("@/features/pod-a/services/document-server", () => ({
   updateWorkflowDocument: mockUpdateWorkflowDocument,
   submitWorkflowDocument: mockSubmitWorkflowDocument,
   actOnWorkflowDocument: mockActOnWorkflowDocument,
+  syncDocumentToJira: mockSyncDocumentToJira,
 }));
 
 import { GET as getDocuments, POST as postDocument } from "@/app/api/documents/route";
 import { GET as getDocument, PATCH as patchDocument } from "@/app/api/documents/[id]/route";
 import { POST as postSubmitDocument } from "@/app/api/documents/[id]/submit/route";
 import { POST as postApprovalAction } from "@/app/api/documents/[id]/approval/route";
+import { POST as postDocumentJiraSync } from "@/app/api/documents/[id]/jira/route";
 
 const adminClient = { from: vi.fn() };
 
@@ -121,11 +125,13 @@ function createDetailDocument(overrides?: Partial<Record<string, unknown>>) {
         },
       },
     ],
+    jiraLinks: [],
     permissions: {
       canEdit: true,
       canSubmit: true,
       canApprove: false,
       canReject: false,
+      canSyncJira: false,
     },
     ...overrides,
   };
@@ -169,6 +175,7 @@ describe("Pod A document routes", () => {
     mockUpdateWorkflowDocument.mockReset();
     mockSubmitWorkflowDocument.mockReset();
     mockActOnWorkflowDocument.mockReset();
+    mockSyncDocumentToJira.mockReset();
 
     mockCreateClient.mockResolvedValue({
       auth: {
@@ -291,6 +298,7 @@ describe("Pod A document routes", () => {
           canSubmit: false,
           canApprove: true,
           canReject: true,
+          canSyncJira: false,
         },
       }),
     );
@@ -419,6 +427,7 @@ describe("Pod A document routes", () => {
           canSubmit: false,
           canApprove: false,
           canReject: false,
+          canSyncJira: false,
         },
       }),
     );
@@ -443,5 +452,55 @@ describe("Pod A document routes", () => {
       comment: undefined,
     });
     expect(body.document.status).toBe("APPROVED");
+  });
+
+  it("routes Jira sync actions through the dedicated endpoint", async () => {
+    mockGetUser.mockResolvedValue({
+      data: {
+        user: {
+          id: "00000000-0000-4000-8000-000000000010",
+        },
+      },
+      error: null,
+    });
+    mockSyncDocumentToJira.mockResolvedValue(
+      createDetailDocument({
+        status: "APPROVED",
+        jiraLinks: [
+          {
+            id: "00000000-0000-4000-8000-000000000301",
+            issueKey: "KAN-1",
+            issueUrl: "https://workpresso.atlassian.net/browse/KAN-1",
+            issueType: "에픽",
+            summary: "운영 계획",
+            status: "할 일",
+            syncedAt: "2026-03-30T01:00:00.000Z",
+          },
+        ],
+        permissions: {
+          canEdit: false,
+          canSubmit: false,
+          canApprove: false,
+          canReject: false,
+          canSyncJira: true,
+        },
+      }),
+    );
+
+    const response = await postDocumentJiraSync(
+      new Request("http://localhost:3000/api/documents/0001/jira", {
+        method: "POST",
+      }),
+      { params: { id: "0001" } },
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(mockSyncDocumentToJira).toHaveBeenCalledWith({
+      adminSupabase: adminClient,
+      viewerId: "00000000-0000-4000-8000-000000000010",
+      documentId: "0001",
+    });
+    expect(body.document.jiraLinks).toHaveLength(1);
   });
 });
