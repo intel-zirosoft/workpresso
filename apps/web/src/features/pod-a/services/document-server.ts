@@ -18,7 +18,10 @@ import {
   type DocumentSummary,
   type DocumentUser,
 } from "@/features/pod-a/services/document-schema";
-import { upsertKnowledgeSource } from "@/features/pod-c/services/knowledge-sync";
+import {
+  removeKnowledgeSource,
+  upsertKnowledgeSource,
+} from "@/features/pod-c/services/knowledge-sync";
 
 const documentSelectColumns =
   "id, author_id, title, content, status, submitted_at, final_approved_at, created_at, updated_at, deleted_at";
@@ -571,11 +574,10 @@ export async function createWorkflowDocument(params: {
     throw new Error("생성된 문서를 다시 불러오지 못했습니다.");
   }
 
-  try {
-    await syncDocumentKnowledge(detail);
-  } catch (syncError) {
-    console.error("document knowledge sync failed:", syncError);
-  }
+  await syncDocumentKnowledgeForLifecycle({
+    previousDocument: null,
+    nextDocument: detail,
+  });
 
   return detail;
 }
@@ -647,11 +649,10 @@ export async function updateWorkflowDocument(params: {
   });
 
   if (nextDetail) {
-    try {
-      await syncDocumentKnowledge(nextDetail);
-    } catch (syncError) {
-      console.error("document knowledge sync failed:", syncError);
-    }
+    await syncDocumentKnowledgeForLifecycle({
+      previousDocument: detail,
+      nextDocument: nextDetail,
+    });
   }
 
   return nextDetail;
@@ -734,11 +735,10 @@ export async function submitWorkflowDocument(params: {
     throw new Error("제출 후 문서를 다시 불러오지 못했습니다.");
   }
 
-  try {
-    await syncDocumentKnowledge(nextDetail);
-  } catch (syncError) {
-    console.error("document knowledge sync failed:", syncError);
-  }
+  await syncDocumentKnowledgeForLifecycle({
+    previousDocument: detail,
+    nextDocument: nextDetail,
+  });
 
   return nextDetail;
 }
@@ -769,6 +769,35 @@ export async function syncDocumentKnowledge(document: DocumentDetail) {
       })),
     },
   });
+}
+
+export async function removeDocumentKnowledge(documentId: string) {
+  await removeKnowledgeSource({
+    sourceType: "DOCUMENTS",
+    sourceId: documentId,
+  });
+}
+
+export async function syncDocumentKnowledgeForLifecycle(params: {
+  previousDocument: Pick<DocumentDetail, "id" | "status"> | null;
+  nextDocument: DocumentDetail;
+}) {
+  const { previousDocument, nextDocument } = params;
+  const wasApproved = previousDocument?.status === "APPROVED";
+  const isApproved = nextDocument.status === "APPROVED";
+
+  try {
+    if (isApproved) {
+      await syncDocumentKnowledge(nextDocument);
+      return;
+    }
+
+    if (wasApproved) {
+      await removeDocumentKnowledge(nextDocument.id);
+    }
+  } catch (syncError) {
+    console.error("document knowledge sync failed:", syncError);
+  }
 }
 
 export async function actOnWorkflowDocument(params: {
@@ -872,11 +901,10 @@ export async function actOnWorkflowDocument(params: {
     throw new Error("승인 처리 후 문서를 다시 불러오지 못했습니다.");
   }
 
-  try {
-    await syncDocumentKnowledge(nextDetail);
-  } catch (syncError) {
-    console.error("document knowledge sync failed:", syncError);
-  }
+  await syncDocumentKnowledgeForLifecycle({
+    previousDocument: detail,
+    nextDocument: nextDetail,
+  });
 
   return nextDetail;
 }

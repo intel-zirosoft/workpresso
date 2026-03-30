@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+import type {
+  ChatterLinkedObjectInput,
+  SystemBriefingPayload,
+  ThreadCapturedPayload,
+} from "@/features/pod-e/services/chatter-internal-contract";
+import { upsertKnowledgeSource } from "@/features/pod-c/services/knowledge-sync";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   ChatterChannelDetail,
@@ -86,6 +92,12 @@ type LinkedObjectMeta = {
   meta: string;
 };
 
+type SystemMetadata = {
+  systemSenderName?: string;
+  systemSenderRole?: string;
+  systemKind?: "THREAD_CAPTURED" | "CHANNEL_BRIEFING";
+};
+
 export type ChatterShareTarget = {
   id: string;
   label: string;
@@ -95,6 +107,28 @@ export type ChatterShareTarget = {
 
 export function parseCreateChatterMessageInput(payload: unknown) {
   return createChatterMessageSchema.safeParse(payload);
+}
+
+function buildThreadKnowledgeContent(input: ThreadCapturedPayload) {
+  const linkedObjects =
+    input.linkedObjects.length > 0
+      ? `연결 객체:\n${input.linkedObjects
+          .map((linkedObject) => `- ${linkedObject.type}: ${linkedObject.id}`)
+          .join("\n")}`
+      : null;
+
+  const messages = input.messages
+    .map((message) => `- ${message.authorName}: ${message.content}`)
+    .join("\n");
+
+  return [
+    `스레드 제목: ${input.title}`,
+    `요약: ${input.summary}`,
+    linkedObjects,
+    `대화 내용:\n${messages}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 function getAdminSupabase() {
@@ -132,6 +166,49 @@ function normalizeLinkedObject(metadata: Record<string, unknown> | null): Linked
   return { type, id, label, kind, meta };
 }
 
+function normalizeLinkedObjects(metadata: Record<string, unknown> | null): LinkedObjectMeta[] {
+  const linkedObjects = metadata?.linkedObjects;
+
+  if (Array.isArray(linkedObjects)) {
+    return linkedObjects.flatMap((linkedObject) =>
+      normalizeLinkedObject({
+        linkedObject,
+      } satisfies Record<string, unknown>)
+        ? [normalizeLinkedObject({ linkedObject } satisfies Record<string, unknown>) as LinkedObjectMeta]
+        : [],
+    );
+  }
+
+  const linkedObject = normalizeLinkedObject(metadata);
+  return linkedObject ? [linkedObject] : [];
+}
+
+function normalizeSystemMetadata(metadata: Record<string, unknown> | null): SystemMetadata | null {
+  if (!metadata) {
+    return null;
+  }
+
+  const systemSenderName = metadata.systemSenderName;
+  const systemSenderRole = metadata.systemSenderRole;
+  const systemKind = metadata.systemKind;
+
+  if (
+    typeof systemSenderName !== "string" ||
+    typeof systemSenderRole !== "string" ||
+    (systemKind !== undefined &&
+      systemKind !== "THREAD_CAPTURED" &&
+      systemKind !== "CHANNEL_BRIEFING")
+  ) {
+    return null;
+  }
+
+  return {
+    systemSenderName,
+    systemSenderRole,
+    systemKind,
+  };
+}
+
 function buildPreview(message: MessageRow | undefined) {
   if (!message) {
     return "아직 메시지가 없습니다.";
@@ -142,43 +219,39 @@ function buildPreview(message: MessageRow | undefined) {
     return content;
   }
 
-  const linkedObject = normalizeLinkedObject(message.metadata);
-  if (linkedObject) {
-    return `${linkedObject.kind} 공유: ${linkedObject.label}`;
+  const linkedObjects = normalizeLinkedObjects(message.metadata);
+  if (linkedObjects.length > 0) {
+    return `${linkedObjects[0].kind} 공유: ${linkedObjects[0].label}`;
   }
 
   return "새 메시지";
 }
 
 function buildLinkCards(message: MessageRow): ChatterLinkCard[] {
-  const linkedObject = normalizeLinkedObject(message.metadata);
-
-  if (!linkedObject) {
-    return [];
-  }
-
-  return [
-    {
-      id: linkedObject.id,
-      label: linkedObject.label,
-      kind: linkedObject.kind,
-      meta: linkedObject.meta,
-    },
-  ];
+  return normalizeLinkedObjects(message.metadata).map((linkedObject) => ({
+    id: linkedObject.id,
+    label: linkedObject.label,
+    kind: linkedObject.kind,
+    meta: linkedObject.meta,
+  }));
 }
 
 function buildMessageSummary(message: MessageRow, usersById: Map<string, UserRow>, currentUserId: string) {
   const author = usersById.get(message.author_id);
+  const systemMetadata =
+    message.message_type === "SYSTEM"
+      ? normalizeSystemMetadata(message.metadata)
+      : null;
 
   return {
     id: message.id,
     authorId: message.author_id,
-    authorName: author?.name ?? "알 수 없는 사용자",
-    authorRole: author?.department ?? "구성원",
+    authorName: systemMetadata?.systemSenderName ?? author?.name ?? "알 수 없는 사용자",
+    authorRole: systemMetadata?.systemSenderRole ?? author?.department ?? "구성원",
     content: message.content?.trim() ?? "",
     messageType: message.message_type,
     createdAt: message.created_at,
-    isMine: message.author_id === currentUserId,
+    isMine: message.message_type === "SYSTEM" ? false : message.author_id === currentUserId,
     links: buildLinkCards(message),
   } satisfies ChatterMessageSummary;
 }
@@ -225,6 +298,124 @@ function formatScheduleWindow(schedule: ScheduleRow) {
   }).format(end);
 
   return `${dateLabel} · ${timeLabel} - ${endTimeLabel}`;
+}
+
+async function resolveLinkedObjectMetas(
+  adminSupabase: ReturnType<typeof getAdminSupabase>,
+  userId: string,
+  linkedObjects: ChatterLinkedObjectInput[],
+) {
+  const resolved: LinkedObjectMeta[] = [];
+
+  for (const linkedObject of linkedObjects) {
+    if (linkedObject.type === "DOCUMENT") {
+      const { data: document, error } = await adminSupabase
+        .from("documents")
+        .select("id, title, status, updated_at")
+        .eq("id", linkedObject.id)
+        .eq("author_id", userId)
+        .is("deleted_at", null)
+        .returns<DocumentRow[]>()
+        .maybeSingle();
+
+      if (error) {
+        throw error;
+      }
+
+      if (!document) {
+        throw new Error("참조할 문서를 찾을 수 없습니다.");
+      }
+
+      resolved.push({
+        type: "DOCUMENT",
+        id: document.id,
+        label: document.title,
+        kind: "문서",
+        meta: `${formatDocumentStatus(document.status)} · ${formatAbsoluteDate(document.updated_at)}`,
+      });
+      continue;
+    }
+
+    const { data: schedule, error } = await adminSupabase
+      .from("schedules")
+      .select("id, title, start_time, end_time")
+      .eq("id", linkedObject.id)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .returns<ScheduleRow[]>()
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    if (!schedule) {
+      throw new Error("참조할 일정을 찾을 수 없습니다.");
+    }
+
+    resolved.push({
+      type: "SCHEDULE",
+      id: schedule.id,
+      label: schedule.title,
+      kind: "일정",
+      meta: formatScheduleWindow(schedule),
+    });
+  }
+
+  return resolved;
+}
+
+async function insertChannelMessage(params: {
+  userId: string;
+  channelId: string;
+  content: string;
+  messageType: MessageRow["message_type"];
+  metadata?: Record<string, unknown>;
+}) {
+  const adminSupabase = getAdminSupabase();
+  const { data: message, error: insertError } = await adminSupabase
+    .from("chat_messages")
+    .insert({
+      channel_id: params.channelId,
+      author_id: params.userId,
+      content: params.content,
+      message_type: params.messageType,
+      metadata: params.metadata ?? {},
+    })
+    .select("id, channel_id, author_id, content, message_type, metadata, created_at")
+    .returns<MessageRow[]>()
+    .single();
+
+  if (insertError) {
+    throw insertError;
+  }
+
+  const { error: updateChannelError } = await adminSupabase
+    .from("chat_channels")
+    .update({ last_message_at: message.created_at })
+    .eq("id", params.channelId);
+
+  if (updateChannelError) {
+    throw updateChannelError;
+  }
+
+  const { data: author, error: authorError } = await adminSupabase
+    .from("users")
+    .select("id, name, department, status")
+    .eq("id", params.userId)
+    .returns<UserRow[]>()
+    .maybeSingle();
+
+  if (authorError) {
+    throw authorError;
+  }
+
+  const usersById = new Map<string, UserRow>();
+  if (author) {
+    usersById.set(author.id, author);
+  }
+
+  return buildMessageSummary(message, usersById, params.userId);
 }
 
 async function getAccessibleChannel(userId: string, channelId: string) {
@@ -492,108 +683,114 @@ export async function createChannelMessage(userId: string, channelId: string, in
   let metadata: Record<string, unknown> = {};
 
   if (input.linkedObject) {
-    if (input.linkedObject.type === "DOCUMENT") {
-      const { data: document, error } = await adminSupabase
-        .from("documents")
-        .select("id, title, status, updated_at")
-        .eq("id", input.linkedObject.id)
-        .eq("author_id", userId)
-        .is("deleted_at", null)
-        .returns<DocumentRow[]>()
-        .maybeSingle();
+    const [linkedObject] = await resolveLinkedObjectMetas(adminSupabase, userId, [
+      input.linkedObject,
+    ]);
 
-      if (error) {
-        throw error;
-      }
-
-      if (!document) {
-        throw new Error("공유할 문서를 찾을 수 없습니다.");
-      }
-
-      metadata = {
-        linkedObject: {
-          type: "DOCUMENT",
-          id: document.id,
-          label: document.title,
-          kind: "문서",
-          meta: `${formatDocumentStatus(document.status)} · ${formatAbsoluteDate(document.updated_at)}`,
-        },
-      };
-      messageType = "LINKED_OBJECT";
-    }
-
-    if (input.linkedObject.type === "SCHEDULE") {
-      const { data: schedule, error } = await adminSupabase
-        .from("schedules")
-        .select("id, title, start_time, end_time")
-        .eq("id", input.linkedObject.id)
-        .eq("user_id", userId)
-        .is("deleted_at", null)
-        .returns<ScheduleRow[]>()
-        .maybeSingle();
-
-      if (error) {
-        throw error;
-      }
-
-      if (!schedule) {
-        throw new Error("공유할 일정을 찾을 수 없습니다.");
-      }
-
-      metadata = {
-        linkedObject: {
-          type: "SCHEDULE",
-          id: schedule.id,
-          label: schedule.title,
-          kind: "일정",
-          meta: formatScheduleWindow(schedule),
-        },
-      };
-      messageType = "LINKED_OBJECT";
-    }
+    metadata = {
+      linkedObject,
+      linkedObjects: [linkedObject],
+    };
+    messageType = "LINKED_OBJECT";
   }
 
-  const { data: message, error: insertError } = await adminSupabase
-    .from("chat_messages")
-    .insert({
-      channel_id: channelId,
-      author_id: userId,
-      content: trimmedContent,
-      message_type: messageType,
-      metadata,
-    })
-    .select("id, channel_id, author_id, content, message_type, metadata, created_at")
-    .returns<MessageRow[]>()
-    .single();
+  return insertChannelMessage({
+    userId,
+    channelId,
+    content: trimmedContent,
+    messageType,
+    metadata,
+  });
+}
 
-  if (insertError) {
-    throw insertError;
+export async function captureThreadForKnowledge(
+  userId: string,
+  input: ThreadCapturedPayload,
+) {
+  const channel = await getAccessibleChannel(userId, input.channelId);
+
+  if (!channel) {
+    return null;
   }
 
-  const { error: updateChannelError } = await adminSupabase
-    .from("chat_channels")
-    .update({ last_message_at: message.created_at })
-    .eq("id", channelId);
+  const adminSupabase = getAdminSupabase();
+  const linkedObjects = await resolveLinkedObjectMetas(
+    adminSupabase,
+    userId,
+    input.linkedObjects,
+  );
 
-  if (updateChannelError) {
-    throw updateChannelError;
+  await upsertKnowledgeSource({
+    sourceType: "CHAT_THREADS",
+    sourceId: input.threadId,
+    title: input.title,
+    content: buildThreadKnowledgeContent(input),
+    metadata: {
+      channel_id: input.channelId,
+      thread_id: input.threadId,
+      summary: input.summary,
+      linked_objects: linkedObjects.map((linkedObject) => ({
+        type: linkedObject.type,
+        id: linkedObject.id,
+        label: linkedObject.label,
+      })),
+      updated_at: input.updatedAt,
+    },
+  });
+
+  const message = await insertChannelMessage({
+    userId,
+    channelId: input.channelId,
+    content: `스레드 캡처 완료\n제목: ${input.title}\n요약: ${input.summary}`,
+    messageType: "SYSTEM",
+    metadata: {
+      systemSenderName: "워크프레소 AI",
+      systemSenderRole: "스레드 캡처",
+      systemKind: "THREAD_CAPTURED",
+      linkedObjects,
+      threadCapture: {
+        threadId: input.threadId,
+        title: input.title,
+        updatedAt: input.updatedAt,
+      },
+    },
+  });
+
+  return {
+    threadId: input.threadId,
+    message,
+  };
+}
+
+export async function createSystemBriefingMessage(
+  userId: string,
+  channelId: string,
+  input: SystemBriefingPayload,
+) {
+  const channel = await getAccessibleChannel(userId, channelId);
+
+  if (!channel) {
+    return null;
   }
 
-  const { data: author, error: authorError } = await adminSupabase
-    .from("users")
-    .select("id, name, department, status")
-    .eq("id", userId)
-    .returns<UserRow[]>()
-    .maybeSingle();
+  const adminSupabase = getAdminSupabase();
+  const linkedObjects = await resolveLinkedObjectMetas(
+    adminSupabase,
+    userId,
+    input.linkedObjects,
+  );
 
-  if (authorError) {
-    throw authorError;
-  }
-
-  const usersById = new Map<string, UserRow>();
-  if (author) {
-    usersById.set(author.id, author);
-  }
-
-  return buildMessageSummary(message, usersById, userId);
+  return insertChannelMessage({
+    userId,
+    channelId,
+    content: input.content,
+    messageType: "SYSTEM",
+    metadata: {
+      systemSenderName: "워크프레소 AI",
+      systemSenderRole: "시스템 브리핑",
+      systemKind: "CHANNEL_BRIEFING",
+      title: input.title ?? null,
+      linkedObjects,
+    },
+  });
 }
