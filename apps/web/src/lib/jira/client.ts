@@ -58,12 +58,13 @@ export async function getJiraIssuesDueToday(): Promise<{
   }
 
   const baseUrl = process.env.JIRA_BASE_URL;
+  const email = process.env.JIRA_USER_EMAIL!;
   const projectKey = process.env.JIRA_PROJECT_KEY;
   const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
-  // JQL: 현재 프로젝트에서 나에게 할당되고, 오늘 이전 마감이거나 오늘 마감인 미완료 이슈
+  // JQL: assignee = currentUser() 는 서버사이드 토큰에서 동작하지 않으므로 이메일 직접 지정
   const jql = encodeURIComponent(
-    `project = ${projectKey} AND assignee = currentUser() AND duedate <= "${today}" AND statusCategory != Done ORDER BY priority ASC`
+    `project = ${projectKey} AND assignee = "${email}" AND duedate <= "${today}" AND statusCategory != Done ORDER BY priority ASC`
   );
 
   const url = `${baseUrl}/rest/api/3/search?jql=${jql}&fields=summary,status,priority,duedate&maxResults=10`;
@@ -117,10 +118,11 @@ export async function getHighPriorityJiraIssues(): Promise<{
   }
 
   const baseUrl = process.env.JIRA_BASE_URL;
+  const email = process.env.JIRA_USER_EMAIL!;
   const projectKey = process.env.JIRA_PROJECT_KEY;
 
   const jql = encodeURIComponent(
-    `project = ${projectKey} AND assignee = currentUser() AND priority in (Highest, High) AND statusCategory != Done ORDER BY priority ASC`
+    `project = ${projectKey} AND assignee = "${email}" AND priority in (Highest, High) AND statusCategory != Done ORDER BY priority ASC`
   );
 
   const url = `${baseUrl}/rest/api/3/search?jql=${jql}&fields=summary,status,priority,duedate&maxResults=5`;
