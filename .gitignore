@@ -40,3 +40,4 @@ dev-logs/
 # AI Agents
 .codex/
 workthrough/
+.playwright-cli/
