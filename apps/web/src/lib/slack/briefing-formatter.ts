@@ -152,32 +152,28 @@ export function buildBriefingPayload(
   return { blocks };
 }
 
+import { sendSlackMessage } from "@/features/settings/services/extensionAction";
+
 /**
- * Slack Webhook URL로 브리핑 메시지를 실제 전송합니다.
- * SLACK_WEBHOOK_URL 환경변수가 없으면 콘솔 출력으로 대체합니다.
+ * 전사 공용 연동 엔진을 통해 브리핑 메시지를 실제 전송합니다.
+ * DB 설정이 된 경우 실제 전송을, 그렇지 않으면 콘솔 출력(더미)으로 대체합니다.
  */
 export async function sendSlackBriefing(payload: { blocks: any[] }) {
-  const webhookUrl = process.env.SLACK_WEBHOOK_URL;
-
-  if (!webhookUrl) {
-    // 더미 모드: 실제 전송 없이 콘솔에 출력
-    console.log(
-      "[Slack Briefing - DUMMY MODE] 전송 페이로드:",
-      JSON.stringify(payload, null, 2)
-    );
-    return { ok: true, mode: "dummy", message: "콘솔에 출력되었습니다." };
+  try {
+    const result = await sendSlackMessage(payload);
+    
+    if (result.success) {
+      return { ok: true, mode: "live" };
+    } else {
+      // 설정이 없어 실패한 경우 더미 모드처럼 로그 출력
+      console.log(
+        "[Slack Briefing - FALLBACK] 설정이 없어 콘솔에 출력합니다:",
+        JSON.stringify(payload, null, 2)
+      );
+      return { ok: true, mode: "dummy", message: result.message };
+    }
+  } catch (err: any) {
+    console.error("[Slack Briefing] 전송 중 오류 발생:", err.message);
+    throw new Error(`Slack 전송 실패: ${err.message}`);
   }
-
-  // 실제 Slack Webhook 전송
-  const res = await fetch(webhookUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    throw new Error(`Slack 전송 실패: ${res.status} ${await res.text()}`);
-  }
-
-  return { ok: true, mode: "live" };
 }

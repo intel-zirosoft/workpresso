@@ -22,7 +22,7 @@ export interface MeetingLogInsert {
   audio_url: string;
 }
 
-const transformLog = (log: any): MeetingLog => {
+export const transformLog = (log: any): MeetingLog => {
   const transformed = {
     ...log,
     audio_url:
