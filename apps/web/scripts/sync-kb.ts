@@ -1,13 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
-import OpenAI from 'openai';
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
+import { createEmbedding } from '@/lib/ai/embeddings';
 
 // .env.local 환경 변수 로드
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -32,12 +31,7 @@ async function syncKnowledge() {
 
       console.log(`\n📄 [${fileName}] 처리 중...`);
 
-      // 1. 임베딩 생성
-      const embeddingResponse = await openai.embeddings.create({
-        model: 'text-embedding-3-small',
-        input: content,
-      });
-      const [{ embedding }] = embeddingResponse.data;
+      const { embedding } = await createEmbedding(content);
 
       // 2. DB 동기화 (Upsert)
       // 실제 운영 환경에서는 metadata.title 등을 고유 키로 사용하는 RPC를 만들거나 

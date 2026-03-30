@@ -28,7 +28,33 @@ export async function updateSession(request: NextRequest) {
   )
 
   // 중요: 사용자의 인증 세션을 확인합니다.
-  await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (user && request.nextUrl.pathname.startsWith('/settings')) {
+    const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single()
+    const role = profile?.role || 'USER'
+    const url = request.nextUrl.clone()
+
+    if (request.nextUrl.pathname.startsWith('/settings/system') && role !== 'SUPER_ADMIN') {
+      url.pathname = '/settings/profile'
+      return NextResponse.redirect(url)
+    }
+    
+    if (
+      (request.nextUrl.pathname.startsWith('/settings/organization') || 
+       request.nextUrl.pathname.startsWith('/settings/integrations')) && 
+      role !== 'SUPER_ADMIN' && role !== 'ORG_ADMIN'
+    ) {
+      url.pathname = '/settings/profile'
+      return NextResponse.redirect(url)
+    }
+
+    if (request.nextUrl.pathname.startsWith('/settings/team') && 
+        role !== 'SUPER_ADMIN' && role !== 'ORG_ADMIN' && role !== 'TEAM_ADMIN') {
+      url.pathname = '/settings/profile'
+      return NextResponse.redirect(url)
+    }
+  }
 
   return supabaseResponse
 }

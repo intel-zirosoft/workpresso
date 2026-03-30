@@ -2,85 +2,123 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Home, MessageSquare, Users, Layout, Bot, Settings, LogOut, Calendar, FileText, Mic } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { User } from "@supabase/supabase-js";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { APP_NAV_ITEMS, ADMIN_NAV_ITEMS, isActivePath, type AppNavItem } from "@/components/shared/navigation";
+import { useEffect, useState } from "react";
+import { getUserProfile } from "@/features/settings/services/userAction";
 
-const navItems = [
-  { name: "Home", href: "/", icon: Home },
-  { name: "Documents", href: "/documents", icon: FileText },
-  { name: "Work Assistant", href: "/chat", icon: Bot }, // Pod C: AI Agent
-  { name: "Chatter", href: "/chatter", icon: MessageSquare },
-  { name: "Teammates", href: "/teammates", icon: Users },
-  { name: "Canvas", href: "/canvas", icon: Layout },
-  { name: "Schedules", href: "/schedules", icon: Calendar },
-  { name: "Voice", href: "/voice", icon: Mic }, // Pod D: Meeting Logs
-];
+interface SidebarContentProps {
+  onNavigate?: () => void;
+  mobile?: boolean;
+}
 
-export function Sidebar() {
+export function SidebarContent({ onNavigate, mobile = false }: SidebarContentProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
   const supabase = createClient();
 
+  const [isAdmin, setIsAdmin] = useState(false);
+
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-
-    getUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null);
+    async function checkRole() {
+      try {
+        const profile = await getUserProfile();
+        setIsAdmin(profile.role === 'SUPER_ADMIN' || profile.role === 'ORG_ADMIN');
+      } catch (e) {
+        setIsAdmin(false);
       }
-    );
-
-    return () => subscription.unsubscribe();
-  }, [supabase.auth]);
+    }
+    checkRole();
+  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    onNavigate?.();
     router.refresh();
     router.push("/login");
   };
 
   return (
-    <aside className="w-[260px] h-screen sticky top-0 bg-surface border-r border-transparent shadow-soft flex flex-col z-40">
-      {/* Logo / Wordmark */}
-      <div className="p-8">
-        <Link href="/" className="text-2xl font-headings font-bold text-primary tracking-tight">
+    <>
+      <div className={cn("border-background/50", mobile ? "border-b px-5 py-5" : "p-8")}>
+        <Link
+          href="/"
+          onClick={onNavigate}
+          className="text-2xl font-headings font-bold tracking-tight text-primary"
+        >
           WorkPresso
         </Link>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-4 space-y-2">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
+      <nav className={cn("flex-1", mobile ? "space-y-1 px-3 py-4" : "space-y-2 px-4")}>
+        {APP_NAV_ITEMS.map((item: AppNavItem) => {
+          const isActive = isActivePath(pathname, item.href);
           return (
             <Link
               key={item.name}
               href={item.href}
+              onClick={onNavigate}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-pill transition-all duration-200 group",
-                isActive 
-                  ? "bg-primary text-white shadow-soft" 
-                  : "text-text-muted hover:bg-background hover:text-text"
+                "group flex items-center gap-3 transition-all duration-200",
+                mobile ? "rounded-2xl px-4 py-3.5" : "rounded-pill px-4 py-3",
+                isActive
+                  ? "bg-primary text-white shadow-soft"
+                  : "text-muted hover:bg-background hover:text-text"
               )}
             >
-              <item.icon size={20} className={cn(isActive ? "text-white" : "text-text-muted group-hover:text-text")} />
+              <item.icon
+                size={20}
+                className={cn(isActive ? "text-white" : "text-muted group-hover:text-text")}
+              />
               <span className="font-headings font-medium">{item.name}</span>
             </Link>
           );
         })}
       </nav>
 
-      {/* Profile / Bottom Menu - Removed as it moved to Header */}
+      <div className={cn("mt-auto border-t border-background/50 space-y-2", mobile ? "p-3" : "p-6")}>
+        {isAdmin && ADMIN_NAV_ITEMS.map((item: AppNavItem) => {
+          const isActive = isActivePath(pathname, item.href);
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              onClick={onNavigate}
+              className={cn(
+                "group flex items-center gap-3 transition-all duration-200",
+                mobile ? "rounded-2xl px-4 py-3.5" : "rounded-pill px-4 py-3",
+                isActive
+                  ? "bg-primary/10 text-primary border border-primary/20"
+                  : "text-muted hover:bg-background hover:text-text"
+              )}
+            >
+              <item.icon
+                size={20}
+                className={cn(isActive ? "text-primary" : "text-muted group-hover:text-text")}
+              />
+              <span className="font-headings font-medium">{item.name}</span>
+            </Link>
+          );
+        })}
+
+        <button
+          onClick={handleSignOut}
+          className="flex w-full items-center gap-3 rounded-pill px-4 py-3 text-muted transition-all duration-200 hover:bg-destructive/10 hover:text-destructive group"
+        >
+          <LogOut size={20} />
+          <span className="font-headings font-medium">로그아웃</span>
+        </button>
+      </div>
+    </>
+  );
+}
+
+export function Sidebar() {
+  return (
+    <aside className="w-[260px] h-screen sticky top-0 bg-surface border-r border-transparent shadow-soft flex flex-col z-40">
+      <SidebarContent />
     </aside>
   );
 }

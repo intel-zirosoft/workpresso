@@ -1,17 +1,13 @@
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { createEmbedding } from '@/lib/ai/embeddings';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 const DUMMY_KNOWLEDGE = [
   {
@@ -48,12 +44,7 @@ export async function GET() {
     // 2. 지식 데이터 벡터화 및 저장
     const results = [];
     for (const item of DUMMY_KNOWLEDGE) {
-      // 임베딩 생성
-      const embeddingResponse = await openai.embeddings.create({
-        model: 'text-embedding-3-small',
-        input: item.content,
-      });
-      const [{ embedding }] = embeddingResponse.data;
+      const { embedding } = await createEmbedding(item.content);
 
       // DB 저장
       const { data, error } = await supabase

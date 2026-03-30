@@ -13,6 +13,7 @@ type UserStatus =
   | "OUTSIDE"
   | "HALF_DAY";
 
+
 type ActiveScheduleRow = {
   user_id: string;
   type: "MEETING" | "VACATION" | "WFH" | "OUTSIDE" | "HALF_DAY";

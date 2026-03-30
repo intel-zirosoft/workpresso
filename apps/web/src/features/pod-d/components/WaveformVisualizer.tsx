@@ -18,11 +18,14 @@ export const WaveformVisualizer: React.FC<WaveformVisualizerProps> = ({ audioUrl
   useEffect(() => {
     if (!containerRef.current) return;
 
+    // 언마운트 여부 추적 — 파괴된 이후 state 업데이트 방지
+    let isDestroyed = false;
+
     const ws = WaveSurfer.create({
       container: containerRef.current,
-      waveColor: '#7FA1C3', // --color-primary
-      progressColor: '#2C394B', // --color-text
-      cursorColor: '#F2C18D', // --color-accent
+      waveColor: '#7FA1C3',
+      progressColor: '#2C394B',
+      cursorColor: '#F2C18D',
       barWidth: 2,
       barGap: 3,
       barRadius: 3,
@@ -32,22 +35,38 @@ export const WaveformVisualizer: React.FC<WaveformVisualizerProps> = ({ audioUrl
 
     wavesurferRef.current = ws;
 
+    // load 중 발생하는 AbortError를 이벤트 레벨에서 흡수
+    ws.on('error', (err: any) => {
+      if (isDestroyed) return; // 언마운트 후 에러는 무시
+      if (err?.name === 'AbortError' || err?.message?.includes('aborted')) return;
+      console.error('[WaveformVisualizer] WaveSurfer error:', err);
+    });
+
     if (blob) {
       ws.loadBlob(blob);
     } else if (audioUrl) {
       ws.load(audioUrl);
     }
 
-    ws.on('play', () => setIsPlaying(true));
-    ws.on('pause', () => setIsPlaying(false));
-    ws.on('finish', () => setIsPlaying(false));
+    ws.on('play', () => { if (!isDestroyed) setIsPlaying(true); });
+    ws.on('pause', () => { if (!isDestroyed) setIsPlaying(false); });
+    ws.on('finish', () => { if (!isDestroyed) setIsPlaying(false); });
 
     return () => {
-      try {
-        ws.destroy();
-      } catch (e) {
-        // Ignore AbortError when destroying during load
-      }
+      isDestroyed = true;
+      // destroy()가 내부적으로 던지는 비동기 AbortError를 catch하기 위해
+      // Promise 체인으로 래핑하여 unhandled rejection 방지
+      Promise.resolve().then(() => {
+        try {
+          ws.destroy();
+        } catch (e: any) {
+          if (e?.name !== 'AbortError') {
+            console.error('[WaveformVisualizer] destroy error:', e);
+          }
+        }
+      }).catch(() => {
+        // destroy() 내부의 비동기 AbortError 흡수
+      });
     };
   }, [audioUrl, blob]);
 

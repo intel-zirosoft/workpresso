@@ -18,6 +18,10 @@ import {
   type DocumentSummary,
   type DocumentUser,
 } from "@/features/pod-a/services/document-schema";
+import {
+  removeKnowledgeSource,
+  upsertKnowledgeSource,
+} from "@/features/pod-c/services/knowledge-sync";
 
 const documentSelectColumns =
   "id, author_id, title, content, status, submitted_at, final_approved_at, created_at, updated_at, deleted_at";
@@ -25,8 +29,7 @@ const documentSelectColumns =
 const approvalStepSelectColumns =
   "id, document_id, step_order, step_label, approver_id, status, acted_at, comment, deleted_at";
 
-const ccRecipientSelectColumns =
-  "id, document_id, recipient_id, deleted_at";
+const ccRecipientSelectColumns = "id, document_id, recipient_id, deleted_at";
 
 type RawApprovalStepRow = {
   id: string;
@@ -47,10 +50,17 @@ type RawCcRecipientRow = {
   deleted_at: string | null;
 };
 
+type DocumentViewerRole = "SUPER_ADMIN" | "ORG_ADMIN" | "TEAM_ADMIN" | "USER";
+
+function isDocumentAdmin(role: DocumentViewerRole) {
+  return role === "SUPER_ADMIN" || role === "ORG_ADMIN";
+}
+
 function buildPermissions(
   document: DocumentBase,
   approvalSteps: ApprovalStep[],
   viewerId: string,
+  viewerRole: DocumentViewerRole,
 ): DocumentPermissions {
   const activeStep =
     approvalSteps.find((step) => step.status === "PENDING") ?? null;
@@ -59,13 +69,35 @@ function buildPermissions(
     isAuthor && (document.status === "DRAFT" || document.status === "REJECTED");
   const canSubmit = canEdit && approvalSteps.length > 0;
   const canApprove = activeStep?.approverId === viewerId;
+  const canDelete =
+    isAuthor &&
+    (document.status !== "APPROVED" || isDocumentAdmin(viewerRole));
 
   return {
     canEdit,
     canSubmit,
     canApprove,
     canReject: canApprove,
+    canDelete,
   };
+}
+
+async function fetchViewerRole(
+  adminSupabase: SupabaseClient,
+  viewerId: string,
+): Promise<DocumentViewerRole> {
+  const { data, error } = await adminSupabase
+    .from("users")
+    .select("role")
+    .eq("id", viewerId)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error("사용자 권한 정보를 불러오지 못했습니다.");
+  }
+
+  return ((data?.role as DocumentViewerRole | undefined) ?? "USER");
 }
 
 async function fetchUsersByIds(
@@ -144,6 +176,7 @@ async function buildDocumentDetails(
   adminSupabase: SupabaseClient,
   documents: DocumentBase[],
   viewerId: string,
+  viewerRole: DocumentViewerRole,
 ) {
   const documentIds = documents.map((document) => document.id);
   const rawApprovalSteps = await fetchApprovalStepsByDocumentIds(
@@ -211,7 +244,12 @@ async function buildDocumentDetails(
       author,
       approvalSteps,
       ccRecipients,
-      permissions: buildPermissions(document, approvalSteps, viewerId),
+      permissions: buildPermissions(
+        document,
+        approvalSteps,
+        viewerId,
+        viewerRole,
+      ),
     });
   });
 }
@@ -254,6 +292,7 @@ export async function listDocumentsForViewer(params: {
   status?: DocumentStatus;
 }) {
   const { adminSupabase, viewerId, scope, status } = params;
+  const viewerRole = await fetchViewerRole(adminSupabase, viewerId);
 
   if (scope === "authored") {
     let query = adminSupabase
@@ -277,6 +316,7 @@ export async function listDocumentsForViewer(params: {
       adminSupabase,
       (data ?? []).map(normalizeDocumentRow),
       viewerId,
+      viewerRole,
     );
 
     return details.map((detail) =>
@@ -295,6 +335,7 @@ export async function listDocumentsForViewer(params: {
         author: detail.author,
         approvalSteps: detail.approvalSteps,
         ccRecipients: detail.ccRecipients,
+        viewerApprovalStatus: null,
       }),
     );
   }
@@ -302,22 +343,33 @@ export async function listDocumentsForViewer(params: {
   if (scope === "approvals") {
     const { data, error } = await adminSupabase
       .from("document_approval_steps")
-      .select("document_id")
+      .select("document_id, status")
       .eq("approver_id", viewerId)
-      .eq("status", "PENDING")
+      .in("status", ["PENDING", "APPROVED", "REJECTED"])
       .is("deleted_at", null);
 
     if (error) {
       throw new Error("결재 대기 문서를 불러오지 못했습니다.");
     }
 
-    const documentIds = (data ?? []).map((row) => row.document_id as string);
+    const viewerApprovalStatusByDocumentId = new Map<string, ApprovalStepStatus>(
+      (data ?? []).map((row) => [
+        row.document_id as string,
+        row.status as ApprovalStepStatus,
+      ]),
+    );
+    const documentIds = Array.from(viewerApprovalStatusByDocumentId.keys());
     const documents = await fetchDocumentRowsByIds(
       adminSupabase,
       documentIds,
       status,
     );
-    const details = await buildDocumentDetails(adminSupabase, documents, viewerId);
+    const details = await buildDocumentDetails(
+      adminSupabase,
+      documents,
+      viewerId,
+      viewerRole,
+    );
 
     return details.map((detail) =>
       buildDocumentSummary({
@@ -335,6 +387,8 @@ export async function listDocumentsForViewer(params: {
         author: detail.author,
         approvalSteps: detail.approvalSteps,
         ccRecipients: detail.ccRecipients,
+        viewerApprovalStatus:
+          viewerApprovalStatusByDocumentId.get(detail.id) ?? null,
       }),
     );
   }
@@ -350,8 +404,17 @@ export async function listDocumentsForViewer(params: {
   }
 
   const documentIds = (data ?? []).map((row) => row.document_id as string);
-  const documents = await fetchDocumentRowsByIds(adminSupabase, documentIds, status);
-  const details = await buildDocumentDetails(adminSupabase, documents, viewerId);
+  const documents = await fetchDocumentRowsByIds(
+    adminSupabase,
+    documentIds,
+    status,
+  );
+  const details = await buildDocumentDetails(
+    adminSupabase,
+    documents,
+    viewerId,
+    viewerRole,
+  );
 
   return details.map((detail) =>
     buildDocumentSummary({
@@ -369,6 +432,7 @@ export async function listDocumentsForViewer(params: {
       author: detail.author,
       approvalSteps: detail.approvalSteps,
       ccRecipients: detail.ccRecipients,
+      viewerApprovalStatus: null,
     }),
   );
 }
@@ -379,6 +443,7 @@ export async function getDocumentDetailForViewer(params: {
   viewerId: string;
 }) {
   const { adminSupabase, documentId, viewerId } = params;
+  const viewerRole = await fetchViewerRole(adminSupabase, viewerId);
   const { data, error } = await adminSupabase
     .from("documents")
     .select(documentSelectColumns)
@@ -398,6 +463,7 @@ export async function getDocumentDetailForViewer(params: {
     adminSupabase,
     [normalizeDocumentRow(data)],
     viewerId,
+    viewerRole,
   );
 
   const hasAccess =
@@ -559,6 +625,11 @@ export async function createWorkflowDocument(params: {
     throw new Error("생성된 문서를 다시 불러오지 못했습니다.");
   }
 
+  await syncDocumentKnowledgeForLifecycle({
+    previousDocument: null,
+    nextDocument: detail,
+  });
+
   return detail;
 }
 
@@ -622,11 +693,20 @@ export async function updateWorkflowDocument(params: {
     ccRecipientIds,
   });
 
-  return getDocumentDetailForViewer({
+  const nextDetail = await getDocumentDetailForViewer({
     adminSupabase,
     documentId,
     viewerId,
   });
+
+  if (nextDetail) {
+    await syncDocumentKnowledgeForLifecycle({
+      previousDocument: detail,
+      nextDocument: nextDetail,
+    });
+  }
+
+  return nextDetail;
 }
 
 export async function submitWorkflowDocument(params: {
@@ -706,45 +786,68 @@ export async function submitWorkflowDocument(params: {
     throw new Error("제출 후 문서를 다시 불러오지 못했습니다.");
   }
 
+  await syncDocumentKnowledgeForLifecycle({
+    previousDocument: detail,
+    nextDocument: nextDetail,
+  });
+
   return nextDetail;
 }
 
 export async function syncDocumentKnowledge(document: DocumentDetail) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    return;
-  }
-
-  const response = await fetch(
-    `${supabaseUrl.replace(/\/$/, "")}/functions/v1/document-knowledge-sync`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${serviceRoleKey}`,
-        apikey: serviceRoleKey,
-      },
-      body: JSON.stringify({
-        action: document.status === "APPROVED" ? "upsert" : "remove",
-        document: {
-          id: document.id,
-          authorId: document.authorId,
-          title: document.title,
-          content: document.content,
-          status: document.status,
-        },
-        documentId: document.id,
-      }),
+  await upsertKnowledgeSource({
+    sourceType: "DOCUMENTS",
+    sourceId: document.id,
+    title: document.title,
+    content: document.content,
+    metadata: {
+      author_id: document.authorId,
+      author_name: document.author.name,
+      status: document.status,
+      submitted_at: document.submittedAt,
+      final_approved_at: document.finalApprovedAt,
+      approval_steps: document.approvalSteps.map((step) => ({
+        id: step.id,
+        step_order: step.stepOrder,
+        step_label: step.stepLabel,
+        approver_id: step.approverId,
+        approver_name: step.approver.name,
+        status: step.status,
+      })),
+      cc_recipients: document.ccRecipients.map((recipient) => ({
+        id: recipient.recipientId,
+        name: recipient.recipient.name,
+      })),
     },
-  );
+  });
+}
 
-  if (!response.ok) {
-    const data = await response.json().catch(() => null);
-    throw new Error(
-      data?.error ?? "문서 지식 인덱싱 Edge Function 호출에 실패했습니다.",
-    );
+export async function removeDocumentKnowledge(documentId: string) {
+  await removeKnowledgeSource({
+    sourceType: "DOCUMENTS",
+    sourceId: documentId,
+  });
+}
+
+export async function syncDocumentKnowledgeForLifecycle(params: {
+  previousDocument: Pick<DocumentDetail, "id" | "status"> | null;
+  nextDocument: DocumentDetail;
+}) {
+  const { previousDocument, nextDocument } = params;
+  const wasApproved = previousDocument?.status === "APPROVED";
+  const isApproved = nextDocument.status === "APPROVED";
+
+  try {
+    if (isApproved) {
+      await syncDocumentKnowledge(nextDocument);
+      return;
+    }
+
+    if (wasApproved) {
+      await removeDocumentKnowledge(nextDocument.id);
+    }
+  } catch (syncError) {
+    console.error("document knowledge sync failed:", syncError);
   }
 }
 
@@ -781,7 +884,7 @@ export async function actOnWorkflowDocument(params: {
   const currentStepPatch = {
     status: action === "APPROVE" ? "APPROVED" : "REJECTED",
     acted_at: now,
-    comment: action === "REJECT" ? (comment?.trim() || null) : null,
+    comment: action === "REJECT" ? comment?.trim() || null : null,
   };
 
   const { error: currentStepError } = await adminSupabase
@@ -849,18 +952,88 @@ export async function actOnWorkflowDocument(params: {
     throw new Error("승인 처리 후 문서를 다시 불러오지 못했습니다.");
   }
 
-  if (nextDetail.status === "APPROVED") {
-    try {
-      await syncDocumentKnowledge(nextDetail);
-    } catch (syncError) {
-      console.error("document-knowledge-sync failed:", syncError);
-    }
-  }
+  await syncDocumentKnowledgeForLifecycle({
+    previousDocument: detail,
+    nextDocument: nextDetail,
+  });
 
   return nextDetail;
 }
 
-export function documentDetailToSummary(detail: DocumentDetail): DocumentSummary {
+export async function deleteWorkflowDocument(params: {
+  adminSupabase: SupabaseClient;
+  viewerId: string;
+  documentId: string;
+}) {
+  const { adminSupabase, viewerId, documentId } = params;
+  const detail = await getDocumentDetailForViewer({
+    adminSupabase,
+    documentId,
+    viewerId,
+  });
+
+  if (!detail || detail.authorId !== viewerId) {
+    return false;
+  }
+
+  if (!detail.permissions.canDelete) {
+    throw new Error("현재 상태에서는 문서를 삭제할 수 없습니다.");
+  }
+
+  const deletedAt = new Date().toISOString();
+
+  const { error: documentError } = await adminSupabase
+    .from("documents")
+    .update({
+      deleted_at: deletedAt,
+    })
+    .eq("id", documentId)
+    .eq("author_id", viewerId)
+    .is("deleted_at", null);
+
+  if (documentError) {
+    throw new Error("문서를 삭제하지 못했습니다.");
+  }
+
+  const { error: stepError } = await adminSupabase
+    .from("document_approval_steps")
+    .update({
+      deleted_at: deletedAt,
+    })
+    .eq("document_id", documentId)
+    .is("deleted_at", null);
+
+  if (stepError) {
+    throw new Error("문서 결재선을 삭제하지 못했습니다.");
+  }
+
+  const { error: ccError } = await adminSupabase
+    .from("document_cc_recipients")
+    .update({
+      deleted_at: deletedAt,
+    })
+    .eq("document_id", documentId)
+    .is("deleted_at", null);
+
+  if (ccError) {
+    throw new Error("문서 공람 대상을 삭제하지 못했습니다.");
+  }
+
+  try {
+    await removeKnowledgeSource({
+      sourceType: "DOCUMENTS",
+      sourceId: documentId,
+    });
+  } catch (syncError) {
+    console.error("document knowledge removal failed:", syncError);
+  }
+
+  return true;
+}
+
+export function documentDetailToSummary(
+  detail: DocumentDetail,
+): DocumentSummary {
   return buildDocumentSummary({
     document: {
       id: detail.id,

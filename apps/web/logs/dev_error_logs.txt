@@ -54,3 +54,43 @@ Details: {
   "hasAudioBlob": true
 }
 --------------------------------------------------
+[2026-03-26T01:30:08.488Z] [ERROR] Meeting processing failed
+Details: {
+  "error": "Gemini API Key is missing. Please check your environment variables.",
+  "stack": "Error: Gemini API Key is missing. Please check your environment variables.\n    at transcribeAudio (webpack-internal:///(app-pages-browser)/./src/features/pod-d/services/sttService.ts:14:15)\n    at handleUpload (webpack-internal:///(app-pages-browser)/./src/features/pod-d/components/AudioRecorder.tsx:81:99)",
+  "status": "stopped",
+  "hasAudioBlob": true
+}
+--------------------------------------------------
+[2026-03-26T01:32:06.039Z] [ERROR] Meeting processing failed
+Details: {
+  "error": "Gemini API Key is missing. Please check your environment variables.",
+  "stack": "Error: Gemini API Key is missing. Please check your environment variables.\n    at transcribeAudio (webpack-internal:///(app-pages-browser)/./src/features/pod-d/services/sttService.ts:14:15)\n    at handleUpload (webpack-internal:///(app-pages-browser)/./src/features/pod-d/components/AudioRecorder.tsx:81:99)",
+  "status": "stopped",
+  "hasAudioBlob": true
+}
+--------------------------------------------------
+[2026-03-26T01:34:59.169Z] [ERROR] Meeting processing failed
+Details: {
+  "error": "Gemini API Error: models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.",
+  "stack": "Error: Gemini API Error: models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\n    at transcribeAudio (webpack-internal:///(app-pages-browser)/./src/features/pod-d/services/sttService.ts:51:15)\n    at async handleUpload (webpack-internal:///(app-pages-browser)/./src/features/pod-d/components/AudioRecorder.tsx:81:24)",
+  "status": "stopped",
+  "hasAudioBlob": true
+}
+--------------------------------------------------
+[2026-03-26T01:35:59.746Z] [ERROR] Meeting processing failed
+Details: {
+  "error": "Gemini API Error: models/gemini-1.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.",
+  "stack": "Error: Gemini API Error: models/gemini-1.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.\n    at transcribeAudio (webpack-internal:///(app-pages-browser)/./src/features/pod-d/services/sttService.ts:51:15)\n    at async handleUpload (webpack-internal:///(app-pages-browser)/./src/features/pod-d/components/AudioRecorder.tsx:81:24)",
+  "status": "stopped",
+  "hasAudioBlob": true
+}
+--------------------------------------------------
+[2026-03-30T02:44:32.754Z] [ERROR] Meeting processing failed
+Details: {
+  "error": "OpenRouter STT 호출 실패: 400 {\"error\":{\"message\":\"Provider returned error\",\"code\":400,\"metadata\":{\"raw\":\"{\\n  \\\"error\\\": {\\n    \\\"message\\\": \\\"This model does not support the format you provided.\\\",\\n    \\\"type\\\": \\\"invalid_request_error\\\",\\n    \\\"param\\\": \\\"messages\\\",\\n    \\\"code\\\": \\\"unsupported_format\\\"\\n  }\\n}\",\"provider_name\":\"OpenAI\",\"is_byok\":false}},\"user_id\":\"user_39FPFSELvjgyr7AOX5Zv3xVDI6s\"}",
+  "stack": "Error: OpenRouter STT 호출 실패: 400 {\"error\":{\"message\":\"Provider returned error\",\"code\":400,\"metadata\":{\"raw\":\"{\\n  \\\"error\\\": {\\n    \\\"message\\\": \\\"This model does not support the format you provided.\\\",\\n    \\\"type\\\": \\\"invalid_request_error\\\",\\n    \\\"param\\\": \\\"messages\\\",\\n    \\\"code\\\": \\\"unsupported_format\\\"\\n  }\\n}\",\"provider_name\":\"OpenAI\",\"is_byok\":false}},\"user_id\":\"user_39FPFSELvjgyr7AOX5Zv3xVDI6s\"}\n    at transcribeAudio (webpack-internal:///(app-pages-browser)/./src/features/pod-d/services/sttService.ts:21:15)\n    at async handleUpload (webpack-internal:///(app-pages-browser)/./src/features/pod-d/components/AudioRecorder.tsx:65:24)",
+  "status": "stopped",
+  "hasAudioBlob": true
+}
+--------------------------------------------------

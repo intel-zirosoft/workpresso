@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Plus, RefreshCw } from "lucide-react";
+import { FileText, Loader2, Plus, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +16,8 @@ import {
   type DocumentSummary,
 } from "@/features/pod-a/services/document-schema";
 import {
+  approvalStepStatusBadgeClassMap,
+  approvalStepStatusLabelMap,
   formatDate,
   renderUserName,
   scopeConfig,
@@ -65,241 +67,127 @@ export function DocumentWorkspaceShell({
   onSelectDocument,
 }: DocumentWorkspaceShellProps) {
   return (
-    <div className="space-y-8">
-      <section className="flex flex-col gap-4 rounded-md bg-surface px-8 py-7 shadow-soft lg:flex-row lg:items-end lg:justify-between">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-headings font-semibold tracking-tight text-text">
-            문서 탐색에 집중하고, 상세와 편집은 더 넓게 보세요.
-          </h1>
-          <p className="max-w-3xl text-base leading-7 text-text/80">
-            목록은 가볍게 훑고, 문서를 열 때는 읽기 전용 상세 모달과 대형 편집
-            오버레이로 전환되는 하이브리드 워크플로우입니다.
-          </p>
+    <div className="space-y-6 flex flex-col h-screen max-h-[calc(100vh-8rem)]">
+      <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between px-2 flex-shrink-0">
+        <div>
+          <h1 className="text-3xl font-headings font-bold tracking-tight text-text">문서 워크스페이스</h1>
+          <p className="text-sm text-muted font-medium mt-1">업무의 흐름을 한눈에 파악하고 결재를 진행하세요.</p>
         </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            type="button"
-            className="rounded-pill px-5"
-            onClick={onNewDocument}
-            disabled={!currentUserId || isMutating}
-          >
-            <Plus className="h-4 w-4" />새 문서
-          </Button>
+        <div className="flex items-center gap-3">
           <Button
             type="button"
             variant="ghost"
-            className="rounded-pill"
+            className="rounded-pill bg-background/50 hover:bg-background h-10 px-4"
             onClick={onRefresh}
             disabled={!currentUserId || isRefreshing}
           >
-            <RefreshCw
-              className={cn("h-4 w-4", isRefreshing && "animate-spin")}
-            />
-            새로고침
+            <RefreshCw className={cn("h-4 w-4 mr-2", isRefreshing && "animate-spin")} />
+            동기화
+          </Button>
+          <Button
+            type="button"
+            className="rounded-pill px-6 h-10 shadow-lg shadow-primary/20 hover:shadow-xl transition-all"
+            onClick={onNewDocument}
+            disabled={!currentUserId || isMutating}
+          >
+            <Plus className="h-4 w-4 mr-2" />새 문서 작성
           </Button>
         </div>
-      </section>
+      </header>
 
-      <Card className="rounded-md border-none bg-surface shadow-soft">
-        <CardHeader className="space-y-4 border-b border-background/70 bg-background/35">
-          <div>
-            <CardTitle className="text-2xl font-headings text-text">
-              문서 탐색
-            </CardTitle>
-            <CardDescription className="font-body text-text/70">
-              scope와 상태를 기준으로 문서를 추려 보고, 항목을 클릭하면 상세
-              모달에서 빠르게 확인합니다.
-            </CardDescription>
+      {/* Status Metrics Dashboard */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-2 flex-shrink-0">
+        {[
+          { label: "전체 문서", count: documents.length, color: "bg-blue-50/80 border-blue-200/50 text-blue-600", dot: "bg-blue-400" },
+          { label: "결재 대기", count: documents.filter(d => d.status === 'PENDING').length, color: "bg-amber-50/80 border-amber-200/50 text-amber-600", dot: "bg-amber-400" },
+          { label: "승인 완료", count: documents.filter(d => d.status === 'APPROVED').length, color: "bg-emerald-50/80 border-emerald-200/50 text-emerald-600", dot: "bg-emerald-400" },
+          { label: "반려/취소", count: documents.filter(d => d.status === 'REJECTED').length, color: "bg-rose-50/80 border-rose-200/50 text-rose-600", dot: "bg-rose-400" },
+        ].map((stat, i) => (
+          <div key={i} className={cn(
+            "p-5 rounded-2xl border flex flex-col gap-1 transition-all hover:shadow-md hover:-translate-y-0.5",
+            stat.color
+          )}>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[13px] font-black uppercase tracking-wider opacity-60">{stat.label}</span>
+              <div className={cn("w-2 h-2 rounded-full", stat.dot)} />
+            </div>
+            <div className="text-4xl font-headings font-bold tracking-tight">{stat.count}</div>
           </div>
+        ))}
+      </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-md bg-background/55 p-4">
-              <div className="mb-3 text-sm font-semibold text-text">
-                문서 분류
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {scopeConfig.map((item) => {
-                  const isActive = scope === item.value;
-
-                  return (
-                    <Button
-                      key={item.value}
-                      type="button"
-                      variant={isActive ? "default" : "ghost"}
-                      className="rounded-pill"
-                      onClick={() => onScopeChange(item.value)}
-                    >
-                      {item.label}
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="rounded-md bg-background/55 p-4">
-              <div className="mb-3 text-sm font-semibold text-text">
-                결재 분류
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {statusFilters.map((filter) => {
-                  const isActive = statusFilter === filter.value;
-
-                  return (
-                    <Button
-                      key={filter.value}
-                      type="button"
-                      variant={isActive ? "secondary" : "ghost"}
-                      className="rounded-pill"
-                      onClick={() => onStatusFilterChange(filter.value)}
-                    >
-                      {filter.label}
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="space-y-4 p-4">
-          {isAuthLoading ? (
-            <div className="flex items-center justify-center gap-2 py-10 text-sm text-text/60">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              사용자 정보를 확인하고 있습니다.
-            </div>
-          ) : null}
-
-          {authMessage ? (
-            <p className="rounded-md bg-secondary/20 px-4 py-3 text-sm text-text">
-              {authMessage}
-            </p>
-          ) : null}
-
-          {errorMessage ? (
-            <p className="rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              {errorMessage}
-            </p>
-          ) : null}
-
-          {!isAuthLoading && isDocumentsLoading ? (
-            <div className="flex items-center justify-center gap-2 py-10 text-sm text-text/60">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              문서를 불러오는 중입니다.
-            </div>
-          ) : null}
-
-          {!isDocumentsLoading &&
-          !isDocumentsError &&
-          documents.length === 0 ? (
-            <div className="rounded-md bg-background/60 px-5 py-8 text-center text-sm leading-6 text-text/60">
-              현재 조건에 해당하는 문서가 없습니다.
-            </div>
-          ) : null}
-
-          <div className="overflow-y-auto pr-1 md:max-h-[min(62vh,calc(100vh-19rem))]">
-            {scope === "authored" ? (
-              <div className="hidden overflow-hidden rounded-md border border-background/70 md:block">
-                <table className="w-full border-collapse text-sm">
-                  <thead>
-                    <tr className="sticky top-0 bg-background/95 text-left text-text/70 backdrop-blur">
-                      <th className="px-4 py-3">제목</th>
-                      <th className="px-4 py-3">상태</th>
-                      <th className="px-4 py-3">현재 단계</th>
-                      <th className="px-4 py-3">수정일</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {documents.map((document) => {
-                      const isSelected = selectedDocumentId === document.id;
-
-                      return (
-                        <tr
-                          key={document.id}
-                          className={cn(
-                            "cursor-pointer border-t border-background/70 transition-colors hover:bg-background/60",
-                            isSelected && "bg-primary/10",
-                          )}
-                          onClick={() => onSelectDocument(document.id)}
-                        >
-                          <td className="px-4 py-3 font-medium text-text">
-                            {document.title}
-                          </td>
-                          <td className="px-4 py-3">
-                            <span
-                              className={cn(
-                                "rounded-pill px-3 py-1 text-xs font-semibold",
-                                statusBadgeClassMap[document.status],
-                              )}
-                            >
-                              {statusLabelMap[document.status]}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-text/70">
-                            {document.currentStepLabel ?? "-"}
-                          </td>
-                          <td className="px-4 py-3 text-text/60">
-                            {formatDate(document.updatedAt)}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : null}
-
-            <div className="space-y-3 md:hidden">
-              {documents.map((document) => {
-                const isSelected = selectedDocumentId === document.id;
-
+      <div className="flex-1 flex flex-col gap-6 min-h-0">
+        <div className="bg-surface/50 backdrop-blur-md rounded-3xl p-6 shadow-soft border border-background/50 mx-2 flex-shrink-0">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex items-center gap-1 bg-background/40 p-1.5 rounded-2xl w-fit">
+              {scopeConfig.map((item) => {
+                const isActive = scope === item.value;
                 return (
                   <button
-                    key={document.id}
-                    type="button"
-                    onClick={() => onSelectDocument(document.id)}
+                    key={item.value}
+                    onClick={() => onScopeChange(item.value)}
                     className={cn(
-                      "w-full rounded-md px-4 py-4 text-left transition-all",
-                      isSelected
-                        ? "bg-primary text-white shadow-soft"
-                        : "bg-background/70 text-text hover:bg-background",
+                      "px-5 py-2 text-[13px] font-bold rounded-xl transition-all whitespace-nowrap",
+                      isActive 
+                        ? "bg-white text-primary shadow-sm" 
+                        : "text-text/50 hover:text-text hover:bg-white/40"
                     )}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate font-headings text-base font-semibold">
-                          {document.title}
-                        </p>
-                        <p
-                          className={cn(
-                            "mt-1 text-xs",
-                            isSelected ? "text-white/80" : "text-text/60",
-                          )}
-                        >
-                          {document.currentStepLabel ??
-                            statusLabelMap[document.status]}
-                        </p>
-                      </div>
-                      <span
-                        className={cn(
-                          "rounded-pill px-3 py-1 text-xs font-semibold",
-                          isSelected
-                            ? "bg-white/20 text-white"
-                            : statusBadgeClassMap[document.status],
-                        )}
-                      >
-                        {statusLabelMap[document.status]}
-                      </span>
-                    </div>
+                    {item.label}
                   </button>
                 );
               })}
             </div>
+            
+            <div className="flex items-center gap-1.5 bg-background/30 px-3 py-1.5 rounded-xl border border-background/40">
+              <span className="text-[11px] font-black text-text/40 uppercase tracking-widest mr-2 ml-1">Status</span>
+              {statusFilters.map((filter) => {
+                const isActive = statusFilter === filter.value;
+                return (
+                  <button
+                    key={filter.value}
+                    onClick={() => onStatusFilterChange(filter.value)}
+                    className={cn(
+                      "px-3 py-1 text-xs font-bold rounded-lg transition-all",
+                      isActive 
+                        ? "bg-primary text-white shadow-sm" 
+                        : "text-text/60 hover:bg-background/50 hover:text-text"
+                    )}
+                  >
+                    {filter.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
 
-            {scope !== "authored" ? (
-              <div className="space-y-3">
+        <div className="flex-1 overflow-hidden px-2 pb-6">
+          {(isAuthLoading || isDocumentsLoading) ? (
+            <div className="flex flex-col items-center justify-center h-64 gap-4 bg-surface/30 rounded-3xl border border-dashed border-background/60">
+              <Loader2 className="h-8 w-8 animate-spin text-primary opacity-50" />
+              <p className="text-sm font-headings font-bold text-text/40">문서를 불러오는 중입니다...</p>
+            </div>
+          ) : documents.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64 gap-2 bg-surface/30 rounded-3xl border border-dashed border-background/60">
+              <p className="text-sm font-headings font-bold text-text/40">{authMessage || errorMessage || "현재 조건에 해당하는 문서가 없습니다."}</p>
+            </div>
+          ) : (
+            <div className="h-full overflow-y-auto pr-2 custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-1 pb-20">
                 {documents.map((document) => {
                   const isSelected = selectedDocumentId === document.id;
+                  const badgeLabel =
+                    scope === "approvals" && document.viewerApprovalStatus
+                      ? approvalStepStatusLabelMap[document.viewerApprovalStatus]
+                      : statusLabelMap[document.status];
+                  const badgeClassName =
+                    scope === "approvals" && document.viewerApprovalStatus
+                      ? approvalStepStatusBadgeClassMap[
+                          document.viewerApprovalStatus
+                        ]
+                      : statusBadgeClassMap[document.status] ||
+                        "bg-background/80 text-text/60 border-background";
 
                   return (
                     <button
@@ -307,55 +195,70 @@ export function DocumentWorkspaceShell({
                       type="button"
                       onClick={() => onSelectDocument(document.id)}
                       className={cn(
-                        "hidden w-full rounded-md px-4 py-4 text-left transition-all md:block",
+                        "group relative flex flex-col p-6 rounded-3xl border transition-all text-left",
                         isSelected
-                          ? "bg-primary text-white shadow-soft"
-                          : "bg-background/70 text-text hover:bg-background",
+                          ? "bg-primary border-primary shadow-lg shadow-primary/20 ring-4 ring-primary/5 scale-[1.02] z-10"
+                          : "bg-surface border-background/70 hover:border-primary/40 hover:bg-white hover:shadow-md hover:-translate-y-1"
                       )}
                     >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0 space-y-2">
-                          <p className="truncate font-headings text-base font-semibold">
-                            {document.title}
-                          </p>
-                          <div
-                            className={cn(
-                              "text-sm",
-                              isSelected ? "text-white/80" : "text-text/60",
-                            )}
-                          >
-                            작성자 {renderUserName(document.author)}
-                          </div>
-                          <div
-                            className={cn(
-                              "text-xs",
-                              isSelected ? "text-white/75" : "text-text/55",
-                            )}
-                          >
-                            {document.currentStepLabel
-                              ? `${document.currentStepLabel} · ${renderUserName(document.currentApprover)}`
-                              : "현재 활성 단계 없음"}
-                          </div>
+                      <div className="flex items-start justify-between mb-5">
+                        <div className={cn(
+                          "w-11 h-11 rounded-2xl flex items-center justify-center transition-colors shadow-sm",
+                          isSelected ? "bg-white/20 text-white" : "bg-background/80 text-primary group-hover:bg-primary/5"
+                        )}>
+                          <FileText size={22} strokeWidth={2.5} />
                         </div>
-                        <span
-                          className={cn(
-                            "rounded-pill px-3 py-1 text-xs font-semibold",
-                            isSelected
-                              ? "bg-white/20 text-white"
-                              : statusBadgeClassMap[document.status],
-                          )}
-                        >
-                          {statusLabelMap[document.status]}
+                        <span className={cn(
+                          "px-3 py-1.5 rounded-pill text-[10px] font-black uppercase tracking-wider shadow-sm border",
+                          isSelected 
+                            ? "bg-white/20 text-white border-white/20" 
+                            : badgeClassName
+                        )}>
+                          {badgeLabel}
                         </span>
+                      </div>
+
+                      <div className="flex-1 min-w-0 mb-6">
+                        <h3 className={cn(
+                          "font-headings font-bold text-lg leading-tight mb-2 line-clamp-2",
+                          isSelected ? "text-white" : "text-text"
+                        )}>
+                          {document.title}
+                        </h3>
+                        <div className={cn(
+                          "flex items-center gap-2 text-[11px] font-bold",
+                          isSelected ? "text-white/70" : "text-text/40"
+                        )}>
+                          <span>{renderUserName(document.author)}</span>
+                          <span className="opacity-40">•</span>
+                          <span>{formatDate(document.updatedAt)}</span>
+                        </div>
+                      </div>
+
+                      <div className={cn(
+                        "pt-4 border-t flex items-center justify-between",
+                        isSelected ? "border-white/20" : "border-background/60"
+                      )}>
+                        <div className={cn(
+                          "text-[10px] font-black uppercase tracking-tighter opacity-80",
+                          isSelected ? "text-white" : "text-text/60"
+                        )}>
+                          {document.currentStepLabel || "초안 단계"}
+                        </div>
+                        {isSelected && (
+                          <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+                            <Plus size={14} className="text-white rotate-45" />
+                          </div>
+                        )}
                       </div>
                     </button>
                   );
                 })}
               </div>
-            ) : null}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,33 +1,39 @@
-import { convertToCoreMessages, embed, streamText, tool, type Message } from 'ai';
-import { openai } from '@ai-sdk/openai';
-import { z } from 'zod';
+import {
+  convertToCoreMessages,
+  streamText,
+  tool,
+  type Message,
+} from "ai";
+import { z } from "zod";
 
-import { createAdminClient } from '@/lib/supabase/admin';
-import { createClient } from '@/lib/supabase/server';
+import {
+  createScheduleToolSchema,
+  createScheduleViaPodBApi,
+} from "@/features/pod-b/services/pod-b-schedule-api-adapter";
+import { getChatLanguageModel } from "@/lib/ai/chat";
+import { createEmbedding } from "@/lib/ai/embeddings";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const chatRequestSchema = z.object({
-  messages: z.array(
-    z.object({
-      role: z.string(),
-      content: z.unknown(),
-    }),
-  ).min(1, '최소 1개 이상의 메시지가 필요합니다.'),
+  messages: z
+    .array(
+      z.object({
+        role: z.string(),
+        content: z.unknown(),
+      }),
+    )
+    .min(1, "최소 1개 이상의 메시지가 필요합니다."),
 });
 
-const createScheduleSchema = z.object({
-  title: z.string().describe('일정 제목'),
-  start_time: z.string().describe('시작 시간'),
-  end_time: z.string().describe('종료 시간'),
-});
-
-type CreateScheduleArgs = z.infer<typeof createScheduleSchema>;
-type NormalizedChatMessage = Omit<Message, 'id'>;
+type CreateScheduleArgs = z.infer<typeof createScheduleToolSchema>;
+type NormalizedChatMessage = Omit<Message, "id">;
 
 function extractMessageText(content: unknown): string {
-  if (typeof content === 'string') {
+  if (typeof content === "string") {
     return content;
   }
 
@@ -35,96 +41,109 @@ function extractMessageText(content: unknown): string {
     return content
       .flatMap((part) => {
         if (
-          typeof part === 'object' &&
+          typeof part === "object" &&
           part !== null &&
-          'type' in part &&
-          'text' in part &&
-          part.type === 'text' &&
-          typeof part.text === 'string'
+          "type" in part &&
+          "text" in part &&
+          part.type === "text" &&
+          typeof part.text === "string"
         ) {
           return [part.text];
         }
 
         return [];
       })
-      .join('\n')
+      .join("\n")
       .trim();
   }
 
-  return '';
+  return "";
 }
 
 export async function POST(req: Request) {
   try {
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY가 설정되지 않았습니다.');
-    }
-
     const supabase = await createClient();
     const {
       data: { user: authUser },
     } = await supabase.auth.getUser();
 
-    if (!authUser) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!authUser)
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
 
     const userId = authUser.id;
     const { messages } = chatRequestSchema.parse(await req.json());
-    const normalizedMessages: NormalizedChatMessage[] = messages.map((message) => ({
-      role: message.role as Message['role'],
-      content: extractMessageText(message.content),
-    }));
+    const normalizedMessages: NormalizedChatMessage[] = messages.map(
+      (message) => ({
+        role: message.role as Message["role"],
+        content: extractMessageText(message.content),
+      }),
+    );
     const lastMessage =
-      normalizedMessages[normalizedMessages.length - 1]?.content ?? '';
+      normalizedMessages[normalizedMessages.length - 1]?.content ?? "";
 
     const adminSupabase = createAdminClient();
 
-    let contextText = '관련 지식 없음';
+    let contextText = "관련 지식 없음";
     try {
       if (lastMessage.trim()) {
-        const { embedding } = await embed({
-          model: openai.embedding('text-embedding-3-small'),
-          value: lastMessage,
-        });
-        const { data: documents } = await adminSupabase.rpc('match_knowledge', {
+        const { embedding } = await createEmbedding(lastMessage);
+        const { data: documents } = await adminSupabase.rpc("match_knowledge", {
           query_embedding: embedding,
           match_threshold: 0.1,
           match_count: 5,
         });
         if (documents) {
           contextText = documents
-            .map((doc: any) => doc.metadata?.content || '')
+            .map((doc: any) => doc.metadata?.content || "")
             .filter(Boolean)
-            .join('\n\n');
+            .join("\n\n");
         }
       }
     } catch (e) {
-      console.warn('RAG Skip', e);
+      console.warn("RAG Skip", e);
     }
 
+    const chatModel = await getChatLanguageModel();
+    const now = new Date();
+    const currentTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const result = await streamText({
-      model: openai('gpt-4o-mini'),
-      system: `당신은 워크프레소의 업무 비서입니다. 한국어로 친절하게 답변하세요. 내부 지식: ${contextText}`,
+      model: chatModel,
+      system: `당신은 워크프레소의 업무 비서입니다. 한국어로 친절하게 답변하세요.
+현재 시각: ${now.toISOString()}
+기준 시간대: ${currentTimeZone}
+내부 지식: ${contextText}
+
+규칙:
+- 일정 생성은 반드시 Pod-B API(/api/schedules) 기반 tool 호출로만 처리하세요.
+- 일정 생성 전에 title, start_time, end_time을 확정할 근거가 부족하면 tool을 호출하지 말고 먼저 짧게 재질문하세요.
+- 상대시간 표현(예: 오늘, 내일, 다음 주)은 현재 시각과 시간대를 기준으로 해석하세요.
+- 참석자 식별이 모호하면 attendee_ids를 추정하지 말고 후보를 제시하거나 다시 물어보세요.
+- 일정 생성 후에는 생성 결과와 링크를 함께 안내하세요.`,
       messages: convertToCoreMessages(normalizedMessages),
       maxSteps: 2,
       tools: {
         create_schedule: tool({
-          description: '일정 등록',
-          parameters: createScheduleSchema,
-          execute: async ({ title, start_time, end_time }: CreateScheduleArgs) => {
-            const { error } = await adminSupabase
-              .from('schedules')
-              .insert([{ title, start_time, end_time, user_id: userId }]);
-            if (error) throw new Error(error.message);
-            return `일정 '${title}' 등록 완료.`;
+          description:
+            "Pod-B 일정 생성 API 호출. start_time/end_time이 확정된 ISO 8601일 때만 호출하세요. 불충분하면 먼저 재질문하세요.",
+          parameters: createScheduleToolSchema,
+          execute: async (payload: CreateScheduleArgs) => {
+            const createdSchedule = await createScheduleViaPodBApi({
+              payload,
+              request: req,
+            });
+
+            return {
+              message: `일정 '${createdSchedule.title}' 등록 완료`,
+              schedule: createdSchedule,
+            };
           },
         }),
       },
     });
 
     return result.toDataStreamResponse();
-
   } catch (error: any) {
-    console.error('Fatal Error:', error.message);
+    console.error("Fatal Error:", error.message);
     return new Response(error.message, { status: 500 });
   }
 }

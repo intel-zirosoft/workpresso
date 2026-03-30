@@ -1,45 +1,46 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
-import { LogOut, Menu, Moon, Sun } from "lucide-react";
-import { useTheme } from "@/providers/theme-provider";
-import { cn } from "@/lib/utils";
+import { LogOut, Menu, Settings } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getUserProfile } from "@/features/settings/services/userAction";
+import { UserRoleBadge } from "@/features/settings/components/UserRoleBadge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { SidebarContent } from "@/components/shared/sidebar";
+import { getCurrentSectionTitle } from "@/components/shared/navigation";
 
 export function Header() {
   const [user, setUser] = useState<User | null>(null);
-  const [department, setDepartment] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient(); // 표준 방식으로 단순화 (null 에러 해결)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const supabase = createClient();
   const router = useRouter();
-  const { resolvedTheme, setThemePreference } = useTheme();
+  const pathname = usePathname();
+  const currentSectionTitle = getCurrentSectionTitle(pathname);
 
-  // 부서 정보를 가져오는 별도의 비동기 함수
-  const loadDepartment = useCallback(async (userId: string) => {
-    try {
-      const { data } = await supabase
-        .from('users')
-        .select('department')
-        .eq('id', userId)
-        .maybeSingle();
-      if (data?.department) setDepartment(data.department);
-    } catch (e) {
-      console.warn("Could not load department from DB");
-    }
-  }, [supabase]);
+  const { data: profile, isLoading: isProfileLoading } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: () => getUserProfile(),
+    retry: 1,
+    enabled: !!user,
+  });
 
   useEffect(() => {
     const initAuth = async () => {
       const { data: { user: initialUser } } = await supabase.auth.getUser();
       if (initialUser) {
         setUser(initialUser);
-        // 메타데이터에 이미 있다면 우선 설정
-        setDepartment(initialUser.user_metadata?.department || initialUser.user_metadata?.position || null);
-        loadDepartment(initialUser.id);
       }
       setLoading(false);
     };
@@ -49,17 +50,11 @@ export function Header() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
-      if (currentUser) {
-        setDepartment(currentUser.user_metadata?.department || currentUser.user_metadata?.position || null);
-        loadDepartment(currentUser.id);
-      } else {
-        setDepartment(null);
-      }
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase, loadDepartment]);
+  }, [supabase]);
 
   const handleSignOut = async () => {
     setLoading(true);
@@ -67,97 +62,103 @@ export function Header() {
     window.location.href = "/login";
   };
 
-  const isDarkMode = resolvedTheme === "dark";
-
-  const handleThemeToggle = () => {
-    setThemePreference(isDarkMode ? "light" : "dark");
-  };
-
   return (
-    <header className="h-[72px] md:h-[96px] flex items-center justify-between md:justify-end px-4 md:px-10 sticky top-0 bg-background/80 backdrop-blur-md">
-      {/* Mobile Menu */}
-      <div className="md:hidden">
-        <Button variant="ghost" size="icon" className="text-primary">
-          <Menu className="w-6 h-6" />
-        </Button>
+    <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between bg-background/80 px-4 backdrop-blur-md md:h-[96px] md:px-10">
+      <div className="flex min-w-0 items-center gap-3 md:flex-1">
+        <Dialog open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+          <DialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-primary md:hidden"
+              aria-label="메뉴 열기"
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="left-0 top-0 h-full w-[min(88vw,320px)] max-w-none translate-x-0 translate-y-0 gap-0 rounded-none border-none bg-surface p-0 shadow-2xl data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left">
+            <div className="sr-only">
+              <DialogTitle>주 메뉴</DialogTitle>
+              <DialogDescription>서비스의 주요 화면으로 이동합니다.</DialogDescription>
+            </div>
+            <div className="flex h-full flex-col">
+              <SidebarContent mobile onNavigate={() => setMobileNavOpen(false)} />
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/70">
+            Workspace
+          </p>
+          <h1 className="truncate font-headings text-lg font-bold text-text md:text-2xl">
+            {currentSectionTitle}
+          </h1>
+        </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        {loading ? (
-          <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
+      <div className="flex items-center gap-3 md:gap-4">
+        {loading || (user && isProfileLoading) ? (
+          <div className="flex items-center gap-3 p-2 rounded-md bg-white/50 shadow-soft border border-background/50">
+            <div className="w-9 h-9 rounded-full bg-muted animate-pulse" />
+            <div className="flex flex-col gap-1">
+              <div className="h-3 w-16 bg-muted animate-pulse rounded" />
+              <div className="h-2 w-12 bg-muted/50 animate-pulse rounded" />
+            </div>
+          </div>
         ) : user ? (
-          <>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={isDarkMode}
-              aria-label={isDarkMode ? "라이트 테마로 변경" : "다크 테마로 변경"}
-              onClick={handleThemeToggle}
-              className="flex items-center gap-3 rounded-pill border border-background/60 bg-white/60 px-3 py-2 shadow-soft transition-colors hover:bg-white/80"
-            >
-              <Sun
-                className={cn(
-                  "h-4 w-4 transition-colors",
-                  isDarkMode ? "text-text-muted" : "text-primary",
+          /* 로그인 성공 UI */
+          <div className="flex items-center gap-2 rounded-md border border-background/50 bg-white/50 p-2 shadow-soft backdrop-blur-sm transition-all hover:bg-white/80 md:gap-3 md:pr-4">
+            <Avatar className="h-9 w-9 shadow-sm border border-primary/10">
+              <AvatarImage src={`https://api.dicebear.com/7.x/notionists/svg?seed=${profile?.name || user.email}`} />
+              <AvatarFallback className="bg-secondary/30 text-primary font-bold text-xs">
+                {(profile?.name || user.email || "U")[0].toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="hidden min-w-[120px] flex-col md:flex">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-bold text-text leading-tight truncate max-w-[100px]">
+                  {profile?.name || user.user_metadata?.name || user.email?.split('@')[0]}
+                </p>
+                {profile?.role && (
+                  <UserRoleBadge role={profile.role} className="scale-75 origin-left" />
                 )}
-              />
-              <span
-                className={cn(
-                  "relative h-6 w-11 rounded-full transition-colors",
-                  isDarkMode ? "bg-primary/20" : "bg-secondary/80",
-                )}
-              >
-                <span
-                  className={cn(
-                    "absolute top-0.5 h-5 w-5 rounded-full bg-primary shadow-sm transition-transform",
-                    isDarkMode ? "translate-x-[22px]" : "translate-x-0.5",
-                  )}
-                />
-              </span>
-              <Moon
-                className={cn(
-                  "h-4 w-4 transition-colors",
-                  isDarkMode ? "text-primary" : "text-text-muted",
-                )}
-              />
-              <span className="hidden w-10 shrink-0 text-center text-xs font-semibold text-text-muted sm:inline-block">
-                {isDarkMode ? "다크" : "라이트"}
-              </span>
-            </button>
-
-            <div className="flex items-center gap-3 p-2 rounded-md bg-white/50 shadow-soft border border-background/50">
-              <Avatar className="h-9 w-9 shadow-sm">
-                <AvatarImage src={user.user_metadata?.avatar_url} />
-                <AvatarFallback className="bg-secondary/30 text-primary font-bold text-xs">
-                  {(user.user_metadata?.name || user.email || "U")[0].toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col min-w-[100px]">
-                <div className="flex items-baseline gap-1.5">
-                  <p className="text-sm font-bold text-text leading-tight">
-                    {user.user_metadata?.name || user.email?.split('@')[0]}
-                  </p>
-                  <p className="text-[11px] font-medium text-primary/70 leading-tight">
-                    {department || "구성원"}
-                  </p>
-                </div>
-                <p className="hidden md:block text-[10px] md:text-[11px] font-medium text-muted leading-tight mt-0.5">
+              </div>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <p className="text-[10px] font-medium text-muted/80 leading-tight">
+                  {profile?.department || "구성원"}
+                </p>
+                <span className="w-1 h-1 rounded-full bg-muted/30" />
+                <p className="text-[10px] font-medium text-primary/60 leading-tight">
                   {user.email}
                 </p>
               </div>
+            </div>
+            <div className="mx-1 hidden h-8 w-[1px] bg-background/50 md:block" />
+            <div className="flex items-center gap-1">
+              <button 
+                onClick={() => router.push("/settings/profile")}
+                className="text-muted hover:text-primary transition-all p-1.5 hover:bg-primary/10 rounded-full"
+                title="설정"
+                aria-label="설정으로 이동"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
               <button 
                 onClick={handleSignOut}
-                className="ml-2 text-muted hover:text-destructive transition-colors p-1.5 hover:bg-destructive/10 rounded-full"
+                className="text-muted hover:text-destructive transition-all p-1.5 hover:bg-destructive/10 rounded-full"
+                title="로그아웃"
+                aria-label="로그아웃"
               >
-                <LogOut className="w-4 h-4 md:w-5 md:h-5" />
+                <LogOut className="w-4 h-4" />
               </button>
             </div>
-          </>
+          </div>
         ) : (
           /* 로그인 필요 UI */
           <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={() => router.push("/login")} className="px-4">로그인</Button>
-            <Button onClick={() => router.push("/signup")} className="px-6 rounded-pill bg-primary text-white">시작하기</Button>
+            <Button variant="ghost" onClick={() => router.push("/login")} className="px-4 font-headings text-sm">로그인</Button>
+            <Button onClick={() => router.push("/signup")} className="px-6 rounded-pill bg-primary text-white font-headings text-sm shadow-soft hover:shadow-md transition-all">시작하기</Button>
           </div>
         )}
       </div>
