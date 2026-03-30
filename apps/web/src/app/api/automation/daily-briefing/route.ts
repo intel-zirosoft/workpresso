@@ -16,6 +16,8 @@ import { buildBriefingPayload, sendSlackBriefing } from "@/lib/slack/briefing-fo
 import { getJiraIssuesDueToday } from "@/lib/jira/client";
 import { startOfDay, endOfDay } from "date-fns";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const supabase = await createClient();

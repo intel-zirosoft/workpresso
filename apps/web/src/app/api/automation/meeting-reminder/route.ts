@@ -24,6 +24,8 @@ import {
 } from "@/lib/slack/reminder-formatter";
 import { addMinutes } from "date-fns";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const supabase = await createClient();
