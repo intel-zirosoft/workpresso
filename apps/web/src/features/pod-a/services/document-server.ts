@@ -18,6 +18,7 @@ import {
   type DocumentSummary,
   type DocumentUser,
 } from "@/features/pod-a/services/document-schema";
+import { upsertKnowledgeSource } from "@/features/pod-c/services/knowledge-sync";
 
 const documentSelectColumns =
   "id, author_id, title, content, status, submitted_at, final_approved_at, created_at, updated_at, deleted_at";
@@ -25,8 +26,7 @@ const documentSelectColumns =
 const approvalStepSelectColumns =
   "id, document_id, step_order, step_label, approver_id, status, acted_at, comment, deleted_at";
 
-const ccRecipientSelectColumns =
-  "id, document_id, recipient_id, deleted_at";
+const ccRecipientSelectColumns = "id, document_id, recipient_id, deleted_at";
 
 type RawApprovalStepRow = {
   id: string;
@@ -317,7 +317,11 @@ export async function listDocumentsForViewer(params: {
       documentIds,
       status,
     );
-    const details = await buildDocumentDetails(adminSupabase, documents, viewerId);
+    const details = await buildDocumentDetails(
+      adminSupabase,
+      documents,
+      viewerId,
+    );
 
     return details.map((detail) =>
       buildDocumentSummary({
@@ -350,8 +354,16 @@ export async function listDocumentsForViewer(params: {
   }
 
   const documentIds = (data ?? []).map((row) => row.document_id as string);
-  const documents = await fetchDocumentRowsByIds(adminSupabase, documentIds, status);
-  const details = await buildDocumentDetails(adminSupabase, documents, viewerId);
+  const documents = await fetchDocumentRowsByIds(
+    adminSupabase,
+    documentIds,
+    status,
+  );
+  const details = await buildDocumentDetails(
+    adminSupabase,
+    documents,
+    viewerId,
+  );
 
   return details.map((detail) =>
     buildDocumentSummary({
@@ -559,6 +571,12 @@ export async function createWorkflowDocument(params: {
     throw new Error("생성된 문서를 다시 불러오지 못했습니다.");
   }
 
+  try {
+    await syncDocumentKnowledge(detail);
+  } catch (syncError) {
+    console.error("document knowledge sync failed:", syncError);
+  }
+
   return detail;
 }
 
@@ -622,11 +640,21 @@ export async function updateWorkflowDocument(params: {
     ccRecipientIds,
   });
 
-  return getDocumentDetailForViewer({
+  const nextDetail = await getDocumentDetailForViewer({
     adminSupabase,
     documentId,
     viewerId,
   });
+
+  if (nextDetail) {
+    try {
+      await syncDocumentKnowledge(nextDetail);
+    } catch (syncError) {
+      console.error("document knowledge sync failed:", syncError);
+    }
+  }
+
+  return nextDetail;
 }
 
 export async function submitWorkflowDocument(params: {
@@ -706,46 +734,41 @@ export async function submitWorkflowDocument(params: {
     throw new Error("제출 후 문서를 다시 불러오지 못했습니다.");
   }
 
+  try {
+    await syncDocumentKnowledge(nextDetail);
+  } catch (syncError) {
+    console.error("document knowledge sync failed:", syncError);
+  }
+
   return nextDetail;
 }
 
 export async function syncDocumentKnowledge(document: DocumentDetail) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    return;
-  }
-
-  const response = await fetch(
-    `${supabaseUrl.replace(/\/$/, "")}/functions/v1/document-knowledge-sync`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${serviceRoleKey}`,
-        apikey: serviceRoleKey,
-      },
-      body: JSON.stringify({
-        action: document.status === "APPROVED" ? "upsert" : "remove",
-        document: {
-          id: document.id,
-          authorId: document.authorId,
-          title: document.title,
-          content: document.content,
-          status: document.status,
-        },
-        documentId: document.id,
-      }),
+  await upsertKnowledgeSource({
+    sourceType: "DOCUMENTS",
+    sourceId: document.id,
+    title: document.title,
+    content: document.content,
+    metadata: {
+      author_id: document.authorId,
+      author_name: document.author.name,
+      status: document.status,
+      submitted_at: document.submittedAt,
+      final_approved_at: document.finalApprovedAt,
+      approval_steps: document.approvalSteps.map((step) => ({
+        id: step.id,
+        step_order: step.stepOrder,
+        step_label: step.stepLabel,
+        approver_id: step.approverId,
+        approver_name: step.approver.name,
+        status: step.status,
+      })),
+      cc_recipients: document.ccRecipients.map((recipient) => ({
+        id: recipient.recipientId,
+        name: recipient.recipient.name,
+      })),
     },
-  );
-
-  if (!response.ok) {
-    const data = await response.json().catch(() => null);
-    throw new Error(
-      data?.error ?? "문서 지식 인덱싱 Edge Function 호출에 실패했습니다.",
-    );
-  }
+  });
 }
 
 export async function actOnWorkflowDocument(params: {
@@ -781,7 +804,7 @@ export async function actOnWorkflowDocument(params: {
   const currentStepPatch = {
     status: action === "APPROVE" ? "APPROVED" : "REJECTED",
     acted_at: now,
-    comment: action === "REJECT" ? (comment?.trim() || null) : null,
+    comment: action === "REJECT" ? comment?.trim() || null : null,
   };
 
   const { error: currentStepError } = await adminSupabase
@@ -849,18 +872,18 @@ export async function actOnWorkflowDocument(params: {
     throw new Error("승인 처리 후 문서를 다시 불러오지 못했습니다.");
   }
 
-  if (nextDetail.status === "APPROVED") {
-    try {
-      await syncDocumentKnowledge(nextDetail);
-    } catch (syncError) {
-      console.error("document-knowledge-sync failed:", syncError);
-    }
+  try {
+    await syncDocumentKnowledge(nextDetail);
+  } catch (syncError) {
+    console.error("document knowledge sync failed:", syncError);
   }
 
   return nextDetail;
 }
 
-export function documentDetailToSummary(detail: DocumentDetail): DocumentSummary {
+export function documentDetailToSummary(
+  detail: DocumentDetail,
+): DocumentSummary {
   return buildDocumentSummary({
     document: {
       id: detail.id,

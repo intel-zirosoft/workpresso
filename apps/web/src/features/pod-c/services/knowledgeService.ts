@@ -1,13 +1,57 @@
-/**
- * Pod C: Knowledge AI Component Integration Interface
- * 이 서비스는 타 파드에서 변환된 텍스트를 수신하여 벡터 인덱싱을 수행하는 진입점입니다.
- */
+export type KnowledgeSourceType = "DOCUMENTS" | "MEETING_LOGS" | "SCHEDULES";
 
-export const indexKnowledge = async (sourceId: string, sourceType: 'DOCUMENTS' | 'MEETING_LOGS', text: string) => {
-  // 실제 연동 시 Pod C의 벡터 DB 적재 로직이 들어갈 자리입니다.
-  console.log(`[Pod C Integration] Indexing knowledge for ${sourceType}: ${sourceId}`);
-  console.log(`Content Preview: ${text.substring(0, 50)}...`);
-  
-  // TODO: Supabase Edge Function을 호출하여 pgvector에 적재하는 로직 구현
-  return { success: true };
-};
+async function parseResponse(response: Response) {
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.error ?? "지식 동기화 요청을 처리하지 못했습니다.");
+  }
+
+  return data;
+}
+
+export async function indexKnowledge(
+  sourceId: string,
+  sourceType: KnowledgeSourceType,
+  content: string,
+  options?: {
+    title?: string;
+    metadata?: Record<string, unknown>;
+  },
+) {
+  const response = await fetch("/api/knowledge/sync", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      sourceId,
+      sourceType,
+      title: options?.title,
+      content,
+      metadata: options?.metadata,
+    }),
+  });
+
+  return parseResponse(response);
+}
+
+export async function removeKnowledge(
+  sourceId: string,
+  sourceType: KnowledgeSourceType,
+) {
+  const response = await fetch("/api/knowledge/sync", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      sourceId,
+      sourceType,
+    }),
+  });
+
+  if (!response.ok) {
+    await parseResponse(response);
+  }
+}

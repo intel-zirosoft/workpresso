@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
+import {
+  buildScheduleKnowledgeContent,
+  upsertKnowledgeSource,
+} from "@/features/pod-c/services/knowledge-sync";
 import { createClient } from "@/lib/supabase/server";
 import { createScheduleSchema } from "@/lib/validations/schedule";
 
 export async function GET() {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -27,7 +33,9 @@ export async function GET() {
 export async function POST(request: Request) {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -53,11 +61,36 @@ export async function POST(request: Request) {
       throw error;
     }
 
+    try {
+      await upsertKnowledgeSource({
+        sourceType: "SCHEDULES",
+        sourceId: data.id,
+        title: data.title,
+        content: buildScheduleKnowledgeContent({
+          title: data.title,
+          startTime: data.start_time,
+          endTime: data.end_time,
+          type: data.type,
+        }),
+        metadata: {
+          user_id: user.id,
+          type: data.type ?? null,
+          start_time: data.start_time,
+          end_time: data.end_time,
+        },
+      });
+    } catch (syncError) {
+      console.error("schedule knowledge sync failed:", syncError);
+    }
+
     return NextResponse.json(data, { status: 201 });
   } catch (error: any) {
     if (error.name === "ZodError") {
       return NextResponse.json({ error: error.errors }, { status: 400 });
     }
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }
