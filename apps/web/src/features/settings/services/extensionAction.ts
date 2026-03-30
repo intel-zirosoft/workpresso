@@ -35,15 +35,16 @@ export async function sanitizeJiraDomain(domain: string): Promise<string> {
 function getEnvExtensionFallback(extName: string) {
   if (extName === 'slack') {
     const webhookUrl = process.env.WORKPRESSO_SLACK_WEBHOOK_URL?.trim() ?? '';
+    const botToken = process.env.WORKPRESSO_SLACK_BOT_TOKEN?.trim() ?? '';
 
-    if (!webhookUrl) {
+    if (!webhookUrl && !botToken) {
       return null;
     }
 
     return {
       ext_name: 'slack',
-      is_active: true,
-      config: { webhookUrl },
+      is_active: Boolean(webhookUrl),
+      config: { webhookUrl, botToken },
     };
   }
 
