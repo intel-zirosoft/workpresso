@@ -171,6 +171,7 @@ export const documentPermissionsSchema = z.object({
   canSubmit: z.boolean(),
   canApprove: z.boolean(),
   canReject: z.boolean(),
+  canDelete: z.boolean(),
 });
 
 export const documentSummarySchema = documentBaseSchema.extend({
@@ -179,6 +180,7 @@ export const documentSummarySchema = documentBaseSchema.extend({
   currentApprover: documentUserSchema.nullable(),
   approvalStepCount: z.number().int().nonnegative(),
   ccRecipientCount: z.number().int().nonnegative(),
+  viewerApprovalStatus: approvalStepStatusSchema.nullable(),
 });
 
 export const documentDetailSchema = documentSummarySchema.extend({
@@ -230,6 +232,7 @@ export function buildDocumentSummary(input: {
   author: DocumentUser;
   approvalSteps: ApprovalStep[];
   ccRecipients: CcRecipient[];
+  viewerApprovalStatus?: ApprovalStepStatus | null;
 }) {
   const currentStep =
     input.approvalSteps.find((step) => step.status === "PENDING") ?? null;
@@ -241,6 +244,7 @@ export function buildDocumentSummary(input: {
     currentApprover: currentStep?.approver ?? null,
     approvalStepCount: input.approvalSteps.length,
     ccRecipientCount: input.ccRecipients.length,
+    viewerApprovalStatus: input.viewerApprovalStatus ?? null,
   });
 }
 

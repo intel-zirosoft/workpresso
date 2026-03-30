@@ -1,4 +1,5 @@
 import {
+  type ApprovalStepStatus,
   type ApprovalStepInput,
   type DocumentDetail,
   type DocumentScope,
@@ -49,6 +50,23 @@ export const statusLabelMap: Record<DocumentStatus, string> = {
 
 export const statusBadgeClassMap: Record<DocumentStatus, string> = {
   DRAFT: "bg-secondary/70 text-text",
+  PENDING: "bg-amber-100 text-amber-700",
+  APPROVED: "bg-emerald-100 text-emerald-700",
+  REJECTED: "bg-rose-100 text-rose-700",
+};
+
+export const approvalStepStatusLabelMap: Record<ApprovalStepStatus, string> = {
+  WAITING: "결재 예정",
+  PENDING: "결재 대기",
+  APPROVED: "승인 완료",
+  REJECTED: "반려",
+};
+
+export const approvalStepStatusBadgeClassMap: Record<
+  ApprovalStepStatus,
+  string
+> = {
+  WAITING: "bg-slate-200 text-slate-600",
   PENDING: "bg-amber-100 text-amber-700",
   APPROVED: "bg-emerald-100 text-emerald-700",
   REJECTED: "bg-rose-100 text-rose-700",

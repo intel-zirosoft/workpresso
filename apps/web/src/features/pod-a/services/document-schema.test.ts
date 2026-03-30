@@ -134,6 +134,7 @@ describe("document-schema", () => {
         canSubmit: false,
         canApprove: true,
         canReject: true,
+        canDelete: false,
       },
     });
 
