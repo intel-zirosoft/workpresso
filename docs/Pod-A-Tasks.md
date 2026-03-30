@@ -2,7 +2,7 @@
 
 본 문서는 풀스택 수직적 분할(Full-stack Vertical Slicing) 원칙에 따라 Pod A의 세부 구현 기능을 팀원들에게 분배하기 위한 태스크 리스트입니다.
 
-## 📌 현재 구현 현황 (2026-03-27)
+## 📌 현재 구현 현황 (2026-03-30)
 
 - 문서 워크플로우 v2의 **주요 코드 구현은 완료**되었습니다.
 - 완료 범위:
@@ -12,11 +12,14 @@
   - Markdown 툴바/단축키, `Tab` 들여쓰기, 제목 단계 단축키, `Ctrl/Cmd+Shift+V` 미리보기 토글 구현
   - 멀티 스텝 편집기(템플릿 선택 → 본문 작성 → 결재선/공람) 및 집중 보기(`크게보기`) 오버레이 구현
   - `내 문서 Grid`, `내 결재함`, `공람 문서` 분리 UI 및 탐색 컨테이너 내부 스크롤 구현
-  - Pod A unit test 갱신 및 통과
+  - 문서 제출 / 승인 / 반려 시 Slack 상태 알림 연동 구현
+  - 승인 완료 문서의 Jira 이슈 생성, 링크 저장, 상태 위젯 연동 구현
+  - `프로젝트 승인 요청서` 템플릿의 Jira 추출 친화 섹션(`기능 명세`, `작업 체크리스트`) 보강
+  - Pod A unit test 19건 및 `apps/web` 기준 `npm run type-check` 통과
 - 남은 확인:
   - Supabase에 신규 마이그레이션 실제 적용 전 integration 기준 검증 필요
   - 수동 QA 미완료
-  - 전체 `type-check`는 Pod A가 아닌 `apps/web/src/app/api/chat/route.ts` 기존 오류 때문에 아직 실패
+  - Slack 양방향 승인(Slack App/Bot 기반)과 Jira 부분 실패 요약 반환은 후속 확장 범위
 
 ## 🧑‍💻 Part 1: 마크다운 에디터 및 문서 CRUD
 
@@ -113,11 +116,10 @@
 - [ ] **UI Test / Manual QA**: `내 문서 Grid`, `내 결재함`, `공람 문서` scope별 노출 검증
 - [ ] **UI Test / Manual QA**: 멀티 스텝 편집기 전환, 템플릿 적용, 미리보기 토글, `크게보기` 집중 모드 동작 점검
 - [ ] **UI Test / Manual QA**: textarea auto-resize와 오버레이 단일 스크롤 동작 점검
-- [ ] **Docs Sync**: API 변경 시 `docs/Workpresso_API_명세서.md`와 관련 협업 문서 동기화
+- [x] **Docs Sync**: API 변경 시 `docs/Workpresso_API_명세서.md`와 관련 협업 문서 동기화
 - [ ] **Dependency Log**: 신규 라이브러리 도입 시 `docs/DEPENDENCIES.md` 즉시 업데이트
 - [x] **Unit Test**: `npm test` 기준 Pod A 관련 unit test 통과
-- [ ] **Type Check**: 전체 `npm run type-check` 통과
-  현재는 `apps/web/src/app/api/chat/route.ts` 기존 타입 오류로 실패 중
+- [x] **Type Check**: `apps/web` 기준 `npm run type-check` 통과
 
 ## 🧭 Jira / Slack 연동 기반 Pod A 실행 계획
 
