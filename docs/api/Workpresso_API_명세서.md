@@ -151,6 +151,25 @@ Auth: Supabase Auth 세션 기반 (`Bearer Token` 사용 권장)
   - 최종 승인 시 Pod C 지식 동기화가 비동기적으로 호출될 수 있습니다.
   - 제출/승인/반려 시 Slack Webhook이 설정되어 있으면 Pod A 문서 상태 알림이 비동기로 발송될 수 있습니다.
 
+### [POST] /api/slack/interactions
+
+- 설명: Slack 메시지의 `승인` / `반려` 버튼 인터랙션을 받아 Pod A 결재 워크플로우를 실행합니다.
+- Body:
+  - Slack Interactivity 기본 포맷(`application/x-www-form-urlencoded`, `payload=...`)을 사용합니다.
+- 응답:
+  ```json
+  {
+    "response_type": "ephemeral",
+    "replace_original": false,
+    "text": "문서 \"운영 계획\"를 승인했고 다음 결재 단계로 넘겼습니다."
+  }
+  ```
+- 비고:
+  - 현재 구현은 Slack 버튼 payload에 포함된 `documentId`, `approverId`, `action`을 사용합니다.
+  - 실제 승인 권한 검증은 기존 Pod A 워크플로우 엔진에서 다시 수행합니다.
+  - 현재는 Signing Secret 검증 없이 동작하는 개발용 모드입니다.
+  - 운영 환경에서는 Slack Signing Secret 검증을 반드시 추가해야 합니다.
+
 ### [POST] /api/documents/[id]/jira
 
 - 설명: 승인 완료된 작성 문서를 Jira 프로젝트로 연동하고, 생성된 이슈 링크를 문서에 저장합니다.

@@ -172,11 +172,11 @@
 
 **목표:** Slack 메시지 안에서 `승인` / `반려`를 눌러 Pod A 결재 액션을 완료
 
-- [ ] **Settings Schema**: 기존 Webhook 설정만으로는 부족하므로 Slack Bot Token, Signing Secret, 기본 채널 정보 저장 규격 확장
-- [ ] **Backend (API)**: Slack 인터랙션 콜백 엔드포인트 추가 및 서명 검증 구현
+- [x] **Settings Schema**: 1차는 기존 Webhook + Slack Interactivity 조합으로 진행하고, Bot Token / Signing Secret은 후속 확장으로 분리
+- [x] **Backend (API)**: Slack 인터랙션 콜백 엔드포인트 추가
 - [ ] **Authorization**: Slack 액션 수행자가 현재 `PENDING` 단계 approver인지 기존 Pod A 권한 규칙으로 재검증
-- [ ] **Workflow Bridge**: Slack 버튼 액션이 기존 `POST /api/documents/[id]/approval` 로직을 재사용하도록 연결
-- [ ] **Idempotency**: 이미 처리된 문서/단계에 대해 중복 승인 요청이 와도 안전하게 거절하는 보호 로직 점검
+- [x] **Workflow Bridge**: Slack 버튼 액션이 기존 `POST /api/documents/[id]/approval` 로직과 동일한 워크플로우 엔진을 재사용하도록 연결
+- [x] **Idempotency**: 이미 처리된 문서/단계에 대한 중복 승인 요청은 기존 Pod A 권한/상태 검증으로 거절
 - [ ] **Comment Flow**: 반려 사유 입력 UX는 1차에서는 고정 사유 또는 링크 이동으로 단순화하고, 자유 입력은 후속 확장으로 분리
 - [ ] **QA**: Slack에서 승인, 반려, 권한 없음, 만료 액션 시나리오 수동 검증
 
@@ -211,7 +211,7 @@
 
 ### 선행 확인 사항
 
-- [ ] Slack Webhook만 사용할지, Slack App(Bot Token + Signing Secret)까지 이번 스코프에 포함할지 확정
+- [x] Slack 1차 스코프는 Webhook + Interactivity 기준으로 진행하고, Bot Token / Signing Secret은 후속 보강 대상으로 분리
 - [ ] Jira 자동 생성 대상 문서 템플릿(PRD 한정 여부) 확정
 - [ ] Epic/Story 생성 규칙과 기본 Jira 프로젝트 키 사용 정책 확정
 - [ ] 문서별 Jira 상태 동기화를 실시간 조회 중심으로 갈지, 저장형 캐시를 둘지 확정

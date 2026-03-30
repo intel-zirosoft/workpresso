@@ -457,6 +457,9 @@ async function sendDocumentSlackNotification(params: {
   } as const;
 
   const copy = eventTextMap[event];
+  const canRenderSlackApprovalActions =
+    (event === "SUBMITTED" || event === "APPROVED_STEP") &&
+    document.currentApprover;
   const fields = [
     {
       type: "mrkdwn",
@@ -491,6 +494,57 @@ async function sendDocumentSlackNotification(params: {
     });
   }
 
+  const actionElements: Array<Record<string, unknown>> = [
+    {
+      type: "button",
+      text: {
+        type: "plain_text",
+        text: "문서 보기",
+        emoji: true,
+      },
+      url: documentUrl,
+      style: event === "REJECTED" ? "danger" : "primary",
+    },
+  ];
+
+  if (canRenderSlackApprovalActions && document.currentApprover) {
+    const baseValue = {
+      documentId: document.id,
+      approverId: document.currentApprover.id,
+    };
+
+    actionElements.unshift(
+      {
+        type: "button",
+        text: {
+          type: "plain_text",
+          text: "승인",
+          emoji: true,
+        },
+        style: "primary",
+        action_id: "document_approve",
+        value: JSON.stringify({
+          ...baseValue,
+          action: "APPROVE",
+        }),
+      },
+      {
+        type: "button",
+        text: {
+          type: "plain_text",
+          text: "반려",
+          emoji: true,
+        },
+        style: "danger",
+        action_id: "document_reject",
+        value: JSON.stringify({
+          ...baseValue,
+          action: "REJECT",
+        }),
+      },
+    );
+  }
+
   const blocks = [
     {
       type: "header",
@@ -513,18 +567,7 @@ async function sendDocumentSlackNotification(params: {
     },
     {
       type: "actions",
-      elements: [
-        {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "문서 보기",
-            emoji: true,
-          },
-          url: documentUrl,
-          style: event === "REJECTED" ? "danger" : "primary",
-        },
-      ],
+      elements: actionElements,
     },
   ];
 
