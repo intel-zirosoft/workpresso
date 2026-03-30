@@ -66,7 +66,7 @@ export const approvalStepStatusBadgeClassMap: Record<
   ApprovalStepStatus,
   string
 > = {
-  WAITING: "bg-slate-200 text-slate-600",
+  WAITING: "bg-background text-text-muted",
   PENDING: "bg-amber-100 text-amber-700",
   APPROVED: "bg-emerald-100 text-emerald-700",
   REJECTED: "bg-rose-100 text-rose-700",

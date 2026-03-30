@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { usePathname, useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
-import { LogOut, Menu, Settings } from "lucide-react";
+import { LogOut, Menu, Moon, Settings, Sun } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getUserProfile } from "@/features/settings/services/userAction";
 import { UserRoleBadge } from "@/features/settings/components/UserRoleBadge";
@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/dialog";
 import { SidebarContent } from "@/components/shared/sidebar";
 import { getCurrentSectionTitle } from "@/components/shared/navigation";
+import { useTheme } from "@/providers/theme-provider";
+import { cn } from "@/lib/utils";
 
 export function Header() {
   const [user, setUser] = useState<User | null>(null);
@@ -28,6 +30,7 @@ export function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const currentSectionTitle = getCurrentSectionTitle(pathname);
+  const { resolvedTheme, setThemePreference } = useTheme();
 
   const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: ['userProfile'],
@@ -60,6 +63,12 @@ export function Header() {
     setLoading(true);
     await supabase.auth.signOut();
     window.location.href = "/login";
+  };
+
+  const isDarkMode = resolvedTheme === "dark";
+
+  const handleThemeToggle = () => {
+    setThemePreference(isDarkMode ? "light" : "dark");
   };
 
   return (
@@ -98,8 +107,50 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-3 md:gap-4">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={isDarkMode}
+          aria-label={isDarkMode ? "라이트 테마로 변경" : "다크 테마로 변경"}
+          onClick={handleThemeToggle}
+          className="hidden items-center gap-2.5 rounded-pill border border-background/60 bg-surface/80 px-2.5 py-2 shadow-soft transition-colors hover:bg-surface sm:flex"
+        >
+          <span className="flex h-5 w-5 items-center justify-center">
+            <Sun
+              className={cn(
+                "h-4 w-4 transition-colors",
+                isDarkMode ? "text-text-muted" : "text-primary"
+              )}
+            />
+          </span>
+          <span
+            className={cn(
+              "relative h-7 w-12 shrink-0 rounded-full transition-colors",
+              isDarkMode ? "bg-primary/20" : "bg-secondary/80"
+            )}
+          >
+            <span
+              className={cn(
+                "absolute left-1 top-1 h-5 w-5 rounded-full bg-primary shadow-sm transition-transform",
+                isDarkMode ? "translate-x-6" : "translate-x-0"
+              )}
+            />
+          </span>
+          <span className="flex h-5 w-5 items-center justify-center">
+            <Moon
+              className={cn(
+                "h-4 w-4 transition-colors",
+                isDarkMode ? "text-primary" : "text-text-muted"
+              )}
+            />
+          </span>
+          <span className="hidden w-10 shrink-0 text-center text-xs font-semibold text-text-muted lg:inline-block">
+            {isDarkMode ? "다크" : "라이트"}
+          </span>
+        </button>
+
         {loading || (user && isProfileLoading) ? (
-          <div className="flex items-center gap-3 p-2 rounded-md bg-white/50 shadow-soft border border-background/50">
+          <div className="flex items-center gap-3 rounded-md border border-background/50 bg-surface/70 p-2 shadow-soft">
             <div className="w-9 h-9 rounded-full bg-muted animate-pulse" />
             <div className="flex flex-col gap-1">
               <div className="h-3 w-16 bg-muted animate-pulse rounded" />
@@ -108,7 +159,7 @@ export function Header() {
           </div>
         ) : user ? (
           /* 로그인 성공 UI */
-          <div className="flex items-center gap-2 rounded-md border border-background/50 bg-white/50 p-2 shadow-soft backdrop-blur-sm transition-all hover:bg-white/80 md:gap-3 md:pr-4">
+          <div className="flex items-center gap-2 rounded-md border border-background/50 bg-surface/70 p-2 shadow-soft backdrop-blur-sm transition-all hover:bg-surface md:gap-3 md:pr-4">
             <Avatar className="h-9 w-9 shadow-sm border border-primary/10">
               <AvatarImage src={`https://api.dicebear.com/7.x/notionists/svg?seed=${profile?.name || user.email}`} />
               <AvatarFallback className="bg-secondary/30 text-primary font-bold text-xs">
@@ -125,7 +176,7 @@ export function Header() {
                 )}
               </div>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <p className="text-[10px] font-medium text-muted/80 leading-tight">
+                <p className="text-[10px] font-medium text-text-muted leading-tight">
                   {profile?.department || "구성원"}
                 </p>
                 <span className="w-1 h-1 rounded-full bg-muted/30" />
@@ -137,8 +188,8 @@ export function Header() {
             <div className="mx-1 hidden h-8 w-[1px] bg-background/50 md:block" />
             <div className="flex items-center gap-1">
               <button 
-                onClick={() => router.push("/settings/profile")}
-                className="text-muted hover:text-primary transition-all p-1.5 hover:bg-primary/10 rounded-full"
+                onClick={() => router.push("/settings/integrations")}
+                className="text-text-muted hover:text-primary transition-all p-1.5 hover:bg-primary/10 rounded-full"
                 title="설정"
                 aria-label="설정으로 이동"
               >
@@ -146,7 +197,7 @@ export function Header() {
               </button>
               <button 
                 onClick={handleSignOut}
-                className="text-muted hover:text-destructive transition-all p-1.5 hover:bg-destructive/10 rounded-full"
+                className="text-text-muted hover:text-destructive transition-all p-1.5 hover:bg-destructive/10 rounded-full"
                 title="로그아웃"
                 aria-label="로그아웃"
               >

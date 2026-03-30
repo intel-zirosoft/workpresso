@@ -104,7 +104,7 @@ export default async function IntegrationsPage() {
         <h1 className="text-3xl font-headings font-bold text-text flex items-center gap-3">
           <Link2 className="w-8 h-8 text-primary" /> 외부 도구 연동
         </h1>
-        <p className="text-sm text-muted mt-1 font-body">
+        <p className="text-sm text-text-muted mt-1 font-body">
           조직에서 사용하는 협업 도구들을 연결하여 업무 효율을 극대화합니다.
         </p>
       </div>
@@ -165,7 +165,7 @@ export default async function IntegrationsPage() {
       {/* GitHub Integration (Coming Soon Card Design) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-primary/5 rounded-3xl p-8 border border-primary/10 flex flex-col md:flex-row items-center gap-6">
-          <div className="bg-white p-5 rounded-3xl shadow-soft">
+          <div className="bg-surface p-5 rounded-3xl shadow-soft">
             <Zap className="w-10 h-10 text-primary animate-pulse" />
           </div>
           <div className="text-center md:text-left">
@@ -180,12 +180,12 @@ export default async function IntegrationsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl p-8 border border-background shadow-soft flex flex-col items-center justify-center text-center group cursor-not-allowed">
+        <div className="bg-surface rounded-3xl p-8 border border-background shadow-soft flex flex-col items-center justify-center text-center group cursor-not-allowed">
           <div className="w-16 h-16 bg-background rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <Github className="w-8 h-8 text-muted" />
+            <Github className="w-8 h-8 text-text-muted" />
           </div>
           <h4 className="font-bold text-muted-foreground">GitHub 연동</h4>
-          <p className="text-xs text-muted mt-1 italic">Coming Soon</p>
+          <p className="text-xs text-text-muted mt-1 italic">Coming Soon</p>
         </div>
       </div>
     </div>

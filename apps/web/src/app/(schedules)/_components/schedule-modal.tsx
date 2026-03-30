@@ -95,7 +95,7 @@ export function ScheduleModal({
           <DialogTitle className="text-xl font-headings font-bold text-text">
             {initialData ? "일정 수정" : "일정 추가"}
           </DialogTitle>
-          <DialogDescription className="text-muted font-body">
+          <DialogDescription className="text-text-muted font-body">
             {initialData
               ? "일정의 내용을 수정합니다."
               : selectedDate
@@ -154,7 +154,7 @@ export function ScheduleModal({
           <div className="grid grid-cols-4 items-center gap-4">
             <label
               htmlFor="type"
-              className="text-right text-muted font-headings font-medium"
+              className="text-right text-text-muted font-headings font-medium"
             >
               분류
             </label>

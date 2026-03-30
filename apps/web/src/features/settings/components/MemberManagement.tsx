@@ -156,7 +156,7 @@ export function MemberManagement({ users, currentUserId, teams }: MemberManageme
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-background pb-6">
         <div className="space-y-1">
           <h2 className="text-xl font-headings font-bold text-text tracking-tight">팀원 인벤토리</h2>
-          <p className="text-sm text-muted font-body font-medium">조직의 모든 멤버와 글로벌 권한을 제어합니다.</p>
+          <p className="text-sm text-text-muted font-body font-medium">조직의 모든 멤버와 글로벌 권한을 제어합니다.</p>
         </div>
         <Button 
           onClick={() => setIsInviteOpen(true)}
@@ -173,11 +173,11 @@ export function MemberManagement({ users, currentUserId, teams }: MemberManageme
           <Card 
             key={user.id} 
             className={cn(
-              "p-5 bg-white border border-background shadow-soft hover:shadow-md transition-all duration-300 rounded-[28px] flex items-center gap-4 group",
+              "p-5 bg-surface border border-background shadow-soft hover:shadow-md transition-all duration-300 rounded-[28px] flex items-center gap-4 group",
               updating === user.id && "opacity-50 pointer-events-none scale-[0.98]"
             )}
           >
-            <Avatar className="w-14 h-14 border-4 border-white shadow-sm ring-1 ring-primary/5 group-hover:ring-primary/20 transition-all">
+            <Avatar className="w-14 h-14 border-4 border-surface shadow-sm ring-1 ring-primary/5 group-hover:ring-primary/20 transition-all">
               <AvatarImage src={user.avatar_url} />
               <AvatarFallback className="bg-primary/5 text-primary text-xl font-bold">
                 {user.name?.[0] || 'U'}
@@ -192,7 +192,7 @@ export function MemberManagement({ users, currentUserId, teams }: MemberManageme
                 )}
               </div>
               <div className="flex flex-col gap-2 mt-1">
-                <div className="flex items-center gap-1.5 text-xs text-muted font-medium">
+                <div className="flex items-center gap-1.5 text-xs text-text-muted font-medium">
                   <Mail className="w-3.5 h-3.5 text-primary/40" />
                   <span className="truncate">{user.email || '이메일 정보 없음'}</span>
                 </div>
@@ -216,12 +216,12 @@ export function MemberManagement({ users, currentUserId, teams }: MemberManageme
                     {updating === user.id ? (
                       <RefreshCw className="w-4 h-4 text-primary animate-spin" />
                     ) : (
-                      <MoreHorizontal className="w-5 h-5 text-muted group-hover:text-primary transition-colors" />
+                      <MoreHorizontal className="w-5 h-5 text-text-muted group-hover:text-primary transition-colors" />
                     )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 shadow-lg border-background/50 animate-in slide-in-from-top-1">
-                  <DropdownMenuLabel className="text-[11px] font-bold text-muted px-3 py-2 uppercase tracking-widest opacity-50 font-headings">퀵 액션</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-[11px] font-bold text-text-muted px-3 py-2 uppercase tracking-widest opacity-50 font-headings">퀵 액션</DropdownMenuLabel>
                   <DropdownMenuItem 
                     className="rounded-xl px-3 py-2.5 text-sm font-bold gap-3 cursor-pointer focus:bg-primary/5 focus:text-primary transition-all"
                     onClick={() => {
@@ -233,7 +233,7 @@ export function MemberManagement({ users, currentUserId, teams }: MemberManageme
                   </DropdownMenuItem>
                   
                   <DropdownMenuSeparator className="my-1 bg-background" />
-                  <DropdownMenuLabel className="text-[11px] font-bold text-muted px-3 py-2 uppercase tracking-widest opacity-50 font-headings">권한 변경</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-[11px] font-bold text-text-muted px-3 py-2 uppercase tracking-widest opacity-50 font-headings">권한 변경</DropdownMenuLabel>
                   <DropdownMenuItem 
                     className="rounded-xl px-3 py-2 text-sm font-medium gap-3 cursor-pointer focus:bg-primary/5 focus:text-primary"
                     onClick={() => handleQuickRoleChange(user.id, 'SUPER_ADMIN')}
@@ -269,13 +269,13 @@ export function MemberManagement({ users, currentUserId, teams }: MemberManageme
       
       {/* Invite Modal */}
       <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-        <DialogContent className="rounded-[32px] sm:max-w-md p-8 bg-white shadow-2xl border-background/50">
+        <DialogContent className="rounded-[32px] sm:max-w-md p-8 bg-surface shadow-2xl border-background/50">
           <DialogHeader className="space-y-3">
             <div className="bg-primary/5 w-12 h-12 rounded-2xl flex items-center justify-center mb-1">
               <UserPlus className="w-6 h-6 text-primary" />
             </div>
             <DialogTitle className="text-2xl font-headings font-bold text-text">새 팀원 초대하기</DialogTitle>
-            <DialogDescription className="text-sm font-body font-medium text-muted">
+            <DialogDescription className="text-sm font-body font-medium text-text-muted">
               조직에 합류할 새 멤버의 정보를 입력해 주세요. <br />초대 메일이 즉시 발송됩니다.
             </DialogDescription>
           </DialogHeader>
@@ -283,22 +283,22 @@ export function MemberManagement({ users, currentUserId, teams }: MemberManageme
           <form onSubmit={handleInvite} className="space-y-6 pt-4">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="invite-email" className="text-[11px] font-black text-muted px-4 uppercase tracking-widest">이메일 주소</Label>
+                <Label htmlFor="invite-email" className="text-[11px] font-black text-text-muted px-4 uppercase tracking-widest">이메일 주소</Label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted/30" />
-                  <Input id="invite-email" name="email" type="email" required className="rounded-pill bg-background/50 border-transparent h-12 pl-12 focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all" placeholder="work@example.com" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted/30" />
+                  <Input id="invite-email" name="email" type="email" required className="rounded-pill bg-background/50 border-transparent h-12 pl-12 focus:bg-surface focus:ring-4 focus:ring-primary/10 transition-all" placeholder="work@example.com" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="invite-name" className="text-[11px] font-black text-muted px-4 uppercase tracking-widest">성명</Label>
-                  <Input id="invite-name" name="name" required className="rounded-pill bg-background/50 border-transparent h-12 px-5 focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all font-bold" placeholder="홍길동" />
+                  <Label htmlFor="invite-name" className="text-[11px] font-black text-text-muted px-4 uppercase tracking-widest">성명</Label>
+                  <Input id="invite-name" name="name" required className="rounded-pill bg-background/50 border-transparent h-12 px-5 focus:bg-surface focus:ring-4 focus:ring-primary/10 transition-all font-bold" placeholder="홍길동" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="invite-team" className="text-[11px] font-black text-muted px-4 uppercase tracking-widest">소속 팀(부서)</Label>
+                  <Label htmlFor="invite-team" className="text-[11px] font-black text-text-muted px-4 uppercase tracking-widest">소속 팀(부서)</Label>
                   <div className="relative group">
-                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted/30 group-focus-within:text-primary transition-colors pointer-events-none" />
-                    <select id="invite-team" name="team_id" className="w-full rounded-pill bg-background/50 border-transparent h-12 pl-11 pr-5 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all outline-none appearance-none">
+                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted/30 group-focus-within:text-primary transition-colors pointer-events-none" />
+                    <select id="invite-team" name="team_id" className="w-full rounded-pill bg-background/50 border-transparent h-12 pl-11 pr-5 text-sm font-bold focus:bg-surface focus:ring-4 focus:ring-primary/10 transition-all outline-none appearance-none">
                       <option value="">소속팀 선택</option>
                       {teams.map(team => (
                         <option key={team.id} value={team.id}>{team.name}</option>
@@ -308,10 +308,10 @@ export function MemberManagement({ users, currentUserId, teams }: MemberManageme
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="invite-role" className="text-[11px] font-black text-muted px-4 uppercase tracking-widest">부여할 글로벌 권한</Label>
+                <Label htmlFor="invite-role" className="text-[11px] font-black text-text-muted px-4 uppercase tracking-widest">부여할 글로벌 권한</Label>
                 <div className="relative group">
-                  <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted/30 group-focus-within:text-primary transition-colors pointer-events-none" />
-                  <select id="invite-role" name="role" className="w-full rounded-pill bg-background/50 border-transparent h-12 pl-11 pr-5 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all outline-none appearance-none">
+                  <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted/30 group-focus-within:text-primary transition-colors pointer-events-none" />
+                  <select id="invite-role" name="role" className="w-full rounded-pill bg-background/50 border-transparent h-12 pl-11 pr-5 text-sm font-bold focus:bg-surface focus:ring-4 focus:ring-primary/10 transition-all outline-none appearance-none">
                     <option value="USER">일반 사용자 (USER)</option>
                     <option value="TEAM_ADMIN">팀 관리자 (TEAM_ADMIN)</option>
                     <option value="ORG_ADMIN">조직 관리자 (ORG_ADMIN)</option>
@@ -332,13 +332,13 @@ export function MemberManagement({ users, currentUserId, teams }: MemberManageme
 
       {/* Edit Modal */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="rounded-[32px] sm:max-w-md p-8 bg-white shadow-2xl border-background/50 animate-in zoom-in-95 duration-300">
+        <DialogContent className="rounded-[32px] sm:max-w-md p-8 bg-surface shadow-2xl border-background/50 animate-in zoom-in-95 duration-300">
           <DialogHeader className="space-y-3">
             <div className="bg-primary/5 w-12 h-12 rounded-2xl flex items-center justify-center mb-1">
               <Pencil className="w-6 h-6 text-primary" />
             </div>
             <DialogTitle className="text-2xl font-headings font-bold text-text tracking-tight">멤버 프로필 수정</DialogTitle>
-            <DialogDescription className="text-sm font-body font-medium text-muted">
+            <DialogDescription className="text-sm font-body font-medium text-text-muted">
               {selectedUser?.name}님의 조직 내 역할과 배치 팀을 관리합니다.
             </DialogDescription>
           </DialogHeader>
@@ -347,13 +347,13 @@ export function MemberManagement({ users, currentUserId, teams }: MemberManageme
             <div className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-name" className="text-[11px] font-black text-muted px-4 uppercase tracking-widest">성명</Label>
-                  <Input id="edit-name" name="name" defaultValue={selectedUser?.name} required className="rounded-pill bg-background/50 border-transparent h-12 px-5 focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all font-bold" />
+                  <Label htmlFor="edit-name" className="text-[11px] font-black text-text-muted px-4 uppercase tracking-widest">성명</Label>
+                  <Input id="edit-name" name="name" defaultValue={selectedUser?.name} required className="rounded-pill bg-background/50 border-transparent h-12 px-5 focus:bg-surface focus:ring-4 focus:ring-primary/10 transition-all font-bold" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-team" className="text-[11px] font-black text-muted px-4 uppercase tracking-widest">배치할 팀(부서)</Label>
+                  <Label htmlFor="edit-team" className="text-[11px] font-black text-text-muted px-4 uppercase tracking-widest">배치할 팀(부서)</Label>
                   <div className="relative group">
-                    <select id="edit-team" name="team_id" defaultValue={selectedUser?.team_id || ''} className="w-full rounded-pill bg-background/50 border-transparent h-12 px-5 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-primary/10 outline-none transition-all appearance-none">
+                    <select id="edit-team" name="team_id" defaultValue={selectedUser?.team_id || ''} className="w-full rounded-pill bg-background/50 border-transparent h-12 px-5 text-sm font-bold focus:bg-surface focus:ring-4 focus:ring-primary/10 outline-none transition-all appearance-none">
                       <option value="">미지정</option>
                       {teams.map(team => (
                         <option key={team.id} value={team.id}>{team.name}</option>
@@ -363,9 +363,9 @@ export function MemberManagement({ users, currentUserId, teams }: MemberManageme
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-role" className="text-[11px] font-black text-muted px-4 uppercase tracking-widest">글로벌 권한 설정</Label>
+                <Label htmlFor="edit-role" className="text-[11px] font-black text-text-muted px-4 uppercase tracking-widest">글로벌 권한 설정</Label>
                 <div className="relative group">
-                  <select id="edit-role" name="role" defaultValue={selectedUser?.role} className="w-full rounded-pill bg-background/50 border-transparent h-12 px-6 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-primary/10 outline-none transition-all appearance-none">
+                  <select id="edit-role" name="role" defaultValue={selectedUser?.role} className="w-full rounded-pill bg-background/50 border-transparent h-12 px-6 text-sm font-bold focus:bg-surface focus:ring-4 focus:ring-primary/10 outline-none transition-all appearance-none">
                     <option value="USER">일반 사용자</option>
                     <option value="TEAM_ADMIN">팀 관리자</option>
                     <option value="ORG_ADMIN">조직 관리자</option>
@@ -395,12 +395,12 @@ export function MemberManagement({ users, currentUserId, teams }: MemberManageme
       </Dialog>
       
       {users.length === 0 && (
-        <Card className="p-16 text-center bg-white border border-background rounded-[32px] shadow-soft">
+        <Card className="p-16 text-center bg-surface border border-background rounded-[32px] shadow-soft">
           <div className="bg-primary/5 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
             <UserPlus className="w-8 h-8 text-primary/40" />
           </div>
           <p className="text-xl font-headings font-bold text-text mb-2">조직에 활성 멤버가 없습니다.</p>
-          <p className="text-sm text-muted font-medium max-w-xs mx-auto mb-8">새로운 멤버를 초대하여 워크프레소 협업을 시작하세요.</p>
+          <p className="text-sm text-text-muted font-medium max-w-xs mx-auto mb-8">새로운 멤버를 초대하여 워크프레소 협업을 시작하세요.</p>
           <Button onClick={() => setIsInviteOpen(true)} className="rounded-pill px-8" variant="outline">지금 초대하기</Button>
         </Card>
       )}

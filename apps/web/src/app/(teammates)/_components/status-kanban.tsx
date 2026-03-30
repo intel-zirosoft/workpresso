@@ -24,12 +24,12 @@ const DEPARTMENT_COLORS: Record<string, string> = {
 };
 
 const STATUS_COLUMNS: { id: KanbanColumnId; label: string; color: string; dot: string }[] = [
-  { id: 'ACTIVE', label: '업무 중', color: 'bg-primary/5', dot: 'bg-primary' },
-  { id: 'MEETING', label: '회의 중', color: 'bg-amber-50', dot: 'bg-amber-400' },
-  { id: 'REMOTE', label: '재택 근무', color: 'bg-blue-50', dot: 'bg-blue-400' },
-  { id: 'OUTSIDE', label: '외근 중', color: 'bg-emerald-50', dot: 'bg-emerald-400' },
-  { id: 'VACATION_HALF_DAY', label: '휴가/반차', color: 'bg-rose-50', dot: 'bg-rose-400' },
-  { id: 'OFFLINE', label: '부재 중', color: 'bg-slate-50', dot: 'bg-slate-300' },
+  { id: 'ACTIVE', label: '업무 중', color: 'bg-primary/[0.18]', dot: 'bg-primary' },
+  { id: 'MEETING', label: '회의 중', color: 'bg-secondary/[0.20]', dot: 'bg-secondary' },
+  { id: 'REMOTE', label: '재택 근무', color: 'bg-primary/[0.12]', dot: 'bg-primary/80' },
+  { id: 'OUTSIDE', label: '외근 중', color: 'bg-success/[0.18]', dot: 'bg-success' },
+  { id: 'VACATION_HALF_DAY', label: '휴가/반차', color: 'bg-destructive/[0.12]', dot: 'bg-destructive/70' },
+  { id: 'OFFLINE', label: '부재 중', color: 'bg-background', dot: 'bg-text-muted/60' },
 ];
 
 export function StatusKanban() {
@@ -122,7 +122,7 @@ export function StatusKanban() {
     return (
       <div className="flex flex-col items-center justify-center h-full space-y-4">
         <Loader2 className="animate-spin text-primary" size={32} />
-        <p className="text-muted font-headings animate-pulse">팀 정보를 불러오는 중입니다...</p>
+        <p className="text-text-muted font-headings animate-pulse">팀 정보를 불러오는 중입니다...</p>
       </div>
     );
   }
@@ -152,7 +152,7 @@ export function StatusKanban() {
                   "font-headings font-bold text-text transition-all",
                   isEmpty ? "text-xs opacity-70" : "text-sm"
                 )}>{column.label}</h3>
-                <span className="bg-white/60 text-[10px] px-2 py-0.5 rounded-full text-muted font-bold ml-1 border border-background/20">
+                <span className="bg-surface/70 text-[10px] px-2 py-0.5 rounded-full text-text-muted font-bold ml-1 border border-background/20">
                   {columnTeammates.length}
                 </span>
               </div>
@@ -170,7 +170,7 @@ export function StatusKanban() {
                     draggable={isMe}
                     onDragStart={(e) => handleDragStart(e, teammate.id)}
                     className={cn(
-                      "bg-white p-4 rounded-xl shadow-sm border transition-all duration-200 relative group",
+                      "bg-surface p-4 rounded-xl shadow-sm border transition-all duration-200 relative group",
                       isMe 
                         ? "border-primary/40 ring-4 ring-primary/5 cursor-grab active:cursor-grabbing hover:shadow-md hover:-translate-y-1 z-10" 
                         : "border-background/40 opacity-80 hover:opacity-100"
@@ -184,7 +184,7 @@ export function StatusKanban() {
                     )}
                     <div className="flex items-start gap-3">
                       <div className={cn(
-                        "w-10 h-10 rounded-full bg-white flex items-center justify-center text-muted transition-all duration-300 flex-shrink-0 overflow-hidden border border-background/50 shadow-sm",
+                        "w-10 h-10 rounded-full bg-surface flex items-center justify-center text-text-muted transition-all duration-300 flex-shrink-0 overflow-hidden border border-background/50 shadow-sm",
                         isMe && "ring-2 ring-primary/20 group-hover:ring-primary/40 group-hover:scale-105"
                       )}>
                         <img 
@@ -198,7 +198,7 @@ export function StatusKanban() {
                         </p>
                         {teammate.department && (
                           <span className={cn(
-                            "inline-block mt-1 text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider text-muted bg-background/50"
+                            "inline-block mt-1 text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider text-text-muted bg-background/50"
                           )}>
                             {teammate.department}
                           </span>
@@ -210,11 +210,11 @@ export function StatusKanban() {
               })}
               
               {isEmpty && (
-                <div className="h-full min-h-[120px] border-2 border-dashed border-black/5 rounded-xl flex flex-col items-center justify-center p-4 transition-colors hover:bg-white/20">
+                <div className="h-full min-h-[120px] border-2 border-dashed border-black/5 rounded-xl flex flex-col items-center justify-center p-4 transition-colors hover:bg-surface/40">
                   <div className="w-8 h-8 rounded-full bg-background/50 flex items-center justify-center mb-2">
-                    <span className="text-muted opacity-40 text-lg font-light">+</span>
+                    <span className="text-text-muted opacity-40 text-lg font-light">+</span>
                   </div>
-                  <p className="text-[10px] text-muted opacity-40 font-headings font-medium text-center">이동 가능</p>
+                  <p className="text-[10px] text-text-muted opacity-40 font-headings font-medium text-center">이동 가능</p>
                 </div>
               )}
             </div>

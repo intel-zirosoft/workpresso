@@ -74,7 +74,7 @@ const statusTone: Record<ChatterMemberStatus, string> = {
   ACTIVE: "bg-success text-text",
   MEETING: "bg-secondary text-text",
   VACATION: "bg-primary/20 text-text",
-  OFFLINE: "bg-muted/20 text-muted",
+  OFFLINE: "bg-muted/20 text-text-muted",
 };
 
 const statusLabel: Record<ChatterMemberStatus, string> = {
@@ -181,7 +181,7 @@ function MessageBubble({ message }: { message: ChatterMessageSummary }) {
             "rounded-[26px] border px-5 py-4 shadow-soft transition-transform duration-300",
             message.isMine
               ? "rounded-br-[10px] border-primary bg-primary text-white"
-              : "rounded-tl-[10px] border-background/80 bg-white/95 text-text"
+              : "rounded-tl-[10px] border-background/80 bg-surface/95 text-text"
           )}
         >
           <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -196,7 +196,7 @@ function MessageBubble({ message }: { message: ChatterMessageSummary }) {
             <span
               className={cn(
                 "text-xs font-body",
-                message.isMine ? "text-white/70" : "text-muted"
+                message.isMine ? "text-white/70" : "text-text-muted"
               )}
             >
               {message.authorRole}
@@ -225,7 +225,7 @@ function MessageBubble({ message }: { message: ChatterMessageSummary }) {
 
         <div
           className={cn(
-            "px-2 text-xs font-body text-muted",
+            "px-2 text-xs font-body text-text-muted",
             message.isMine ? "text-right" : "text-left"
           )}
         >
@@ -245,7 +245,7 @@ function LinkCard({ item, muted = false }: { item: ChatterLinkCard; muted?: bool
         "flex items-center gap-3 rounded-[22px] border px-4 py-3",
         muted
           ? "border-white/10 bg-white/12"
-          : "border-background/80 bg-white/80 backdrop-blur-sm"
+          : "border-background/80 bg-surface/80 backdrop-blur-sm"
       )}
     >
       <div
@@ -260,7 +260,7 @@ function LinkCard({ item, muted = false }: { item: ChatterLinkCard; muted?: bool
         <p className={cn("truncate font-headings text-sm font-semibold", muted ? "text-white" : "text-text")}>
           {item.label}
         </p>
-        <p className={cn("truncate text-xs font-body", muted ? "text-white/75" : "text-muted")}>
+        <p className={cn("truncate text-xs font-body", muted ? "text-white/75" : "text-text-muted")}>
           {item.kind} · {item.meta}
         </p>
       </div>
@@ -270,7 +270,7 @@ function LinkCard({ item, muted = false }: { item: ChatterLinkCard; muted?: bool
 
 function MemberListItem({ member }: { member: ChatterMemberSummary }) {
   return (
-    <div className="flex items-center gap-3 rounded-[22px] border border-background/80 bg-white/80 px-3 py-3 shadow-soft">
+    <div className="flex items-center gap-3 rounded-[22px] border border-background/80 bg-surface/80 px-3 py-3 shadow-soft">
       <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/15 font-headings text-sm font-semibold text-text">
         {member.name.slice(0, 1)}
       </div>
@@ -288,7 +288,7 @@ function MemberListItem({ member }: { member: ChatterMemberSummary }) {
             {statusLabel[member.status]}
           </span>
         </div>
-        <p className="truncate text-xs text-muted">
+        <p className="truncate text-xs text-text-muted">
           {member.role} · {member.department}
         </p>
       </div>
@@ -325,12 +325,12 @@ function ContextChip({
   value: string;
 }) {
   return (
-    <div className="inline-flex w-full items-center gap-3 rounded-[20px] border border-background/80 bg-white/80 px-4 py-2 text-sm text-text shadow-soft sm:w-auto sm:rounded-pill">
+    <div className="inline-flex w-full items-center gap-3 rounded-[20px] border border-background/80 bg-surface/80 px-4 py-2 text-sm text-text shadow-soft sm:w-auto sm:rounded-pill">
       <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
         <Icon className="h-4 w-4 text-primary" />
       </span>
       <span className="flex flex-col leading-tight">
-        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted">
+        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-text-muted">
           {label}
         </span>
         <span className="font-headings font-semibold text-text">{value}</span>
@@ -341,9 +341,9 @@ function ContextChip({
 
 function EmptyState({ title, description }: { title: string; description: string }) {
   return (
-    <div className="rounded-[28px] border border-dashed border-primary/20 bg-white/70 px-6 py-10 text-center shadow-soft">
+    <div className="rounded-[28px] border border-dashed border-primary/20 bg-surface/70 px-6 py-10 text-center shadow-soft">
       <p className="font-headings text-lg font-bold text-text">{title}</p>
-      <p className="mt-2 text-sm leading-6 text-muted">{description}</p>
+      <p className="mt-2 text-sm leading-6 text-text-muted">{description}</p>
     </div>
   );
 }
@@ -450,9 +450,9 @@ export function ChatterWorkspace() {
   return (
     <div className="space-y-6 md:space-y-8">
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,360px)] xl:grid-cols-[minmax(0,1.2fr)_420px]">
-        <header className="rounded-[32px] bg-[linear-gradient(135deg,rgba(127,161,195,0.18),rgba(242,193,141,0.16),rgba(255,255,255,0.92))] px-6 py-6 shadow-soft md:px-8">
+        <header className="rounded-[32px] border border-background/60 bg-gradient-to-br from-primary/20 via-secondary/15 to-surface px-6 py-6 shadow-soft md:px-8">
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-pill bg-white/80 px-3 py-1 text-xs font-bold text-primary shadow-soft">
+            <div className="inline-flex items-center gap-2 rounded-pill bg-surface/80 px-3 py-1 text-xs font-bold text-primary shadow-soft">
               <Sparkles className="h-4 w-4" />
               업무 맥락이 남는 그룹웨어 채널
             </div>
@@ -466,13 +466,13 @@ export function ChatterWorkspace() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <span className="rounded-pill bg-white/80 px-3 py-1.5 text-xs font-bold text-text shadow-soft">
+              <span className="rounded-pill bg-surface/80 px-3 py-1.5 text-xs font-bold text-text shadow-soft">
                 권한 기반 채널 접근
               </span>
-              <span className="rounded-pill bg-white/80 px-3 py-1.5 text-xs font-bold text-text shadow-soft">
+              <span className="rounded-pill bg-surface/80 px-3 py-1.5 text-xs font-bold text-text shadow-soft">
                 문서·일정 링크 공유
               </span>
-              <span className="rounded-pill bg-white/80 px-3 py-1.5 text-xs font-bold text-text shadow-soft">
+              <span className="rounded-pill bg-surface/80 px-3 py-1.5 text-xs font-bold text-text shadow-soft">
                 WorkPresso 디자인 시스템 유지
               </span>
             </div>
@@ -483,7 +483,7 @@ export function ChatterWorkspace() {
           <MetricCard
             label="내 채널"
             value={String(channels.length)}
-            tone="border-background/80 bg-white/80"
+            tone="border-background/80 bg-surface/80"
           />
           <MetricCard
             label="읽지 않음"
@@ -514,12 +514,12 @@ export function ChatterWorkspace() {
                 <h2 className="mt-1 text-xl font-headings font-bold text-text">
                   내 채널
                 </h2>
-                <p className="mt-1 text-sm leading-6 text-muted">
+                <p className="mt-1 text-sm leading-6 text-text-muted">
                   최근 대화와 읽지 않은 채널을 빠르게 확인하세요.
                 </p>
               </div>
-              <div className="rounded-[22px] border border-background/80 bg-white/75 px-4 py-3 text-right shadow-soft">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted">
+              <div className="rounded-[22px] border border-background/80 bg-surface/75 px-4 py-3 text-right shadow-soft">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-text-muted">
                   Unread
                 </p>
                 <p className="mt-1 font-headings text-2xl font-bold text-text">
@@ -529,7 +529,7 @@ export function ChatterWorkspace() {
             </div>
 
             <div className="relative">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
@@ -541,7 +541,7 @@ export function ChatterWorkspace() {
 
           <div className="grid grid-cols-2 gap-2 px-5 py-4">
             <div className="rounded-[20px] bg-background/70 px-4 py-3">
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-text-muted">
                 표시 채널
               </p>
               <p className="mt-1 font-headings text-xl font-bold text-text">
@@ -549,7 +549,7 @@ export function ChatterWorkspace() {
               </p>
             </div>
             <div className="rounded-[20px] bg-background/70 px-4 py-3">
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-text-muted">
                 새 소식 채널
               </p>
               <p className="mt-1 font-headings text-xl font-bold text-text">
@@ -560,7 +560,7 @@ export function ChatterWorkspace() {
 
           <div className="space-y-2 px-3 pb-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
             {channelsQuery.isLoading ? (
-              <div className="flex min-h-40 items-center justify-center text-muted">
+              <div className="flex min-h-40 items-center justify-center text-text-muted">
                 <Loader2 className="h-5 w-5 animate-spin" />
               </div>
             ) : filteredChannels.length > 0 ? (
@@ -604,7 +604,7 @@ export function ChatterWorkspace() {
                                 "rounded-pill px-2 py-0.5 text-[10px] font-bold",
                                 isActive
                                   ? "bg-white/15 text-white"
-                                  : "bg-background text-muted"
+                                  : "bg-background text-text-muted"
                               )}
                             >
                               {channelTypeLabel[channel.type]}
@@ -613,7 +613,7 @@ export function ChatterWorkspace() {
                           <p
                             className={cn(
                               "mt-1 text-xs",
-                              isActive ? "text-white/75" : "text-muted"
+                              isActive ? "text-white/75" : "text-text-muted"
                             )}
                           >
                             멤버 {channel.memberCount} ·{" "}
@@ -637,7 +637,7 @@ export function ChatterWorkspace() {
                     <p
                       className={cn(
                         "line-clamp-2 text-sm leading-5",
-                        isActive ? "text-white/85" : "text-muted"
+                        isActive ? "text-white/85" : "text-text-muted"
                       )}
                     >
                       {channel.lastMessagePreview}
@@ -655,7 +655,7 @@ export function ChatterWorkspace() {
         </Card>
 
         <Card className="flex min-h-[640px] flex-col overflow-hidden border-transparent bg-surface shadow-soft sm:min-h-[720px] xl:min-h-[calc(100vh-3rem)]">
-          <div className="border-b border-background/70 bg-[linear-gradient(180deg,rgba(253,251,247,0.96),rgba(255,255,255,0.96))] px-4 py-5 sm:px-5 md:px-7">
+          <div className="border-b border-background/70 bg-gradient-to-b from-background/95 to-surface/95 px-4 py-5 sm:px-5 md:px-7">
             {activeChannelSummary ? (
               <div className="space-y-4">
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -668,7 +668,7 @@ export function ChatterWorkspace() {
                         {channelTypeLabel[activeChannelSummary.type]}
                       </Badge>
                     </div>
-                    <p className="max-w-2xl text-sm leading-6 text-muted">
+                    <p className="max-w-2xl text-sm leading-6 text-text-muted">
                       {currentChannelDescription}
                     </p>
                   </div>
@@ -707,14 +707,14 @@ export function ChatterWorkspace() {
                   <div className="grid gap-2 lg:grid-cols-1 2xl:grid-cols-2">
                     {pins.slice(0, 2).map((pin) => (
                       <div
-                        className="flex items-start gap-3 rounded-[24px] border border-background/80 bg-white/80 px-4 py-4 shadow-soft"
+                        className="flex items-start gap-3 rounded-[24px] border border-background/80 bg-surface/80 px-4 py-4 shadow-soft"
                         key={pin}
                       >
                         <span className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-secondary/25">
                           <Pin className="h-4 w-4 text-text" />
                         </span>
                         <div>
-                          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted">
+                          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-text-muted">
                             고정 안내
                           </p>
                           <p className="mt-1 text-sm leading-6 text-text">{pin}</p>
@@ -732,9 +732,9 @@ export function ChatterWorkspace() {
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top,rgba(127,161,195,0.08),transparent_30%)] px-3 py-4 sm:px-4 sm:py-5 md:px-6">
+          <div className="flex-1 overflow-y-auto bg-gradient-to-b from-primary/10 via-transparent to-transparent px-3 py-4 sm:px-4 sm:py-5 md:px-6">
             {channelQuery.isLoading ? (
-              <div className="flex min-h-48 items-center justify-center text-muted">
+              <div className="flex min-h-48 items-center justify-center text-text-muted">
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             ) : channelQuery.isError ? (
@@ -745,7 +745,7 @@ export function ChatterWorkspace() {
             ) : (
               <div className="space-y-4">
                 {activeChannelSummary ? (
-                  <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-2 rounded-[20px] border border-background/80 bg-white/80 px-4 py-2 text-xs text-muted shadow-soft backdrop-blur-sm sm:rounded-pill">
+                  <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-2 rounded-[20px] border border-background/80 bg-surface/80 px-4 py-2 text-xs text-text-muted shadow-soft backdrop-blur-sm sm:rounded-pill">
                     <span className="font-bold uppercase tracking-[0.18em] text-primary/80">
                       Conversation
                     </span>
@@ -767,13 +767,13 @@ export function ChatterWorkspace() {
             )}
           </div>
 
-          <div className="border-t border-background/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(253,251,247,0.96))] px-3 py-4 sm:px-4 md:px-6">
+          <div className="border-t border-background/70 bg-gradient-to-b from-surface/95 to-background/95 px-3 py-4 sm:px-4 md:px-6">
             <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary/80">
                   Quick Share
                 </p>
-                <p className="mt-1 text-sm leading-6 text-muted">
+                <p className="mt-1 text-sm leading-6 text-text-muted">
                   문서와 일정을 함께 남기면 대화의 맥락을 더 빠르게 이어갈 수 있습니다.
                 </p>
               </div>
@@ -804,21 +804,21 @@ export function ChatterWorkspace() {
                 </button>
               ))}
               {!shareTargets.documents.length && !shareTargets.schedules.length ? (
-                <span className="rounded-pill bg-background px-3 py-1.5 text-xs font-bold text-muted">
+                <span className="rounded-pill bg-background px-3 py-1.5 text-xs font-bold text-text-muted">
                   공유 가능한 문서/일정이 아직 없습니다.
                 </span>
               ) : null}
             </div>
 
-            <div className="rounded-[28px] border border-background/80 bg-white p-3 shadow-soft">
+            <div className="rounded-[28px] border border-background/80 bg-surface p-3 shadow-soft">
               <textarea
-                className="min-h-[104px] w-full resize-none rounded-[24px] border border-transparent bg-background/70 px-4 py-4 text-[15px] leading-6 text-text outline-none placeholder:text-muted focus:ring-2 focus:ring-primary/40 sm:min-h-[120px] sm:px-5"
+                className="min-h-[104px] w-full resize-none rounded-[24px] border border-transparent bg-background/70 px-4 py-4 text-[15px] leading-6 text-text outline-none placeholder:text-text-muted focus:ring-2 focus:ring-primary/40 sm:min-h-[120px] sm:px-5"
                 onChange={(event) => setDraft(event.target.value)}
                 placeholder="팀과 공유할 내용을 입력하세요. 문서나 일정 링크를 함께 남기면 맥락이 더 잘 보입니다."
                 value={draft}
               />
               <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-                <div className="space-y-1 text-xs text-muted">
+                <div className="space-y-1 text-xs text-text-muted">
                   <p>비멤버는 채널과 메시지에 접근할 수 없습니다.</p>
                   <p>문서와 일정은 현재 로그인한 사용자 소유 데이터만 공유됩니다.</p>
                 </div>
@@ -850,7 +850,7 @@ export function ChatterWorkspace() {
                     채널 멤버
                   </h3>
                 </div>
-                <p className="mt-1 text-sm leading-6 text-muted">
+                <p className="mt-1 text-sm leading-6 text-text-muted">
                   현재 채널에 참여 중인 구성원과 상태를 한눈에 확인합니다.
                 </p>
               </div>
@@ -881,7 +881,7 @@ export function ChatterWorkspace() {
                     업무 링크
                   </h3>
                 </div>
-                <p className="mt-1 text-sm leading-6 text-muted">
+                <p className="mt-1 text-sm leading-6 text-text-muted">
                   대화 중 언급된 문서와 일정을 모아 바로 이어서 확인할 수 있습니다.
                 </p>
               </div>
@@ -903,7 +903,7 @@ export function ChatterWorkspace() {
             </div>
           </Card>
 
-          <Card className="border-transparent bg-[linear-gradient(180deg,rgba(127,161,195,0.12),rgba(255,255,255,0.95))] p-5 shadow-soft sm:col-span-2 xl:col-span-1">
+          <Card className="border-transparent bg-gradient-to-b from-primary/15 to-surface p-5 shadow-soft sm:col-span-2 xl:col-span-1">
             <div className="mb-4 flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-primary" />
               <h3 className="text-lg font-headings font-bold text-text">
@@ -911,18 +911,18 @@ export function ChatterWorkspace() {
               </h3>
             </div>
             <div className="space-y-3 text-sm leading-6 text-text/85">
-              <div className="flex items-start gap-3 rounded-[22px] bg-white/75 px-4 py-3 shadow-soft">
+              <div className="flex items-start gap-3 rounded-[22px] bg-surface/75 px-4 py-3 shadow-soft">
                 <Lock className="mt-0.5 h-4 w-4 text-primary" />
                 <p>채널 접근은 멤버십 또는 소유자 권한으로만 허용됩니다.</p>
               </div>
-              <div className="flex items-start gap-3 rounded-[22px] bg-white/75 px-4 py-3 shadow-soft">
+              <div className="flex items-start gap-3 rounded-[22px] bg-surface/75 px-4 py-3 shadow-soft">
                 <MessageSquareText className="mt-0.5 h-4 w-4 text-primary" />
                 <p>
                   MVP에서는 텍스트 메시지와 문서/일정 링크만 지원하며 첨부와 외부
                   공개 링크는 제외합니다.
                 </p>
               </div>
-              <div className="flex items-start gap-3 rounded-[22px] bg-white/75 px-4 py-3 shadow-soft">
+              <div className="flex items-start gap-3 rounded-[22px] bg-surface/75 px-4 py-3 shadow-soft">
                 <ShieldCheck className="mt-0.5 h-4 w-4 text-primary" />
                 <p>
                   링크 공유는 현재 로그인한 사용자 소유 객체로 한정해 권한 범위를

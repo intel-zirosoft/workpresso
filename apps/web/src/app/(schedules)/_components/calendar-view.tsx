@@ -271,7 +271,7 @@ export function CalendarView({
 
         {/* 선택된 날짜의 일정 목록 (하단 또는 측면 보조) */}
         {date && (
-          <div className="bg-white/50 rounded-2xl p-6 border border-dashed border-background/80">
+          <div className="bg-surface/60 rounded-2xl p-6 border border-dashed border-background/80">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-lg font-headings font-bold text-text">
                 {format(date, "MM월 dd일 (EEEE)", { locale: ko })}
@@ -290,14 +290,14 @@ export function CalendarView({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {isLoading ? (
                 <div className="col-span-full flex min-h-24 items-center justify-center">
-                  <Loader2 className="animate-spin text-muted" size={24} />
+                  <Loader2 className="animate-spin text-text-muted" size={24} />
                 </div>
               ) : null}
               {!isLoading &&
                 selectedDateSchedules.map((schedule) => (
                   <div
                     key={schedule.id}
-                    className="p-4 rounded-xl bg-white border border-background shadow-xs relative overflow-hidden group"
+                    className="p-4 rounded-xl bg-surface border border-background shadow-xs relative overflow-hidden group"
                   >
                     <div
                       className={cn(
@@ -307,7 +307,7 @@ export function CalendarView({
                     />
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="text-[10px] text-muted font-bold uppercase mb-1">
+                        <p className="text-[10px] text-text-muted font-bold uppercase mb-1">
                           {format(new Date(schedule.start_time), "HH:mm")} -{" "}
                           {format(new Date(schedule.end_time), "HH:mm")}
                         </p>
@@ -333,7 +333,7 @@ export function CalendarView({
                   </div>
                 ))}
               {!isLoading && selectedDateSchedules.length === 0 && (
-                <p className="col-span-full text-center py-4 text-muted text-sm font-medium italic">
+                <p className="col-span-full text-center py-4 text-text-muted text-sm font-medium italic">
                   해당 날짜에 일정이 없습니다.
                 </p>
               )}
@@ -395,13 +395,13 @@ export function CalendarView({
         <div className="space-y-3 flex-1 overflow-y-auto max-h-[300px] pr-2">
           {isLoading ? (
             <div className="flex justify-center items-center h-40">
-              <Loader2 className="animate-spin text-muted" size={24} />
+              <Loader2 className="animate-spin text-text-muted" size={24} />
             </div>
           ) : selectedDateSchedules.length > 0 ? (
             selectedDateSchedules.map((schedule) => (
               <div
                 key={schedule.id}
-                className="flex flex-col p-4 rounded-xl bg-white border border-background shadow-sm hover:shadow-soft transition-shadow relative overflow-hidden group"
+                className="flex flex-col p-4 rounded-xl bg-surface border border-background shadow-sm hover:shadow-soft transition-shadow relative overflow-hidden group"
               >
                 <div
                   className={cn(
@@ -436,7 +436,7 @@ export function CalendarView({
               </div>
             ))
           ) : (
-            <div className="flex flex-col items-center justify-center h-40 text-muted space-y-3 bg-background/30 rounded-2xl border border-dashed border-background/50">
+            <div className="flex flex-col items-center justify-center h-40 text-text-muted space-y-3 bg-background/30 rounded-2xl border border-dashed border-background/50">
               <p className="text-sm">일정이 없습니다.</p>
             </div>
           )}

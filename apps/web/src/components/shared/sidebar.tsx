@@ -65,12 +65,12 @@ export function SidebarContent({ onNavigate, mobile = false }: SidebarContentPro
                 mobile ? "rounded-2xl px-4 py-3.5" : "rounded-pill px-4 py-3",
                 isActive
                   ? "bg-primary text-white shadow-soft"
-                  : "text-muted hover:bg-background hover:text-text"
+                  : "text-text-muted hover:bg-background hover:text-text"
               )}
             >
               <item.icon
                 size={20}
-                className={cn(isActive ? "text-white" : "text-muted group-hover:text-text")}
+                className={cn(isActive ? "text-white" : "text-text-muted group-hover:text-text")}
               />
               <span className="font-headings font-medium">{item.name}</span>
             </Link>
@@ -91,12 +91,12 @@ export function SidebarContent({ onNavigate, mobile = false }: SidebarContentPro
                 mobile ? "rounded-2xl px-4 py-3.5" : "rounded-pill px-4 py-3",
                 isActive
                   ? "bg-primary/10 text-primary border border-primary/20"
-                  : "text-muted hover:bg-background hover:text-text"
+                  : "text-text-muted hover:bg-background hover:text-text"
               )}
             >
               <item.icon
                 size={20}
-                className={cn(isActive ? "text-primary" : "text-muted group-hover:text-text")}
+                className={cn(isActive ? "text-primary" : "text-text-muted group-hover:text-text")}
               />
               <span className="font-headings font-medium">{item.name}</span>
             </Link>
@@ -105,7 +105,7 @@ export function SidebarContent({ onNavigate, mobile = false }: SidebarContentPro
 
         <button
           onClick={handleSignOut}
-          className="flex w-full items-center gap-3 rounded-pill px-4 py-3 text-muted transition-all duration-200 hover:bg-destructive/10 hover:text-destructive group"
+          className="flex w-full items-center gap-3 rounded-pill px-4 py-3 text-text-muted transition-all duration-200 hover:bg-destructive/10 hover:text-destructive group"
         >
           <LogOut size={20} />
           <span className="font-headings font-medium">로그아웃</span>

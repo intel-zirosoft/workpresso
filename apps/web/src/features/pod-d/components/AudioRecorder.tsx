@@ -131,13 +131,13 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onComplete }) => {
 
   if (isCompleted) {
     return (
-      <Card className="p-10 bg-white shadow-soft border border-background/50 rounded-3xl flex flex-col items-center gap-6 max-w-md mx-auto text-center animate-in fade-in zoom-in-95 duration-300">
+      <Card className="p-10 bg-surface shadow-soft border border-background/50 rounded-3xl flex flex-col items-center gap-6 max-w-md mx-auto text-center animate-in fade-in zoom-in-95 duration-300">
         <div className="bg-success/10 p-4 rounded-2xl mb-2">
           <CheckCircle className="w-12 h-12 text-success" />
         </div>
         <div className="space-y-2">
           <h3 className="text-2xl font-headings font-bold text-text">처리 완료!</h3>
-          <p className="text-sm text-muted font-medium leading-relaxed">
+          <p className="text-sm text-text-muted font-medium leading-relaxed">
             회의록이 성공적으로 저장되고<br />
             AI 변환 및 지식 인덱싱이 완료되었습니다.
           </p>
@@ -156,7 +156,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onComplete }) => {
   }
 
   return (
-    <Card className="p-10 bg-white shadow-soft border border-background/50 rounded-3xl flex flex-col items-center gap-8 max-w-md mx-auto relative overflow-hidden">
+    <Card className="p-10 bg-surface shadow-soft border border-background/50 rounded-3xl flex flex-col items-center gap-8 max-w-md mx-auto relative overflow-hidden">
       {isRecording && (
         <div className="absolute inset-0 bg-primary/3 animate-pulse pointer-events-none" />
       )}
@@ -165,7 +165,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onComplete }) => {
         <h3 className="text-2xl font-headings font-bold text-text tracking-tight">
           회의록 녹음
         </h3>
-        <p className="text-sm font-medium text-muted">
+        <p className="text-sm font-medium text-text-muted">
           {isProcessing ? (
             <span className="flex items-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-primary" />
@@ -250,7 +250,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onComplete }) => {
             <Button
               variant="ghost"
               onClick={clearRecording}
-              className="text-muted hover:text-destructive gap-2 h-10 rounded-pill hover:bg-destructive/5 transition-colors"
+              className="text-text-muted hover:text-destructive gap-2 h-10 rounded-pill hover:bg-destructive/5 transition-colors"
             >
               <Trash2 className="w-4 h-4" />
               삭제

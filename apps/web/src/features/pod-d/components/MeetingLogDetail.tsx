@@ -175,10 +175,10 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
   };
 
   return (
-    <Card className="p-10 bg-white shadow-soft border border-background/50 rounded-3xl flex flex-col gap-10 max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <Card className="p-10 bg-surface shadow-soft border border-background/50 rounded-3xl flex flex-col gap-10 max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-muted text-sm font-body">
+          <div className="flex items-center gap-2 text-text-muted text-sm font-body">
             <Calendar className="w-4 h-4" />
             <span>{new Date(log.created_at).toLocaleString()} 회의</span>
           </div>
@@ -208,7 +208,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
                   variant="ghost"
                   size="sm"
                   onClick={handleCancel}
-                  className="rounded-pill gap-2 text-xs text-muted h-9 px-4 font-bold"
+                  className="rounded-pill gap-2 text-xs text-text-muted h-9 px-4 font-bold"
                 >
                   <X className="w-3.5 h-3.5" /> 취소
                 </Button>
@@ -292,7 +292,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
                 </Badge>
               ))
             ) : (
-              <span className="text-sm text-muted italic">
+              <span className="text-sm text-text-muted italic">
                 식별된 참여자가 없습니다.
               </span>
             )}
@@ -317,9 +317,9 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
               placeholder="회의 요약을 입력하세요"
             />
           ) : (
-            <div className="p-8 bg-white/50 border border-background rounded-2xl font-body leading-relaxed text-foreground shadow-sm animate-in fade-in duration-700">
+            <div className="p-8 bg-surface/70 border border-background rounded-2xl font-body leading-relaxed text-foreground shadow-sm animate-in fade-in duration-700">
               {log.summary || (
-                <span className="text-muted italic">
+                <span className="text-text-muted italic">
                   AI 요약 결과가 없습니다. 정제 중이거나 분석에 실패했습니다.
                 </span>
               )}
@@ -339,7 +339,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
                 {(editedLog.action_items || []).map((item: any, i) => (
                   <div
                     key={i}
-                    className="flex flex-col gap-2 p-5 bg-white rounded-2xl border border-background relative group/item shadow-sm hover:shadow-md transition-all slide-in-from-top-2 duration-300"
+                    className="flex flex-col gap-2 p-5 bg-surface rounded-2xl border border-background relative group/item shadow-sm hover:shadow-md transition-all slide-in-from-top-2 duration-300"
                   >
                     <Button
                       variant="ghost"
@@ -359,7 +359,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
                     />
                     <div className="flex gap-4">
                       <div className="flex items-center gap-1 border-b border-dashed border-muted/50">
-                        <UserIcon className="w-3 h-3 text-muted" />
+                        <UserIcon className="w-3 h-3 text-text-muted" />
                         <Input
                           value={item.assignee || ""}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -374,7 +374,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
                         />
                       </div>
                       <div className="flex items-center gap-1 border-b border-dashed border-muted/50">
-                        <Calendar className="w-3 h-3 text-muted" />
+                        <Calendar className="w-3 h-3 text-text-muted" />
                         <Input
                           value={item.due_date || ""}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -395,7 +395,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
                   variant="outline"
                   size="sm"
                   onClick={addActionItem}
-                  className="w-full border-dashed rounded-2xl py-6 text-muted hover:text-primary hover:border-primary/50 bg-white/50 hover:bg-white transition-all font-bold shadow-sm"
+                  className="w-full border-dashed rounded-2xl py-6 text-text-muted hover:text-primary hover:border-primary/50 bg-surface/70 hover:bg-surface transition-all font-bold shadow-sm"
                 >
                   <Plus className="w-4 h-4 mr-2" /> 액션 아이템 추가
                 </Button>
@@ -404,7 +404,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
               log.action_items.map((item: any, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between gap-4 p-5 bg-white rounded-2xl border border-background shadow-sm hover:shadow-md transition-all active:scale-[0.99]"
+                  className="flex items-center justify-between gap-4 p-5 bg-surface rounded-2xl border border-background shadow-sm hover:shadow-md transition-all active:scale-[0.99]"
                 >
                   <div className="flex items-start gap-4 flex-1">
                     <div className="mt-1 w-4 h-4 rounded-full border-2 border-primary/30" />
@@ -412,12 +412,12 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
                       <p className="font-medium">{item.task}</p>
                       <div className="flex gap-4 mt-1">
                         {item.assignee && (
-                          <span className="text-xs text-muted flex items-center gap-1">
+                          <span className="text-xs text-text-muted flex items-center gap-1">
                             <UserIcon className="w-3 h-3" /> 담당: {item.assignee}
                           </span>
                         )}
                         {item.due_date && (
-                          <span className="text-xs text-muted flex items-center gap-1">
+                          <span className="text-xs text-text-muted flex items-center gap-1">
                             <Calendar className="w-3 h-3" /> 기한: {item.due_date}
                           </span>
                         )}
@@ -457,7 +457,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
                 </div>
               ))
             ) : (
-              <div className="p-4 bg-background border border-dashed rounded-lg text-center text-muted text-sm">
+              <div className="p-4 bg-background border border-dashed rounded-lg text-center text-text-muted text-sm">
                 도출된 액션 아이템이 없습니다.
               </div>
             )}
@@ -466,7 +466,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
 
         {/* 원본 텍스트 */}
         <div className="flex flex-col gap-4 mt-4">
-          <h3 className="text-lg font-headings font-semibold flex items-center gap-2 text-muted">
+          <h3 className="text-lg font-headings font-semibold flex items-center gap-2 text-text-muted">
             <FileText className="w-5 h-5 text-muted-foreground/60" />
             STT 원본 텍스트
           </h3>

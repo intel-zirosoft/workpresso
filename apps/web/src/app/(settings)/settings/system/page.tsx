@@ -60,7 +60,7 @@ export default async function SystemSettingsPage() {
       {/* Dashboard Header */}
       <div>
         <h1 className="text-3xl font-headings font-bold text-text">시스템 설정 및 관리</h1>
-        <p className="text-sm text-muted mt-1 font-body">
+        <p className="text-sm text-text-muted mt-1 font-body">
           워크프레소 코어 인프라와 외부 API 엔진을 제어합니다. <span className="text-destructive font-bold">최고 관리자 전용 권한</span>입니다.
         </p>
       </div>
@@ -72,12 +72,12 @@ export default async function SystemSettingsPage() {
           { label: 'AI 엔진 상태', value: '활성', icon: Cpu, color: 'text-primary', bg: 'bg-primary/5' },
           { label: '네트워크 응답', value: '12ms', icon: Activity, color: 'text-blue-500', bg: 'bg-blue-500/5' },
         ].map((item, idx) => (
-          <div key={idx} className="bg-white border border-background p-6 rounded-3xl shadow-soft flex items-center gap-4">
+          <div key={idx} className="bg-surface border border-background p-6 rounded-3xl shadow-soft flex items-center gap-4">
             <div className={`${item.bg} p-3 rounded-2xl`}>
               <item.icon className={`w-6 h-6 ${item.color}`} />
             </div>
             <div>
-              <p className="text-xs font-bold text-muted uppercase tracking-wider">{item.label}</p>
+              <p className="text-xs font-bold text-text-muted uppercase tracking-wider">{item.label}</p>
               <p className="text-lg font-headings font-bold text-text">{item.value}</p>
             </div>
           </div>

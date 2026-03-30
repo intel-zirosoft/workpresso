@@ -77,7 +77,7 @@ export const WaveformVisualizer: React.FC<WaveformVisualizerProps> = ({ audioUrl
   };
 
   return (
-    <div className="w-full flex flex-col gap-4 p-4 bg-white rounded-md shadow-soft">
+    <div className="w-full flex flex-col gap-4 rounded-md bg-surface p-4 shadow-soft">
       <div ref={containerRef} className="w-full" />
       <div className="flex justify-center">
         <Button

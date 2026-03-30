@@ -71,7 +71,7 @@ export function DocumentWorkspaceShell({
       <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between px-2 flex-shrink-0">
         <div>
           <h1 className="text-3xl font-headings font-bold tracking-tight text-text">문서 워크스페이스</h1>
-          <p className="text-sm text-muted font-medium mt-1">업무의 흐름을 한눈에 파악하고 결재를 진행하세요.</p>
+          <p className="text-sm text-text-muted font-medium mt-1">업무의 흐름을 한눈에 파악하고 결재를 진행하세요.</p>
         </div>
         <div className="flex items-center gap-3">
           <Button
@@ -128,9 +128,9 @@ export function DocumentWorkspaceShell({
                     onClick={() => onScopeChange(item.value)}
                     className={cn(
                       "px-5 py-2 text-[13px] font-bold rounded-xl transition-all whitespace-nowrap",
-                      isActive 
-                        ? "bg-white text-primary shadow-sm" 
-                        : "text-text/50 hover:text-text hover:bg-white/40"
+                      isActive
+                        ? "bg-surface text-primary shadow-sm"
+                        : "text-text/50 hover:text-text hover:bg-surface/40"
                     )}
                   >
                     {item.label}
@@ -198,7 +198,7 @@ export function DocumentWorkspaceShell({
                         "group relative flex flex-col p-6 rounded-3xl border transition-all text-left",
                         isSelected
                           ? "bg-primary border-primary shadow-lg shadow-primary/20 ring-4 ring-primary/5 scale-[1.02] z-10"
-                          : "bg-surface border-background/70 hover:border-primary/40 hover:bg-white hover:shadow-md hover:-translate-y-1"
+                          : "bg-surface border-background/70 hover:border-primary/40 hover:bg-surface hover:shadow-md hover:-translate-y-1"
                       )}
                     >
                       <div className="flex items-start justify-between mb-5">
