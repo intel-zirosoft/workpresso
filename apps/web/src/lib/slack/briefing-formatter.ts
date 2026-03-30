@@ -162,7 +162,10 @@ import { sendSlackMessage } from "@/features/settings/services/extensionAction";
  */
 export async function sendSlackBriefing(payload: { blocks: any[] }) {
   try {
-    const result = await sendSlackMessage(payload);
+    const result = await sendSlackMessage(
+      "☀️ 오늘의 WorkPresso 모닝 브리핑",
+      payload.blocks
+    );
     
     if (result.success) {
       return { ok: true, mode: "live" };
