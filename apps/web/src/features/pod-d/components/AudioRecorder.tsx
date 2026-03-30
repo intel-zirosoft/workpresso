@@ -20,7 +20,6 @@ import {
 } from "../services/meetingLogService";
 import { refineMeetingLogServer } from "../services/meetingLogAction";
 import { transcribeAudio } from "../services/sttService";
-import { indexKnowledge } from "../../pod-c/services/knowledgeService";
 import { createClient } from "@/lib/supabase/client";
 import { logger } from "@/lib/logger";
 import { cn } from "@/lib/utils";
@@ -34,7 +33,6 @@ type ProcessingStep =
   | "UPLOADING"
   | "TRANSCRIBING"
   | "REFINING"
-  | "INDEXING"
   | "COMPLETED";
 
 export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onComplete }) => {
@@ -105,9 +103,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onComplete }) => {
           // 변환이 실패하더라도 원본 STT는 저장되었으므로 진행합니다.
         }
 
-        // 5. Integration (Pod C): Index Knowledge
-        setProcessingStep("INDEXING");
-        await indexKnowledge(newLog.id, "MEETING_LOGS", text);
+        // Pod C 지식 인덱싱은 refineMeetingLogServer 내부에서 함께 처리합니다.
       }
 
       setProcessingStep("COMPLETED");
@@ -176,7 +172,6 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onComplete }) => {
               {processingStep === "UPLOADING" && "파일 업로드 중..."}
               {processingStep === "TRANSCRIBING" && "음성 분석 중(STT)..."}
               {processingStep === "REFINING" && "AI 회의록 변환 중..."}
-              {processingStep === "INDEXING" && "지식 저장 중..."}
             </span>
           ) : isRecording ? (
             <span className="flex items-center gap-2 text-primary font-bold">

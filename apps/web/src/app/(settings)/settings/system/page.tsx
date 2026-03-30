@@ -1,9 +1,16 @@
 import { getUserProfile } from '@/features/settings/services/userAction';
-import { getExtension, upsertExtension } from '@/features/settings/services/extensionAction';
+import {
+  getExtension,
+  getSystemLlmSecretSummary,
+  testLLMConnection,
+  upsertExtension,
+  upsertSystemLlmApiKey,
+} from '@/features/settings/services/extensionAction';
 import { APIKeyForm } from '@/features/settings/components/APIKeyForm';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { Activity, Database, Cpu, Globe2, ShieldAlert } from 'lucide-react';
+import { normalizeModelId } from '@/lib/ai/models';
 
 export default async function SystemSettingsPage() {
   const profile = await getUserProfile();
@@ -12,7 +19,18 @@ export default async function SystemSettingsPage() {
     redirect('/settings/profile');
   }
 
-  let llmConfig = { config: { provider: 'openai', apiKey: '' }, is_active: false };
+  const openRouterSecret = await getSystemLlmSecretSummary();
+  const hasOpenRouterKey = openRouterSecret.configured;
+  let llmConfig = {
+    config: {
+      provider: 'openrouter',
+      chatModel: 'openai/gpt-4o-mini',
+      embeddingModel: 'openai/text-embedding-3-small',
+      meetingRefineModel: 'google/gemini-flash-1.5',
+      sttModel: 'openai/gpt-4o-audio-preview',
+    },
+    is_active: hasOpenRouterKey,
+  };
 
   try {
     const ext = await getExtension('system_llm');
@@ -21,9 +39,19 @@ export default async function SystemSettingsPage() {
 
   async function updateLLM(formData: FormData) {
     'use server';
-    const provider = formData.get('provider') as string;
-    const apiKey = formData.get('apiKey') as string;
-    await upsertExtension('system_llm', { provider, apiKey }, !!apiKey);
+    const apiKey = String(formData.get('apiKey') ?? '').trim();
+
+    if (apiKey) {
+      await upsertSystemLlmApiKey(apiKey);
+    }
+
+    await upsertExtension('system_llm', {
+      provider: 'openrouter',
+      chatModel: normalizeModelId(formData.get('chatModel') as string, 'chat'),
+      embeddingModel: normalizeModelId(formData.get('embeddingModel') as string, 'embedding'),
+      meetingRefineModel: normalizeModelId(formData.get('meetingRefineModel') as string, 'meetingRefine'),
+      sttModel: normalizeModelId(formData.get('sttModel') as string, 'stt'),
+    }, hasOpenRouterKey || Boolean(apiKey));
     revalidatePath('/settings/system');
   }
 
@@ -67,14 +95,27 @@ export default async function SystemSettingsPage() {
 
         <div className="max-w-3xl">
           <APIKeyForm
-            title="시스템 LLM (Language Model)"
-            description="전역 RAG 파이프라인 및 백그라운드 AI 워커에 사용될 핵심 지능 엔진을 설정합니다."
-            isActive={llmConfig.is_active}
+            title="시스템 AI 모델 (OpenRouter)"
+            description="OpenRouter API 키는 암호화되어 서버 DB에 저장됩니다. 새 키를 입력하면 교체되고, 비워두면 기존 키를 유지합니다."
+            isActive={Boolean(llmConfig.is_active && hasOpenRouterKey)}
             fields={[
-              { name: 'provider', label: 'AI Provider (OpenAI, Anthropic 등)', type: 'text', defaultValue: llmConfig.config?.provider || 'openai' },
-              { name: 'apiKey', label: '시스템 관리자 API Key', type: 'password', defaultValue: llmConfig.config?.apiKey }
+              {
+                name: 'apiKey',
+                label: 'OpenRouter API Key',
+                type: 'password',
+                description: openRouterSecret.maskedValue
+                  ? `현재 적용 키: ${openRouterSecret.maskedValue}${openRouterSecret.source === 'env' ? ' (환경변수 fallback)' : ' (DB 저장)'}. 새 값을 입력하면 교체됩니다.`
+                  : '현재 저장된 API 키가 없습니다. 새 값을 입력하면 암호화되어 저장됩니다.',
+                placeholder: 'sk-or-v1-... 형태의 OpenRouter API 키',
+                autoComplete: 'new-password',
+              },
+              { name: 'chatModel', label: '채팅 모델', type: 'text', defaultValue: llmConfig.config?.chatModel || 'openai/gpt-4o-mini' },
+              { name: 'embeddingModel', label: '임베딩 모델', type: 'text', defaultValue: llmConfig.config?.embeddingModel || 'openai/text-embedding-3-small' },
+              { name: 'meetingRefineModel', label: '회의록 정제 모델', type: 'text', defaultValue: llmConfig.config?.meetingRefineModel || 'google/gemini-flash-1.5' },
+              { name: 'sttModel', label: 'STT 모델', type: 'text', defaultValue: llmConfig.config?.sttModel || 'openai/gpt-4o-audio-preview' }
             ]}
             action={updateLLM}
+            onTest={testLLMConnection}
           />
         </div>
       </section>
@@ -84,10 +125,9 @@ export default async function SystemSettingsPage() {
         <Globe2 className="w-5 h-5 text-primary mt-1" />
         <p className="text-xs text-muted-foreground leading-relaxed">
           <span className="font-bold text-primary">안내:</span> 시스템 설정 변경은 전역 인프라에 즉시 반영됩니다. 
-          API 키 변경 시 기존에 진행 중인 AI 작업에 일시적인 지연이 발생할 수 있으니 주의해 주세요.
+          OpenRouter API 키는 서버 DB에 암호화 저장되며, 저장된 키가 없을 때만 환경변수 fallback을 사용합니다.
         </p>
       </div>
     </div>
   );
 }
-

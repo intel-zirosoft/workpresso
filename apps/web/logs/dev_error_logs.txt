@@ -86,3 +86,11 @@ Details: {
   "hasAudioBlob": true
 }
 --------------------------------------------------
+[2026-03-30T02:44:32.754Z] [ERROR] Meeting processing failed
+Details: {
+  "error": "OpenRouter STT 호출 실패: 400 {\"error\":{\"message\":\"Provider returned error\",\"code\":400,\"metadata\":{\"raw\":\"{\\n  \\\"error\\\": {\\n    \\\"message\\\": \\\"This model does not support the format you provided.\\\",\\n    \\\"type\\\": \\\"invalid_request_error\\\",\\n    \\\"param\\\": \\\"messages\\\",\\n    \\\"code\\\": \\\"unsupported_format\\\"\\n  }\\n}\",\"provider_name\":\"OpenAI\",\"is_byok\":false}},\"user_id\":\"user_39FPFSELvjgyr7AOX5Zv3xVDI6s\"}",
+  "stack": "Error: OpenRouter STT 호출 실패: 400 {\"error\":{\"message\":\"Provider returned error\",\"code\":400,\"metadata\":{\"raw\":\"{\\n  \\\"error\\\": {\\n    \\\"message\\\": \\\"This model does not support the format you provided.\\\",\\n    \\\"type\\\": \\\"invalid_request_error\\\",\\n    \\\"param\\\": \\\"messages\\\",\\n    \\\"code\\\": \\\"unsupported_format\\\"\\n  }\\n}\",\"provider_name\":\"OpenAI\",\"is_byok\":false}},\"user_id\":\"user_39FPFSELvjgyr7AOX5Zv3xVDI6s\"}\n    at transcribeAudio (webpack-internal:///(app-pages-browser)/./src/features/pod-d/services/sttService.ts:21:15)\n    at async handleUpload (webpack-internal:///(app-pages-browser)/./src/features/pod-d/components/AudioRecorder.tsx:65:24)",
+  "status": "stopped",
+  "hasAudioBlob": true
+}
+--------------------------------------------------

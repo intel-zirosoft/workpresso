@@ -10,9 +10,13 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 const appUrl = process.env.PODC_TEST_BASE_URL ?? "http://localhost:3001";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const openAiKey = process.env.OPENAI_API_KEY;
+const openRouterKey = process.env.OPENROUTER_API_KEY ?? process.env.OPENAI_API_KEY;
+const openRouterBaseUrl =
+  process.env.OPENROUTER_BASE_URL ?? "https://openrouter.ai/api/v1";
+const embeddingModel =
+  process.env.OPENROUTER_EMBEDDING_MODEL ?? "openai/text-embedding-3-small";
 
-if (!supabaseUrl || !serviceRoleKey || !openAiKey) {
+if (!supabaseUrl || !serviceRoleKey || !openRouterKey) {
   throw new Error("Required env vars for Pod C real integration test are missing.");
 }
 
@@ -23,7 +27,18 @@ const adminSupabase = createClient(supabaseUrl, serviceRoleKey, {
   },
 });
 
-const openai = new OpenAI({ apiKey: openAiKey });
+const openai = new OpenAI({
+  apiKey: openRouterKey,
+  baseURL: openRouterBaseUrl,
+  defaultHeaders: {
+    ...(process.env.OPENROUTER_SITE_URL
+      ? { "HTTP-Referer": process.env.OPENROUTER_SITE_URL }
+      : {}),
+    ...(process.env.OPENROUTER_APP_NAME
+      ? { "X-Title": process.env.OPENROUTER_APP_NAME }
+      : {}),
+  },
+});
 
 test.describe("Pod C real integration", () => {
   test("chat streaming uses RAG and creates a schedule in Supabase", async ({ page }) => {
@@ -67,7 +82,7 @@ test.describe("Pod C real integration", () => {
         "워크프레소 내부 보안수칙 WP-SEC-77: 운영 DB 접속 비밀번호와 서비스 롤 키는 개인 메신저로 공유하면 안 되며, 반드시 Vault 승인 절차와 보안 채널을 사용해야 합니다.";
 
       const embeddingResponse = await openai.embeddings.create({
-        model: "text-embedding-3-small",
+        model: embeddingModel,
         input: knowledgeContent,
       });
 

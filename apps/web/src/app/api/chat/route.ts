@@ -1,17 +1,17 @@
 import {
   convertToCoreMessages,
-  embed,
   streamText,
   tool,
   type Message,
 } from "ai";
-import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 
 import {
   buildScheduleKnowledgeContent,
   upsertKnowledgeSource,
 } from "@/features/pod-c/services/knowledge-sync";
+import { getChatLanguageModel } from "@/lib/ai/chat";
+import { createEmbedding } from "@/lib/ai/embeddings";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -68,10 +68,6 @@ function extractMessageText(content: unknown): string {
 
 export async function POST(req: Request) {
   try {
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY가 설정되지 않았습니다.");
-    }
-
     const supabase = await createClient();
     const {
       data: { user: authUser },
@@ -96,10 +92,7 @@ export async function POST(req: Request) {
     let contextText = "관련 지식 없음";
     try {
       if (lastMessage.trim()) {
-        const { embedding } = await embed({
-          model: openai.embedding("text-embedding-3-small"),
-          value: lastMessage,
-        });
+        const { embedding } = await createEmbedding(lastMessage);
         const { data: documents } = await adminSupabase.rpc("match_knowledge", {
           query_embedding: embedding,
           match_threshold: 0.1,
@@ -116,8 +109,9 @@ export async function POST(req: Request) {
       console.warn("RAG Skip", e);
     }
 
+    const chatModel = await getChatLanguageModel();
     const result = await streamText({
-      model: openai("gpt-4o-mini"),
+      model: chatModel,
       system: `당신은 워크프레소의 업무 비서입니다. 한국어로 친절하게 답변하세요. 내부 지식: ${contextText}`,
       messages: convertToCoreMessages(normalizedMessages),
       maxSteps: 2,

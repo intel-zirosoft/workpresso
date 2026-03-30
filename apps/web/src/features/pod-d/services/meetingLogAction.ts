@@ -3,8 +3,9 @@
 import { createClient } from "@/lib/supabase/server";
 import {
   buildMeetingLogKnowledgeContent,
-  upsertKnowledgeSource,
 } from "@/features/pod-c/services/knowledge-sync";
+import { generateJsonObject } from "@/lib/ai/chat";
+import { getResolvedAiConfig } from "@/lib/ai/config";
 import { revalidatePath } from "next/cache";
 
 /**
@@ -13,32 +14,14 @@ import { revalidatePath } from "next/cache";
 export async function refineMeetingLogServer(id: string, sttText: string) {
   const supabase = await createClient();
 
-  // 1. 시스템 설정 가져오기 (LLM & Slack)
-  const { data: llmExt } = await supabase
-    .from("workspace_extensions")
-    .select("*")
-    .eq("ext_name", "system_llm")
-    .single();
-
   const { data: slackExt } = await supabase
     .from("workspace_extensions")
     .select("*")
     .eq("ext_name", "slack")
     .single();
 
-  const llmConfig = llmExt?.config as any;
-  const isLlmActive = llmExt?.is_active;
   const slackConfig = slackExt?.config as any;
   const isSlackActive = slackExt?.is_active;
-
-  // 설정 기반 엔진 선택
-  const provider = isLlmActive ? llmConfig?.provider : "gemini";
-  const apiKey = isLlmActive ? llmConfig?.apiKey : process.env.GEMINI_API_KEY;
-
-  if (!apiKey)
-    throw new Error(
-      "AI 서비스가 구성되지 않았습니다. 관리자 설정에서 API 키를 입력해 주세요.",
-    );
   if (!sttText) return null;
 
   // 2. 맥락 데이터 준비
@@ -69,52 +52,26 @@ STT 데이터: ${sttText}
   "participants": ["참여자 목록"]
 }`;
 
-  let refinedData;
-
-  // 3. 엔진별 API 호출 스위칭
-  if (provider?.toLowerCase().includes("openai")) {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
-        response_format: { type: "json_object" },
-      }),
-    });
-    const result = await response.json();
-    refinedData = JSON.parse(result.choices?.[0]?.message?.content || "{}");
-  } else {
-    // Default Gemini
-    const model = provider || "gemini-1.5-flash";
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { response_mime_type: "application/json" },
-        }),
-      },
-    );
-    const result = await response.json();
-    refinedData = JSON.parse(
-      result.candidates?.[0]?.content?.parts?.[0]?.text || "{}",
-    );
-  }
+  const { meetingRefineModel } = await getResolvedAiConfig();
+  const refinedData = await generateJsonObject<{
+    title?: string;
+    summary?: string;
+    action_items?: Array<Record<string, unknown>>;
+    participants?: string[];
+  }>({
+    prompt,
+    model: meetingRefineModel,
+    temperature: 0,
+  });
 
   // 4. DB 업데이트
   const { error } = await supabase
     .from("meeting_logs")
     .update({
-      title: refinedData.title,
-      summary: refinedData.summary,
-      action_items: refinedData.action_items,
-      participants: refinedData.participants,
+      title: refinedData.title ?? "제목 미정",
+      summary: refinedData.summary ?? "",
+      action_items: refinedData.action_items ?? [],
+      participants: refinedData.participants ?? [],
       is_refined: true,
       updated_at: new Date().toISOString(),
     })
@@ -125,10 +82,16 @@ STT 데이터: ${sttText}
   // 6. Pod C: 지식 기반 실시간 인덱싱 (비동기 처리 권장하나 서버 액션 내에서 완결성을 위해 await)
   try {
     const { indexKnowledge } = await import('@/features/pod-c/services/knowledgeService');
-    const indexText = `제목: ${refinedData.title}\n요약: ${refinedData.summary}`;
+    const indexText = buildMeetingLogKnowledgeContent({
+      title: refinedData.title ?? "제목 미정",
+      summary: refinedData.summary ?? "",
+      participants: refinedData.participants ?? [],
+      actionItems: (refinedData.action_items ?? []) as Array<Record<string, string | number | boolean | null>>,
+      transcript: sttText,
+    });
     
     await indexKnowledge(id, 'MEETING_LOGS', indexText, {
-      title: refinedData.title,
+      title: refinedData.title ?? "제목 미정",
       owner_id: logData?.owner_id
     });
   } catch (idxError) {
@@ -154,7 +117,7 @@ STT 데이터: ${sttText}
           fields: [
             {
               type: "mrkdwn",
-              text: `*회의 제목*\n${refinedData.title}`
+              text: `*회의 제목*\n${refinedData.title ?? "제목 미정"}`
             },
             {
               type: "mrkdwn",
@@ -166,7 +129,7 @@ STT 데이터: ${sttText}
           type: "section",
           text: {
             type: "mrkdwn",
-            text: `*AI 요약*\n${refinedData.summary}`
+            text: `*AI 요약*\n${refinedData.summary ?? ""}`
           }
         }
       ];
@@ -207,7 +170,7 @@ STT 데이터: ${sttText}
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text: `🔔 *새로운 회의록 생성 완료*\n*제목:* ${refinedData.title}\n*작성자:* ${ownerName}\n*요약:* ${refinedData.summary}\n\n<${process.env.NEXT_PUBLIC_SITE_URL || "https://workpresso.app"}/voice/${id}|회의록 상세보기>`,
+          text: `🔔 *새로운 회의록 생성 완료*\n*제목:* ${refinedData.title ?? "제목 미정"}\n*작성자:* ${ownerName}\n*요약:* ${refinedData.summary ?? ""}\n\n<${process.env.NEXT_PUBLIC_SITE_URL || "https://workpresso.app"}/voice/${id}|회의록 상세보기>`,
         }),
       });
     } catch (e) {

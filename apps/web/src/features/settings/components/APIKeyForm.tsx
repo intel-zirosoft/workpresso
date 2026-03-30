@@ -12,6 +12,9 @@ interface FormField {
   label: string;
   type: 'text' | 'password';
   defaultValue?: string;
+  description?: string;
+  placeholder?: string;
+  autoComplete?: string;
 }
 
 interface APIKeyFormProps {
@@ -108,10 +111,14 @@ export function APIKeyForm({ title, description, fields, isActive, action, onTes
                   name={field.name}
                   type={field.type}
                   defaultValue={field.defaultValue}
+                  autoComplete={field.autoComplete}
                   className="rounded-pill bg-background/50 border-transparent hover:border-primary/20 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 h-12 pl-12 transition-all font-mono text-sm"
-                  placeholder={field.type === 'password' ? '••••••••••••••••' : `${field.label} 입력`}
+                  placeholder={field.placeholder ?? (field.type === 'password' ? '••••••••••••••••' : `${field.label} 입력`)}
                 />
               </div>
+              {field.description && (
+                <p className="px-4 text-xs text-muted leading-relaxed">{field.description}</p>
+              )}
             </div>
           ))}
         </div>

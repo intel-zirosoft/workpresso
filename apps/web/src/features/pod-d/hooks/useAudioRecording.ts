@@ -3,6 +3,8 @@
 import { useState, useCallback } from 'react';
 import { useReactMediaRecorder } from 'react-media-recorder';
 
+const AUDIO_MIME_TYPE = 'audio/wav';
+
 export const useAudioRecording = () => {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -22,6 +24,12 @@ export const useAudioRecording = () => {
   } = useReactMediaRecorder({
     audio: true,
     onStop,
+    blobPropertyBag: {
+      type: AUDIO_MIME_TYPE,
+    },
+    mediaRecorderOptions: {
+      mimeType: AUDIO_MIME_TYPE,
+    },
   });
 
   const clearRecording = useCallback(() => {

@@ -1,7 +1,6 @@
 import "server-only";
 
-import OpenAI from "openai";
-
+import { createEmbedding } from "@/lib/ai/embeddings";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type KnowledgeSourceType = "DOCUMENTS" | "MEETING_LOGS" | "SCHEDULES";
@@ -25,18 +24,6 @@ interface UpsertKnowledgeSourceInput {
 interface RemoveKnowledgeSourceInput {
   sourceType: KnowledgeSourceType;
   sourceId: string;
-}
-
-const EMBEDDING_MODEL = "text-embedding-3-small";
-
-function getOpenAIClient() {
-  const apiKey = process.env.OPENAI_API_KEY;
-
-  if (!apiKey) {
-    throw new Error("OPENAI_API_KEY가 설정되지 않았습니다.");
-  }
-
-  return new OpenAI({ apiKey });
 }
 
 function buildEmbeddingInput(
@@ -107,14 +94,9 @@ export async function upsertKnowledgeSource(input: UpsertKnowledgeSourceInput) {
     return;
   }
 
-  const openai = getOpenAIClient();
   const supabase = createAdminClient();
   const embeddingInput = buildEmbeddingInput(input.title, content);
-  const embeddingResponse = await openai.embeddings.create({
-    model: EMBEDDING_MODEL,
-    input: embeddingInput,
-  });
-  const embedding = embeddingResponse.data[0]?.embedding;
+  const { embedding } = await createEmbedding(embeddingInput);
 
   if (!embedding) {
     throw new Error("임베딩 생성 결과가 비어 있습니다.");

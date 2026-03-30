@@ -25,9 +25,34 @@ export function SettingsSidebar({ userRole }: SettingsSidebarProps) {
   const filteredItems = navItems.filter(item => item.allowedRoles.includes(normalizedRole));
 
   return (
-    <nav className="flex flex-col gap-2 w-64 min-h-[calc(100vh-4rem)] p-6 bg-white border-r border-gray-100">
-      <h2 className="text-xl font-headings font-bold text-gray-900 tracking-tight mb-8 px-2">설정</h2>
-      <div className="flex flex-col gap-2">
+    <>
+      <nav className="md:hidden -mx-4 overflow-x-auto pb-2">
+        <div className="flex min-w-max gap-2 px-4">
+          {filteredItems.map(item => {
+            const isActive = pathname.startsWith(item.href);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={cn(
+                  "inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2.5 text-sm font-bold transition-all",
+                  isActive
+                    ? "border-primary bg-primary text-primary-foreground shadow-soft"
+                    : "border-background/70 bg-white text-muted hover:border-primary/20 hover:text-primary"
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{item.name}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+
+      <nav className="hidden w-64 min-h-[calc(100vh-4rem)] flex-col gap-2 border-r border-gray-100 bg-white p-6 md:flex">
+        <h2 className="mb-8 px-2 text-xl font-headings font-bold tracking-tight text-gray-900">설정</h2>
+        <div className="flex flex-col gap-2">
         {filteredItems.map(item => {
           const isActive = pathname.startsWith(item.href);
           const Icon = item.icon;
@@ -52,7 +77,8 @@ export function SettingsSidebar({ userRole }: SettingsSidebarProps) {
             </Link>
           );
         })}
-      </div>
-    </nav>
+        </div>
+      </nav>
+    </>
   );
 }

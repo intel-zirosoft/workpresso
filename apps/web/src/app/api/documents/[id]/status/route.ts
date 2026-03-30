@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 export async function PATCH(
-  _request?: Request,
-  _context?: { params: { id: string } },
+  _request: Request,
+  _context: { params: { id: string } },
 ) {
   return NextResponse.json(
     {

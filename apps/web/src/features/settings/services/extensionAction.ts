@@ -2,6 +2,14 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { createEmbedding } from '@/lib/ai/embeddings';
+import { generateJsonObject } from '@/lib/ai/chat';
+import { getOpenRouterRuntimeConfig } from '@/lib/ai/config';
+import {
+  getExtensionSecretSummary,
+  SYSTEM_LLM_SECRET_NAME,
+  upsertExtensionSecret,
+} from '@/lib/settings/extension-secrets';
 import { getUserProfile } from './userAction';
 
 export async function getExtension(extName: string) {
@@ -54,6 +62,37 @@ export async function upsertExtension(extName: string, config: Record<string, an
 
   if (error) throw new Error(error.message);
   return data;
+}
+
+export async function getSystemLlmSecretSummary() {
+  const profile = await getUserProfile();
+
+  if (profile.role !== 'SUPER_ADMIN') {
+    throw new Error('Forbidden: Need SUPER_ADMIN for system_llm');
+  }
+
+  return getExtensionSecretSummary({
+    extName: 'system_llm',
+    secretName: SYSTEM_LLM_SECRET_NAME,
+    fallbackValue: process.env.OPENROUTER_API_KEY ?? process.env.OPENAI_API_KEY ?? null,
+  });
+}
+
+export async function upsertSystemLlmApiKey(apiKey: string) {
+  const profile = await getUserProfile();
+
+  if (profile.role !== 'SUPER_ADMIN') {
+    throw new Error('Forbidden: Need SUPER_ADMIN for system_llm');
+  }
+
+  await upsertExtensionSecret({
+    extName: 'system_llm',
+    secretName: SYSTEM_LLM_SECRET_NAME,
+    plainValue: apiKey,
+    updatedBy: profile.id,
+  });
+
+  return { success: true };
 }
 
 /**
@@ -125,46 +164,42 @@ export async function testSlackConnection(webhookUrl: string) {
 }
 
 /**
- * 시스템 AI(LLM) 연동 테스트: API Key 및 Provider 유효성 확인
+ * 시스템 AI(LLM) 연동 테스트: OpenRouter 및 모델 유효성 확인
  */
-export async function testLLMConnection(config: { provider: string, apiKey: string, model?: string }) {
-  const { provider, apiKey } = config;
+export async function testLLMConnection(config: {
+  apiKey?: string;
+  chatModel?: string;
+  embeddingModel?: string;
+  meetingRefineModel?: string;
+  sttModel?: string;
+}) {
+  const runtimeConfig = await getOpenRouterRuntimeConfig({
+    apiKeyOverride: config.apiKey,
+  });
 
-  if (!provider || !apiKey) {
-    throw new Error('AI 연동을 위한 모든 정보(Provider, API Key)를 입력해주세요.');
+  if (!runtimeConfig.apiKey) {
+    throw new Error('OpenRouter API 키가 설정되지 않았습니다.');
   }
 
-  // Google Gemini 연동 테스트
-  if (provider.toLowerCase() === 'google') {
-    try {
-      // API 키 유효성 확인을 위한 간단한 모델 리스트 조회 호출
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`, {
-        method: 'GET'
-      });
+  const chatModel = config.chatModel || 'openai/gpt-4o-mini';
+  const embeddingModel = config.embeddingModel || 'openai/text-embedding-3-small';
+  const meetingRefineModel = config.meetingRefineModel || chatModel;
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`Google AI 연결 실패: ${response.status} ${errorData.error?.message || 'Unauthorized'}`);
-      }
+  await createEmbedding('OpenRouter connection test', {
+    model: embeddingModel,
+    apiKeyOverride: config.apiKey,
+  });
 
-      const data = await response.json();
-      const models = data.models || [];
-      
-      return { 
-        success: true, 
-        message: `Google AI 연결 성공! (${models.length}개의 모델 사용 가능)` 
-      };
-    } catch (error) {
-      throw new Error(error instanceof Error ? error.message : 'Google AI 연결 시도 중 네트워크 오류가 발생했습니다.');
-    }
-  }
+  await generateJsonObject({
+    model: meetingRefineModel,
+    prompt: '다음 JSON만 반환하세요: {"ok":true}',
+    apiKeyOverride: config.apiKey,
+  });
 
-  // OpenAI 등 타 프로바이더 확장 가능성 (현재는 Google 중심)
-  if (provider.toLowerCase() === 'openai') {
-    throw new Error('OpenAI 연동 테스트는 현재 준비 중입니다. Google(Gemini)을 권장합니다.');
-  }
-
-  throw new Error(`지원하지 않는 AI Provider입니다: ${provider}`);
+  return { 
+    success: true, 
+    message: `OpenRouter 연결 성공! chat=${chatModel}, embedding=${embeddingModel}` 
+  };
 }
 
 /**

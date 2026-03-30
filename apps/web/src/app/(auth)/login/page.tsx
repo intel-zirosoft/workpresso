@@ -44,7 +44,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-12rem)] items-center justify-center p-4">
+    <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md border-none shadow-float bg-white/80 backdrop-blur-sm">
         <CardHeader className="space-y-2 text-center pb-8">
           <div className="mx-auto w-12 h-12 bg-primary/10 rounded-pill flex items-center justify-center mb-2">
