@@ -23,6 +23,7 @@ import {
   buildReminderPayload,
   sendReminderMessage,
 } from "@/lib/slack/reminder-formatter";
+import { getExtensionInternal } from "@/features/settings/services/extensionAction";
 import { addMinutes } from "date-fns";
 
 export const dynamic = "force-dynamic";
@@ -67,7 +68,7 @@ export async function GET() {
     }
 
     const results = await Promise.all(
-      upcomingMeetings.map(async (meeting) => {
+      upcomingMeetings.map(async (meeting: any) => {
         // [더미] 실제 연동 시: Pod A API에서 회의 관련 문서를 조회하여 URL을 가져옵니다.
         const documentUrl = isDummy
           ? `${baseUrl}/documents?search=${encodeURIComponent(meeting.title)}`

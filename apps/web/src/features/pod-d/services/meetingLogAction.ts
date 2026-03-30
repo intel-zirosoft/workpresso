@@ -7,11 +7,13 @@ import { getAppBaseUrl } from "@/lib/app-url";
 import { meetingRefinedPayloadSchema } from "@/features/pod-d/services/meeting-refined-contract";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { transcribeAudioWithOpenRouter } from "@/lib/ai/audio";
+import { transformLog } from "../services/meetingLogService";
 
 import { 
   createJiraIssue, 
   sendSlackMessage, 
-  getExtension 
+  isExtensionActive 
 } from "@/features/settings/services/extensionAction";
 
 /**
@@ -20,8 +22,7 @@ import {
 export async function refineMeetingLogServer(id: string, sttText: string) {
   const supabase = await createClient();
 
-  const slackExt = await getExtension("slack");
-  const isSlackActive = slackExt?.is_active;
+  const isSlackActive = await isExtensionActive("slack");
   
   if (!sttText) return null;
 
@@ -261,5 +262,67 @@ export async function syncActionItemToJiraServer(
     issueKey: jiraResult.issueKey,
     issueUrl: jiraResult.issueUrl,
     updatedItems,
+  };
+}
+
+/**
+ * 기존 회의록을 최신 엔진으로 다시 전사하고 정제합니다.
+ */
+export async function reprocessMeetingLogServer(id: string) {
+  const supabase = await createClient();
+
+  // 1. 오디오 경로 확인
+  const { data: log, error: fetchError } = await supabase
+    .from("meeting_logs")
+    .select("audio_url")
+    .eq("id", id)
+    .single();
+
+  if (fetchError || !log?.audio_url) {
+    throw new Error("회의록 오디오 정보를 찾을 수 없습니다.");
+  }
+
+  // 2. Storage에서 오디오 다운로드
+  const { data: audioData, error: downloadError } = await supabase.storage
+    .from("meeting-logs")
+    .download(log.audio_url);
+
+  if (downloadError || !audioData) {
+    throw new Error(`오디오 파일 다운로드 실패: ${downloadError?.message || "데이터 없음"}`);
+  }
+
+  // 3. 최신 STT 엔진으로 전사 실행 (webm 지원 반영)
+  const arrayBuffer = await audioData.arrayBuffer();
+  const sttResult = await transcribeAudioWithOpenRouter({
+    audioBuffer: Buffer.from(arrayBuffer),
+    mimeType: audioData.type,
+    fileName: log.audio_url.split("/").pop(),
+  });
+
+  // 4. STT 결과 업데이트
+  const { error: updateError } = await supabase
+    .from("meeting_logs")
+    .update({ 
+      stt_text: sttResult.text, 
+      updated_at: new Date().toISOString() 
+    })
+    .eq("id", id);
+
+  if (updateError) throw new Error(`STT 갱신 실패: ${updateError.message}`);
+
+  // 5. AI 정제 및 연동 처리 재실행 (기존 refineMeetingLogServer 재사용)
+  const refineResult = await refineMeetingLogServer(id, sttResult.text);
+  
+  // 6. 상세 페이지 즉시 갱신을 위해 최신 데이터 반환
+  const { data: updatedLog } = await supabase
+    .from("meeting_logs")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  return { 
+    success: true, 
+    log: updatedLog ? transformLog(updatedLog) : null,
+    message: "재처리가 완료되었습니다." 
   };
 }

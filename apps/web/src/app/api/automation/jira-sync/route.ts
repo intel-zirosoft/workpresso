@@ -22,11 +22,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getJiraIssuesDueToday } from "@/lib/jira/client";
+import { getJiraRuntimeConfig } from "@/features/settings/services/extensionAction";
 import { startOfDay, endOfDay } from "date-fns";
 
 export async function POST() {
   try {
     const supabase = await createClient();
+    const { isConfigured } = await getJiraRuntimeConfig();
 
     const {
       data: { user },
@@ -85,7 +87,7 @@ export async function POST() {
 
     return NextResponse.json({
       success: true,
-      isDummy: !process.env.JIRA_API_TOKEN,
+      isDummy: !isConfigured,
       summary: { created, skipped, total: results.length },
       results,
     });

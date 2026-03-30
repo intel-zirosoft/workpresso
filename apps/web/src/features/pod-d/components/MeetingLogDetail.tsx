@@ -26,7 +26,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { updateMeetingLog } from "../services/meetingLogService";
-import { syncActionItemToJiraServer } from "../services/meetingLogAction";
+import { 
+  syncActionItemToJiraServer,
+  reprocessMeetingLogServer
+} from "../services/meetingLogAction";
+import { RefreshCw } from "lucide-react";
 
 interface MeetingLogDetailProps {
   log: {
@@ -102,6 +106,28 @@ export const MeetingLogDetail: React.FC<MeetingLogDetailProps> = ({
       alert("저장 도중 오류가 발생했습니다.");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const [isReprocessing, setIsReprocessing] = React.useState(false);
+
+  const handleReprocess = async () => {
+    if (!confirm("AI를 사용하여 회의록을 다시 분석하시겠습니까? (기존 요약 및 참가자 정보가 덮어씌워집니다)")) return;
+    
+    try {
+      setIsReprocessing(true);
+      const result = await reprocessMeetingLogServer(log.id);
+      
+      if (result.success && result.log) {
+        setLog(result.log);
+        setEditedLog(result.log);
+        alert(result.message || "회의록 재처리가 완료되었습니다!");
+      }
+    } catch (error) {
+      console.error("AI reprocessing failed:", error);
+      alert(error instanceof Error ? error.message : "AI 재처리에 실패했습니다.");
+    } finally {
+      setIsReprocessing(false);
     }
   };
 
@@ -200,6 +226,20 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
                   className="rounded-pill gap-2 text-xs border-primary/20 hover:bg-primary/5 h-9 px-4 h-9 font-bold"
                 >
                   <FileDown className="w-3.5 h-3.5" /> 다운로드 (Markdown)
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleReprocess}
+                  disabled={isReprocessing}
+                  className="rounded-pill gap-2 text-xs border-primary/20 hover:bg-primary/5 h-9 px-4 h-9 font-bold text-primary"
+                >
+                  {isReprocessing ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  )}
+                  AI 다시 변환하기
                 </Button>
               </>
             ) : (

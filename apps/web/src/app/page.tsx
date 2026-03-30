@@ -1,4 +1,4 @@
-"use client";
+
 
 import Link from "next/link";
 import {
@@ -50,15 +50,18 @@ const QUICK_ACTIONS = [
 const START_GUIDE = [
   {
     title: "가장 먼저 일정 확인",
-    description: "오늘 일정이 비어 있으면 우선 해야 할 일부터 시간 블록을 잡아두세요.",
+    description:
+      "오늘 일정이 비어 있으면 우선 해야 할 일부터 시간 블록을 잡아두세요.",
   },
   {
     title: "문서와 대화 분리",
-    description: "정리할 내용은 문서로, 빠른 소통은 채터로 나누면 찾기 쉬워집니다.",
+    description:
+      "정리할 내용은 문서로, 빠른 소통은 채터로 나누면 찾기 쉬워집니다.",
   },
   {
     title: "막히면 AI 활용",
-    description: "초안 작성, 요약, 다음 액션 정리부터 AI에게 맡기면 시작 비용이 줄어듭니다.",
+    description:
+      "초안 작성, 요약, 다음 액션 정리부터 AI에게 맡기면 시작 비용이 줄어듭니다.",
   },
 ];
 
@@ -98,14 +101,17 @@ export default function HomePage() {
                 해야 할 일을 바로 시작할 수 있게 준비했어요.
               </h1>
               <p className="max-w-xl text-sm leading-6 text-muted md:text-base">
-                일정 확인, 문서 작성, AI 질문, 팀 협업까지 자주 쓰는 흐름을 홈에서
-                바로 이어갈 수 있도록 정리했습니다.
+                일정 확인, 문서 작성, AI 질문, 팀 협업까지 자주 쓰는 흐름을
+                홈에서 바로 이어갈 수 있도록 정리했습니다.
               </p>
             </div>
           </div>
 
           <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
-            <Button asChild className="h-12 rounded-pill px-6 text-sm font-bold shadow-soft">
+            <Button
+              asChild
+              className="h-12 rounded-pill px-6 text-sm font-bold shadow-soft"
+            >
               <Link href="/documents">
                 <Plus className="h-4 w-4" />
                 문서 작성 시작
@@ -201,7 +207,8 @@ export default function HomePage() {
                   내 일정 한눈에 보기
                 </h2>
                 <p className="mt-1 text-sm text-muted">
-                  날짜를 눌러 일정을 확인하고, 필요한 경우 바로 추가할 수 있어요.
+                  날짜를 눌러 일정을 확인하고, 필요한 경우 바로 추가할 수
+                  있어요.
                 </p>
               </div>
             </div>

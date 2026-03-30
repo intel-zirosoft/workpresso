@@ -41,3 +41,4 @@ dev-logs/
 .codex/
 workthrough/
 .playwright-cli/
+.vercel

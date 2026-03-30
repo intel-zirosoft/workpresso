@@ -54,19 +54,26 @@ export const WaveformVisualizer: React.FC<WaveformVisualizerProps> = ({ audioUrl
 
     return () => {
       isDestroyed = true;
-      // destroy()가 내부적으로 던지는 비동기 AbortError를 catch하기 위해
-      // Promise 체인으로 래핑하여 unhandled rejection 방지
-      Promise.resolve().then(() => {
+      
+      const wavesurfer = wavesurferRef.current;
+      if (wavesurfer) {
+        // 중복 호출 방지를 위해 즉시 참조 제거
+        wavesurferRef.current = null;
         try {
-          ws.destroy();
+          // 모든 리스너 우선 해제 (AbortError가 전파되는 통로를 차단)
+          wavesurfer.unAll();
+          
+          // 소멸 호출 시 발생하는 AbortError는 이미 로딩 취소의 결과이므로 무시하도록 설계
+          // 일부 브라우저/버전에서는 destroy()가 동기적으로 에러를 던질 수 있음
+          wavesurfer.destroy();
         } catch (e: any) {
-          if (e?.name !== 'AbortError') {
-            console.error('[WaveformVisualizer] destroy error:', e);
+          // AbortError 및 비동기 소멸 과정의 오류는 전역으로 전파되지 않도록 무시
+          const isAbortError = e?.name === 'AbortError' || e?.message?.includes('aborted');
+          if (!isAbortError) {
+            console.warn('[WaveformVisualizer] Non-critical cleanup info:', e);
           }
         }
-      }).catch(() => {
-        // destroy() 내부의 비동기 AbortError 흡수
-      });
+      }
     };
   }, [audioUrl, blob]);
 
