@@ -117,10 +117,11 @@ export async function POST() {
     const { issues: highPriorityIssues } = await getHighPriorityJiraIssues();
 
     const created: { title: string; start: string; end: string }[] = [];
-    let currentSchedules: { start_time: string; end_time: string }[] = [
+    let currentSchedules: { start_time: string; end_time: string; title: string }[] = [
       ...((existingSchedules ?? []).map((schedule) => ({
         start_time: schedule.start_time,
         end_time: schedule.end_time,
+        title: schedule.title,
       })) ?? []),
     ];
 
