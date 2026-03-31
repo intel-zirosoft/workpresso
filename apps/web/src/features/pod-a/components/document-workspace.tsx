@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import {
   type ChangeEvent,
   type FormEvent,
@@ -21,8 +22,6 @@ import {
   replaceSelection,
   type TextChange,
 } from "@/features/pod-a/components/document-editor";
-import { DocumentDetailDialog } from "@/features/pod-a/components/document-detail-dialog";
-import { DocumentEditorDialog } from "@/features/pod-a/components/document-editor-dialog";
 import {
   createEditorStateFromDocument,
   createEmptyEditorState,
@@ -59,6 +58,26 @@ type EditorHistoryEntry = {
 
 const NORMAL_EDITOR_MIN_HEIGHT = 420;
 const EXPANDED_EDITOR_MIN_HEIGHT = 640;
+
+const DocumentDetailDialog = dynamic(
+  () =>
+    import("@/features/pod-a/components/document-detail-dialog").then(
+      (module) => module.DocumentDetailDialog,
+    ),
+  {
+    ssr: false,
+  },
+);
+
+const DocumentEditorDialog = dynamic(
+  () =>
+    import("@/features/pod-a/components/document-editor-dialog").then(
+      (module) => module.DocumentEditorDialog,
+    ),
+  {
+    ssr: false,
+  },
+);
 
 function getErrorMessage(error: unknown) {
   if (error instanceof DocumentApiError) {
@@ -136,7 +155,7 @@ export function DocumentWorkspace() {
   const usersQuery = useQuery({
     queryKey: ["document-users"],
     queryFn: fetchDocumentUsers,
-    enabled: Boolean(currentUserId),
+    enabled: Boolean(currentUserId && isEditorOpen),
   });
 
   const documentsQuery = useQuery({
@@ -157,16 +176,8 @@ export function DocumentWorkspace() {
   const selectedDocumentQuery = useQuery({
     queryKey: ["document", selectedDocumentId],
     queryFn: () => fetchDocument(selectedDocumentId as string),
-    enabled: Boolean(selectedDocumentId),
+    enabled: Boolean(selectedDocumentId && (isDetailOpen || isEditorOpen)),
   });
-
-  useEffect(() => {
-    if (selectedDocumentId || (documentsQuery.data?.length ?? 0) === 0) {
-      return;
-    }
-
-    setSelectedDocumentId(documentsQuery.data?.[0]?.id ?? null);
-  }, [documentsQuery.data, selectedDocumentId]);
 
   useEffect(() => {
     if (!selectedDocumentId && isDetailOpen) {
