@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { getAppBaseUrl } from "@/lib/app-url";
 import {
   buildDocumentDetail,
   buildDocumentSummary,
@@ -704,9 +705,7 @@ async function sendDocumentSlackNotification(params: {
     return;
   }
 
-  const documentUrl = `${
-    process.env.NEXT_PUBLIC_SITE_URL || "https://workpresso.app"
-  }/documents`;
+  const documentUrl = `${getAppBaseUrl()}/documents`;
 
   const eventTextMap = {
     SUBMITTED: {

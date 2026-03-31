@@ -1,6 +1,8 @@
 # 🌐 WorkPresso 통합 API 명세서 (Draft)
 
-Base URL: `http://localhost:3000`  
+Base URL: 현재 외부에서 접근 가능한 WorkPresso 서버 주소  
+- 로컬 개발: `http://localhost:3000`
+- Vercel/배포 환경: 현재 배포 도메인 또는 `NEXT_PUBLIC_APP_URL`
 Auth: Supabase Auth 세션 기반 (`Bearer Token` 사용 권장)
 
 ---
