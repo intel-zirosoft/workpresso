@@ -31,10 +31,6 @@ export default function TabsLayout() {
           borderColor: '#e2e8f0',
         },
         tabBarStyle: {
-          position: 'absolute',
-          left: 16,
-          right: 16,
-          bottom: bottomSpacing,
           height: 50 + bottomSpacing,
           paddingTop: 4,
           paddingBottom: bottomSpacing,
@@ -54,7 +50,6 @@ export default function TabsLayout() {
         },
         sceneStyle: {
           backgroundColor: '#ffffff',
-          paddingBottom: 74 + bottomSpacing,
         },
       }}
     >
