@@ -3,7 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
-  const bottomSpacing = Math.max(insets.bottom, 10);
+  const bottomSpacing = Math.max(insets.bottom, 8);
 
   return (
     <Tabs
@@ -13,40 +13,44 @@ export default function TabsLayout() {
         tabBarHideOnKeyboard: true,
         tabBarActiveTintColor: '#0f172a',
         tabBarInactiveTintColor: '#64748b',
+        tabBarActiveBackgroundColor: '#e2e8f0',
+        tabBarInactiveBackgroundColor: '#f8fafc',
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: '600',
         },
         tabBarItemStyle: {
-          borderRadius: 14,
-          marginHorizontal: 2,
-          marginVertical: 2,
+          borderRadius: 12,
+          marginHorizontal: 3,
+          marginVertical: 3,
+          borderWidth: 1,
+          borderColor: '#e2e8f0',
         },
         tabBarStyle: {
           position: 'absolute',
-          left: 12,
-          right: 12,
+          left: 14,
+          right: 14,
           bottom: bottomSpacing,
-          height: 68 + bottomSpacing,
-          paddingTop: 10,
+          height: 56 + bottomSpacing,
+          paddingTop: 6,
           paddingBottom: bottomSpacing,
-          paddingHorizontal: 8,
+          paddingHorizontal: 6,
           backgroundColor: '#ffffff',
           borderTopWidth: 1,
           borderTopColor: '#e2e8f0',
-          borderRadius: 22,
-          elevation: 12,
+          borderRadius: 18,
+          elevation: 10,
           shadowColor: '#0f172a',
-          shadowOpacity: 0.12,
-          shadowRadius: 12,
+          shadowOpacity: 0.1,
+          shadowRadius: 10,
           shadowOffset: {
             width: 0,
-            height: 4,
+            height: 3,
           },
         },
         sceneStyle: {
           backgroundColor: '#ffffff',
-          paddingBottom: 96 + bottomSpacing,
+          paddingBottom: 82 + bottomSpacing,
         },
       }}
     >
