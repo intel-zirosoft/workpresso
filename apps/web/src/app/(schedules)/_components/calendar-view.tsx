@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { format, isSameDay, parse, isBefore, startOfDay } from "date-fns";
 import { ko } from "date-fns/locale";
 import { Plus, Clock, Trash2, Loader2, Pencil, Users } from "lucide-react";
@@ -7,10 +8,6 @@ import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { ScheduleModal } from "./schedule-modal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import FullCalendar from "@fullcalendar/react";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import interactionPlugin from "@fullcalendar/interaction";
-import "@/styles/calendar.css";
 import {
   createSchedule,
   deleteSchedule,
@@ -20,6 +17,19 @@ import {
   ScheduleApiError,
   updateSchedule,
 } from "./schedule-api";
+
+const FullCalendarClient = dynamic(
+  () =>
+    import("./full-calendar-client").then((module) => module.FullCalendarClient),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full min-h-[420px] items-center justify-center rounded-2xl border border-dashed border-background/60 bg-background/20">
+        <Loader2 className="h-6 w-6 animate-spin text-text-muted" />
+      </div>
+    ),
+  },
+);
 
 const TYPE_CONFIG: Record<string, { label: string; color: string; icon: any }> =
   {
@@ -67,7 +77,7 @@ export function CalendarView({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
   const queryClient = useQueryClient();
-  const calendarRef = useRef<FullCalendar>(null);
+  const calendarRef = useRef<any>(null);
 
   // 일정 목록 가져오기 (GET)
   const {
@@ -235,32 +245,20 @@ export function CalendarView({
     return (
       <div className="flex flex-col gap-6 h-[calc(100vh-14rem)] min-h-[600px]">
         <div className="flex-1 bg-surface rounded-3xl p-6 shadow-soft border border-background/50 overflow-x-auto custom-scrollbar min-w-0">
-          <FullCalendar
-            ref={calendarRef}
-            plugins={[dayGridPlugin, interactionPlugin]}
-            initialView="dayGridMonth"
-            locale="ko"
-            headerToolbar={{
-              left: "prev,next today",
-              center: "title",
-              right: "dayGridMonth,dayGridWeek",
-            }}
+          <FullCalendarClient
+            calendarRef={calendarRef}
             events={calendarEvents}
-            dateClick={handleDateClick}
-            datesSet={() => {
-              // 렌더링이 완료된 시점에 스크롤을 시도합니다.
-              // 약간의 지연(v-sync)을 주어 DOM 렌더링 완료를 보장할 수 있습니다.
+            onDateClick={handleDateClick}
+            onDatesSet={() => {
               requestAnimationFrame(scrollToToday);
             }}
-            eventClick={(info) => {
+            onEventClick={(info) => {
               const schedule = schedules.find((s) => s.id === info.event.id);
-              if (schedule)
+              if (schedule) {
                 handleEdit(schedule, { stopPropagation: () => {} } as any);
+              }
             }}
-            eventContent={renderEventContent}
-            height="100%"
-            dayMaxEvents={3}
-            selectable={true}
+            renderEventContent={renderEventContent}
           />
         </div>
 

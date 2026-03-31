@@ -1,5 +1,5 @@
-import { ChatterWorkspace } from "@/features/pod-e/components/chatter-workspace";
+import { ChatterWorkspaceEntry } from "@/features/pod-e/components/chatter-workspace-entry";
 
 export default function ChatterPage() {
-  return <ChatterWorkspace />;
+  return <ChatterWorkspaceEntry />;
 }

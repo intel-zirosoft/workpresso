@@ -1,16 +1,49 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
 import { Header } from "@/components/shared/header";
 import { Sidebar } from "@/components/shared/sidebar";
 import { isChromelessPath } from "@/components/shared/navigation";
 import { FloatingAIAssistant } from "@/features/pod-c/components/floating-ai-assistant";
+import { preloadDocumentWorkspace } from "@/features/pod-a/components/document-workspace-entry";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const hideChrome = isChromelessPath(pathname);
+
+  useEffect(() => {
+    if (hideChrome) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const warmup = () => {
+      if (cancelled) {
+        return;
+      }
+
+      preloadDocumentWorkspace();
+    };
+
+    if (typeof window.requestIdleCallback === "function") {
+      const idleId = window.requestIdleCallback(warmup, { timeout: 1500 });
+
+      return () => {
+        cancelled = true;
+        window.cancelIdleCallback(idleId);
+      };
+    }
+
+    const timeoutId = globalThis.setTimeout(warmup, 300);
+
+    return () => {
+      cancelled = true;
+      globalThis.clearTimeout(timeoutId);
+    };
+  }, [hideChrome]);
 
   if (hideChrome) {
     return <main className="min-h-screen">{children}</main>;

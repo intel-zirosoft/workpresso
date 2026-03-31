@@ -12,7 +12,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("users")
-    .select("id, name, department, status")
+    .select("id, name, department, status, role")
     .eq("id", user.id)
     .single();
 
@@ -20,5 +20,9 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data);
+  return NextResponse.json({
+    ...data,
+    email: user.email ?? null,
+    name: data.name ?? user.user_metadata?.name ?? null,
+  });
 }

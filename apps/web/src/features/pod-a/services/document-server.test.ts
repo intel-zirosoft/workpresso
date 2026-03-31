@@ -34,6 +34,7 @@ function createApprovedDocumentDetail() {
     currentApprover: null,
     approvalStepCount: 1,
     ccRecipientCount: 0,
+    viewerApprovalStatus: null,
     approvalSteps: [
       {
         id: "00000000-0000-4000-8000-000000000201",

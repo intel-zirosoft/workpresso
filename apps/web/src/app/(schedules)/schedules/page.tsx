@@ -1,5 +1,3 @@
-"use client";
-
 import { CalendarView } from "../_components/calendar-view";
 
 export default function SchedulesPage() {
