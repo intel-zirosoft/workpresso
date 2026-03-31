@@ -507,10 +507,10 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
         {/* 원본 텍스트 */}
         <div className="flex flex-col gap-4 mt-4">
           <h3 className="text-lg font-headings font-semibold flex items-center gap-2 text-text-muted">
-            <FileText className="w-5 h-5 text-muted-foreground/60" />
+            <FileText className="w-5 h-5 text-text-muted/60" />
             STT 원본 텍스트
           </h3>
-          <div className="p-8 bg-background/50 border border-background rounded-2xl text-sm font-body leading-relaxed text-muted-foreground whitespace-pre-wrap max-h-[350px] overflow-y-auto custom-scrollbar shadow-inner mt-2">
+          <div className="p-8 bg-background/50 border border-background rounded-2xl text-sm font-body leading-relaxed text-text-muted whitespace-pre-wrap max-h-[350px] overflow-y-auto custom-scrollbar shadow-inner mt-2">
             {log.stt_text || "기록된 텍스트가 없습니다."}
           </div>
         </div>

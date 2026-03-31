@@ -159,3 +159,14 @@ export async function deleteDocument(documentId: string): Promise<void> {
     throw new DocumentApiError(data?.message ?? "문서를 삭제하지 못했습니다.");
   }
 }
+
+export async function syncDocumentToJira(
+  documentId: string,
+): Promise<DocumentDetail> {
+  const response = await fetch(`/api/documents/${documentId}/jira`, {
+    method: "POST",
+  });
+  const data = await parseJson(response);
+
+  return documentResponseSchema.parse(data).document;
+}

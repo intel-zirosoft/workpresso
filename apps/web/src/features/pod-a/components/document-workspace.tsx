@@ -41,6 +41,7 @@ import {
   fetchDocuments,
   fetchDocumentUsers,
   submitDocument,
+  syncDocumentToJira,
   updateDocument,
 } from "@/features/pod-a/services/document-api";
 import {
@@ -357,19 +358,45 @@ export function DocumentWorkspace() {
     },
   });
 
+  const jiraSyncMutation = useMutation({
+    mutationFn: syncDocumentToJira,
+    onSuccess: (document) => {
+      const createdIssueCount = document.jiraLinks.length;
+
+      queryClient.setQueryData(["document", document.id], document);
+      setSelectedDocumentId(document.id);
+      setIsDetailOpen(true);
+      invalidateDocumentQueries(document.id);
+
+      if (createdIssueCount > 0) {
+        alert(`Jira 이슈 ${createdIssueCount}건을 생성했습니다.`);
+        return;
+      }
+
+      alert("이미 연결된 Jira 이슈를 불러왔습니다.");
+    },
+    onError: (error) => {
+      alert(
+        getErrorMessage(error) ?? "문서를 Jira와 연동하지 못했습니다.",
+      );
+    },
+  });
+
   const isMutating =
     createMutation.isPending ||
     updateMutation.isPending ||
     submitMutation.isPending ||
     approvalMutation.isPending ||
-    deleteMutation.isPending;
+    deleteMutation.isPending ||
+    jiraSyncMutation.isPending;
 
   const mutationErrorMessage =
     getErrorMessage(createMutation.error) ??
     getErrorMessage(updateMutation.error) ??
     getErrorMessage(submitMutation.error) ??
     getErrorMessage(approvalMutation.error) ??
-    getErrorMessage(deleteMutation.error);
+    getErrorMessage(deleteMutation.error) ??
+    getErrorMessage(jiraSyncMutation.error);
 
   const availableUsers = (usersQuery.data ?? []).filter(
     (user) => user.id !== currentUserId,
@@ -851,6 +878,14 @@ export function DocumentWorkspace() {
     deleteMutation.mutate(selectedDocumentId);
   }
 
+  function handleSyncDocumentToJira() {
+    if (!selectedDocument?.permissions.canSyncJira || !selectedDocumentId) {
+      return;
+    }
+
+    jiraSyncMutation.mutate(selectedDocumentId);
+  }
+
   function handleCancelEditing() {
     if (isMutating) {
       return;
@@ -949,9 +984,11 @@ export function DocumentWorkspace() {
         onApprove={() => handleApprovalAction("APPROVE")}
         onReject={() => handleApprovalAction("REJECT")}
         onDelete={handleDeleteDocument}
+        onSyncToJira={handleSyncDocumentToJira}
         submitPending={submitMutation.isPending}
         approvalPending={approvalMutation.isPending}
         deletePending={deleteMutation.isPending}
+        jiraSyncPending={jiraSyncMutation.isPending}
       />
 
       <DocumentEditorDialog

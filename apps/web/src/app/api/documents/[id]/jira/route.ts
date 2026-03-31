@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
 
+import { documentResponseSchema } from "@/features/pod-a/services/document-schema";
 import {
-  approvalActionInputSchema,
-  documentResponseSchema,
-} from "@/features/pod-a/services/document-schema";
-import {
-  actOnWorkflowDocument,
   processPendingDocumentSideEffectJobs,
+  syncDocumentToJira,
 } from "@/features/pod-a/services/document-server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -19,22 +16,9 @@ function unauthorizedResponse() {
 }
 
 export async function POST(
-  request: Request,
+  _request: Request,
   { params }: { params: { id: string } },
 ) {
-  const payload = await request.json().catch(() => null);
-  const parsedInput = approvalActionInputSchema.safeParse(payload);
-
-  if (!parsedInput.success) {
-    return NextResponse.json(
-      {
-        message: "승인 액션 입력값이 올바르지 않습니다.",
-        errors: parsedInput.error.flatten(),
-      },
-      { status: 400 },
-    );
-  }
-
   const supabase = await createClient();
   const adminSupabase = createAdminClient();
   const {
@@ -53,17 +37,15 @@ export async function POST(
   }
 
   try {
-    const document = await actOnWorkflowDocument({
+    const document = await syncDocumentToJira({
       adminSupabase,
       viewerId: user.id,
       documentId: params.id,
-      action: parsedInput.data.action,
-      comment: parsedInput.data.comment,
     });
 
     if (!document) {
       return NextResponse.json(
-        { message: "승인 처리할 문서를 찾지 못했습니다." },
+        { message: "Jira 연동할 문서를 찾지 못했습니다." },
         { status: 404 },
       );
     }
@@ -77,7 +59,9 @@ export async function POST(
     return NextResponse.json(
       {
         message:
-          error instanceof Error ? error.message : "승인 처리를 완료하지 못했습니다.",
+          error instanceof Error
+            ? error.message
+            : "문서를 Jira와 연동하지 못했습니다.",
       },
       { status: 400 },
     );

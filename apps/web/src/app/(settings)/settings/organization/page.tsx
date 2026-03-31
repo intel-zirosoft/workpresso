@@ -140,7 +140,7 @@ export default async function OrganizationSettingsPage() {
             </div>
             <div>
               <h3 className="text-xl font-headings font-bold text-text-muted">등록된 팀이 없습니다</h3>
-              <p className="text-sm text-muted-foreground mt-2 font-body max-w-xs mx-auto">
+              <p className="text-sm text-text-muted mt-2 font-body max-w-xs mx-auto">
                 새 팀 생성 버튼을 눌러 조직의 공식 부서를 정의해 보세요.
               </p>
             </div>
@@ -170,7 +170,7 @@ export default async function OrganizationSettingsPage() {
                   </div>
                 </div>
 
-                <p className="text-sm text-muted-foreground font-body leading-relaxed line-clamp-2 min-h-[2.5rem]">
+                <p className="text-sm text-text-muted font-body leading-relaxed line-clamp-2 min-h-[2.5rem]">
                   {team.description || '이 부서에 대한 설명이 등록되지 않았습니다.'}
                 </p>
 
@@ -190,7 +190,7 @@ export default async function OrganizationSettingsPage() {
       {/* Admin Safety Belt */}
       <div className="p-6 bg-primary/5 rounded-[32px] border border-primary/10 flex items-center gap-4 animate-in slide-in-from-bottom-4 duration-1000">
         <ShieldCheck className="w-5 h-5 text-primary" />
-        <p className="text-[13px] text-muted-foreground leading-relaxed font-body">
+        <p className="text-[13px] text-text-muted leading-relaxed font-body">
           <span className="font-bold text-primary">안내:</span> 팀을 삭제하더라도 소속된 멤버들은 시스템에서 제외되지 않으며, 자동으로 <span className="underline decoration-primary/30">'미지정'</span> 상태로 전환됩니다.
         </p>
       </div>
