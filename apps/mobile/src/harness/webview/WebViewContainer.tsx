@@ -66,17 +66,31 @@ export type WebViewContainerHandle = {
 type WebViewContainerProps = {
   onAuthWarningChange?: (message: string | null) => void;
   onBridgeLog?: (entry: BridgeLogEntry) => void;
+  onInternalRouteRequest?: (url: string) => boolean;
   path: string;
   onStateChange?: (state: WebViewControlState) => void;
 };
 
 const LOAD_TIMEOUT_MS = 15000;
 
+function isAuthWebUrl(url: string) {
+  if (!isInternalWebUrl(url)) {
+    return false;
+  }
+
+  try {
+    const { pathname } = new URL(url);
+    return pathname === '/login' || pathname === '/signup';
+  } catch {
+    return false;
+  }
+}
+
 export const WebViewContainer = forwardRef<
   WebViewContainerHandle,
   WebViewContainerProps
 >(function WebViewContainer(
-  { path, onAuthWarningChange, onBridgeLog, onStateChange },
+  { path, onAuthWarningChange, onBridgeLog, onInternalRouteRequest, onStateChange },
   ref,
 ) {
   const webViewRef = useRef<WebView>(null);
@@ -91,6 +105,7 @@ export const WebViewContainer = forwardRef<
   const [isLoading, setIsLoading] = useState(true);
 
   const uri = useMemo(() => resolveWebUrl(path), [path]);
+  const [sourceUri, setSourceUri] = useState(uri);
   const webBaseOrigin = useMemo(() => getWebBaseOrigin(), []);
   const webBaseUrlHint = useMemo(() => getWebBaseUrlHint(), []);
   const injectedBridgeScript = useMemo(
@@ -98,7 +113,11 @@ export const WebViewContainer = forwardRef<
     [webBaseOrigin],
   );
   const hasError = Boolean(errorMessage);
-  const currentUrl = navigationState.currentUrl || uri;
+  const currentUrl = navigationState.currentUrl || sourceUri;
+
+  useEffect(() => {
+    setSourceUri(uri);
+  }, [uri]);
 
   const publishAuthWarning = useCallback(
     (message: string | null) => {
@@ -300,13 +319,17 @@ export const WebViewContainer = forwardRef<
       }
 
       if (isInternalWebUrl(request.url)) {
+        if (onInternalRouteRequest?.(request.url)) {
+          return false;
+        }
+
         return true;
       }
 
       void openExternalUrl(request.url).catch(() => undefined);
       return false;
     },
-    [openExternalUrl],
+    [onInternalRouteRequest, openExternalUrl],
   );
 
   const handleNavigationStateChange = useCallback(
@@ -349,7 +372,7 @@ export const WebViewContainer = forwardRef<
     (event: WebViewHttpErrorEvent) => {
       const failedUrl = event.nativeEvent.url;
 
-      if (failedUrl && failedUrl !== currentUrl && failedUrl !== uri) {
+      if (failedUrl && failedUrl !== currentUrl && failedUrl !== sourceUri) {
         return;
       }
 
@@ -359,7 +382,7 @@ export const WebViewContainer = forwardRef<
 
       setLoadFailure(`${description} (HTTP ${event.nativeEvent.statusCode})`);
     },
-    [currentUrl, setLoadFailure, uri],
+    [currentUrl, setLoadFailure, sourceUri],
   );
 
   const handleRenderProcessGone = useCallback(
@@ -400,8 +423,8 @@ export const WebViewContainer = forwardRef<
     <View style={styles.container}>
       <WebView
         ref={webViewRef}
-        key={`${uri}:${reloadKey}`}
-        source={{ uri }}
+        key={`${sourceUri}:${reloadKey}`}
+        source={{ uri: sourceUri }}
         onLoadStart={handleLoadStart}
         onLoadEnd={handleLoadEnd}
         onError={handleError}
@@ -425,6 +448,23 @@ export const WebViewContainer = forwardRef<
               payload?.url && typeof payload.url === 'string'
                 ? payload.url
                 : currentUrl;
+
+            if (onInternalRouteRequest?.(nextUrl)) {
+              clearLoadTimeout();
+              setErrorMessage(null);
+              setIsLoading(false);
+              publishState({
+                currentUrl: nextUrl,
+                hasError: false,
+                isLoading: false,
+              });
+              publishAuthWarning(null);
+              return;
+            }
+
+            if (isAuthWebUrl(nextUrl) && nextUrl !== sourceUri) {
+              setSourceUri(nextUrl);
+            }
 
             clearLoadTimeout();
             setErrorMessage(null);
