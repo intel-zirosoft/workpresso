@@ -2,11 +2,13 @@
 
 import dynamic from "next/dynamic";
 
+const loadDocumentWorkspace = () =>
+  import("@/features/pod-a/components/document-workspace").then(
+    (module) => module.DocumentWorkspace,
+  );
+
 const DocumentWorkspace = dynamic(
-  () =>
-    import("@/features/pod-a/components/document-workspace").then(
-      (module) => module.DocumentWorkspace,
-    ),
+  loadDocumentWorkspace,
   {
     ssr: false,
     loading: () => (
@@ -39,6 +41,10 @@ const DocumentWorkspace = dynamic(
     ),
   },
 );
+
+export function preloadDocumentWorkspace() {
+  void loadDocumentWorkspace();
+}
 
 export function DocumentWorkspaceEntry() {
   return <DocumentWorkspace />;
