@@ -23,6 +23,7 @@ const INITIAL_CONTROL_STATE: WebViewControlState = {
 
 export function WebScreen({ path, title }: WebScreenProps) {
   const [authWarning, setAuthWarning] = useState<string | null>(null);
+  const [isBridgePanelOpen, setIsBridgePanelOpen] = useState(false);
   const webViewRef = useRef<WebViewContainerHandle>(null);
   const [bridgeLogs, setBridgeLogs] = useState<BridgeLogEntry[]>([]);
   const [controlState, setControlState] = useState<WebViewControlState>(
@@ -108,9 +109,23 @@ export function WebScreen({ path, title }: WebScreenProps) {
                 새로고침
               </Text>
             </Pressable>
+            {__DEV__ ? (
+              <Pressable
+                onPress={() => setIsBridgePanelOpen((current) => !current)}
+                style={[
+                  styles.actionButton,
+                  styles.bridgeToggleButton,
+                  isBridgePanelOpen && styles.bridgeToggleButtonActive,
+                ]}
+              >
+                <Text style={styles.actionText}>
+                  {isBridgePanelOpen ? '브리지 닫기' : '브리지'}
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
         </View>
-        {__DEV__ ? (
+        {__DEV__ && isBridgePanelOpen ? (
           <View style={styles.bridgePanel}>
             {authWarning ? (
               <View style={styles.authWarningBox}>
@@ -212,6 +227,14 @@ const styles = StyleSheet.create({
   actionButtonDisabled: {
     backgroundColor: '#f1f5f9',
     borderColor: '#e2e8f0',
+  },
+  bridgeToggleButton: {
+    backgroundColor: '#eef2ff',
+    borderColor: '#c7d2fe',
+  },
+  bridgeToggleButtonActive: {
+    backgroundColor: '#dbeafe',
+    borderColor: '#93c5fd',
   },
   actionText: {
     fontSize: 12,
