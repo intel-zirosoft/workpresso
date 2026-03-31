@@ -10,10 +10,59 @@ interface WaveformVisualizerProps {
   blob?: Blob;
 }
 
+type WaveformPalette = {
+  waveColor: string;
+  progressColor: string;
+  cursorColor: string;
+};
+
+const FALLBACK_PALETTE: WaveformPalette = {
+  waveColor: 'hsl(210 38% 63%)',
+  progressColor: 'hsl(216 26% 23%)',
+  cursorColor: 'hsl(32 83% 75%)',
+};
+
+function getCssTokenColor(name: string, fallback: string) {
+  if (typeof window === 'undefined') {
+    return fallback;
+  }
+
+  const value = window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return value ? `hsl(${value})` : fallback;
+}
+
+function getWaveformPalette(): WaveformPalette {
+  return {
+    waveColor: getCssTokenColor('--primary', FALLBACK_PALETTE.waveColor),
+    progressColor: getCssTokenColor('--text', FALLBACK_PALETTE.progressColor),
+    cursorColor: getCssTokenColor('--secondary', FALLBACK_PALETTE.cursorColor),
+  };
+}
+
 export const WaveformVisualizer: React.FC<WaveformVisualizerProps> = ({ audioUrl, blob }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [palette, setPalette] = useState<WaveformPalette>(FALLBACK_PALETTE);
+
+  useEffect(() => {
+    setPalette(getWaveformPalette());
+
+    if (typeof MutationObserver === 'undefined') {
+      return;
+    }
+
+    const observer = new MutationObserver(() => {
+      setPalette(getWaveformPalette());
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'style', 'class'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -23,9 +72,9 @@ export const WaveformVisualizer: React.FC<WaveformVisualizerProps> = ({ audioUrl
 
     const ws = WaveSurfer.create({
       container: containerRef.current,
-      waveColor: '#7FA1C3',
-      progressColor: '#2C394B',
-      cursorColor: '#F2C18D',
+      waveColor: palette.waveColor,
+      progressColor: palette.progressColor,
+      cursorColor: palette.cursorColor,
       barWidth: 2,
       barGap: 3,
       barRadius: 3,
@@ -68,7 +117,7 @@ export const WaveformVisualizer: React.FC<WaveformVisualizerProps> = ({ audioUrl
         // destroy() 내부의 비동기 AbortError 흡수
       });
     };
-  }, [audioUrl, blob]);
+  }, [audioUrl, blob, palette]);
 
   const togglePlay = () => {
     if (wavesurferRef.current) {

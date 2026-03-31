@@ -335,7 +335,7 @@ export function DocumentEditorDialog({
             onSubmit={onSubmit}
           >
             {errorMessage ? (
-              <div className="bg-rose-50 px-6 py-3 text-sm font-medium text-rose-600 border-b border-rose-100">
+              <div className="bg-destructive-soft px-6 py-3 text-sm font-medium text-destructive border-b border-destructive/20">
                 <span className="mr-2">⚠️</span> {errorMessage}
               </div>
             ) : null}
@@ -380,7 +380,7 @@ export function DocumentEditorDialog({
                             <div className="flex items-center gap-5">
                               <div className={cn(
                                 "flex h-14 w-14 items-center justify-center rounded-2xl transition-all shadow-sm",
-                                isSelected ? "bg-primary text-white" : "bg-background text-primary group-hover:bg-primary group-hover:text-white"
+                                isSelected ? "bg-primary text-primary-foreground" : "bg-background text-primary group-hover:bg-primary group-hover:text-primary-foreground"
                               )}>
                                 <TemplateIcon className="h-7 w-7" />
                               </div>
@@ -401,7 +401,7 @@ export function DocumentEditorDialog({
                               "h-6 w-6 rounded-full border-2 transition-all flex items-center justify-center",
                               isSelected ? "border-primary bg-primary" : "border-background bg-surface group-hover:border-primary/40"
                             )}>
-                              {isSelected && <Check className="h-3.5 w-3.5 text-white" strokeWidth={4} />}
+                              {isSelected && <Check className="h-3.5 w-3.5 text-primary-foreground" strokeWidth={4} />}
                             </div>
                           </div>
 
@@ -451,7 +451,7 @@ export function DocumentEditorDialog({
                           
                           {isSelected && (
                             <div className="absolute top-3 right-14 flex items-center gap-1.5 bg-primary px-3 py-1 rounded-full shadow-lg scale-90 animate-in zoom-in-50">
-                              <span className="text-[9px] font-black text-white tracking-widest">SELECTED</span>
+                              <span className="text-[9px] font-black text-primary-foreground tracking-widest">SELECTED</span>
                             </div>
                           )}
                         </button>
@@ -572,7 +572,7 @@ export function DocumentEditorDialog({
                                  {availableUsers.map(user => <option key={user.id} value={user.id}>{renderUserName(user)}</option>)}
                                </select>
                             </div>
-                            <Button type="button" variant="ghost" size="icon" className="rounded-full h-8 w-8 text-text/30 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onRemoveApprovalStep(step.localId)} disabled={editorState.approvalSteps.length === 1}>
+                            <Button type="button" variant="ghost" size="icon" className="rounded-full h-8 w-8 text-text/30 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onRemoveApprovalStep(step.localId)} disabled={editorState.approvalSteps.length === 1}>
                               <X className="h-4 w-4" />
                             </Button>
                           </div>
@@ -592,7 +592,7 @@ export function DocumentEditorDialog({
                               onClick={() => onToggleCcRecipient(user.id)}
                               className={cn(
                                 "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all",
-                                isSelected ? "bg-primary text-white shadow-md shadow-primary/20" : "bg-surface text-text-muted border border-background/60 hover:border-primary/30"
+                                isSelected ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" : "bg-surface text-text-muted border border-background/60 hover:border-primary/30"
                               )}
                             >
                               <UserPlus className="h-4 w-4" />

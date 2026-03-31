@@ -63,7 +63,7 @@ export function FloatingAIAssistant() {
             key={item.label}
             type="button"
             onClick={() => handleQuickMenuClick(item.prompt)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-surface/95 px-3 py-2 text-[11px] font-semibold text-text shadow-soft backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-primary hover:text-white"
+            className="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-surface/95 px-3 py-2 text-[11px] font-semibold text-text shadow-soft backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-primary hover:text-primary-foreground"
           >
             <item.icon className="h-3.5 w-3.5" />
             {item.label}

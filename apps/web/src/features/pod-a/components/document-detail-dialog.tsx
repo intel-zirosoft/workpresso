@@ -33,9 +33,9 @@ const approvalStepStatusLabelMap = {
 
 const approvalStepStatusClassMap = {
   WAITING: "bg-background text-text-muted",
-  PENDING: "bg-amber-100 text-amber-700",
-  APPROVED: "bg-emerald-100 text-emerald-700",
-  REJECTED: "bg-rose-100 text-rose-700",
+  PENDING: "bg-warning-soft text-warning",
+  APPROVED: "bg-success-soft text-success",
+  REJECTED: "bg-destructive-soft text-destructive",
 } as const;
 
 type DocumentDetailDialogProps = {
@@ -204,7 +204,7 @@ export function DocumentDetailDialog({
 
         <div className="relative flex min-w-0 flex-1 flex-col bg-surface">
           {errorMessage ? (
-            <div className="border-b border-rose-100 bg-rose-50 px-8 py-3 text-sm font-medium text-rose-600">
+            <div className="border-b border-destructive/20 bg-destructive-soft px-8 py-3 text-sm font-medium text-destructive">
               {errorMessage}
             </div>
           ) : null}
@@ -301,7 +301,7 @@ export function DocumentDetailDialog({
                   <Button
                     type="button"
                     variant="outline"
-                    className="rounded-pill border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                    className="rounded-pill border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive"
                     onClick={onDelete}
                     disabled={isActionPending}
                   >

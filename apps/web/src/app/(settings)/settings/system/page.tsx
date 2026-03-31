@@ -70,7 +70,7 @@ export default async function SystemSettingsPage() {
         {[
           { label: '데이터베이스', value: '정상', icon: Database, color: 'text-success', bg: 'bg-success/5' },
           { label: 'AI 엔진 상태', value: '활성', icon: Cpu, color: 'text-primary', bg: 'bg-primary/5' },
-          { label: '네트워크 응답', value: '12ms', icon: Activity, color: 'text-blue-500', bg: 'bg-blue-500/5' },
+          { label: '네트워크 응답', value: '12ms', icon: Activity, color: 'text-info', bg: 'bg-info-soft' },
         ].map((item, idx) => (
           <div key={idx} className="bg-surface border border-background p-6 rounded-3xl shadow-soft flex items-center gap-4">
             <div className={`${item.bg} p-3 rounded-2xl`}>

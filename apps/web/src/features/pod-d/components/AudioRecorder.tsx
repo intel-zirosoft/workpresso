@@ -147,7 +147,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onComplete }) => {
             setIsCompleted(false);
             clearRecording();
           }}
-          className="mt-4 rounded-pill px-8 h-12 bg-primary text-white shadow-md hover:shadow-lg transition-all font-bold"
+          className="mt-4 rounded-pill px-8 h-12 bg-primary text-primary-foreground shadow-md hover:shadow-lg transition-all font-bold"
         >
           새 녹음 시작
         </Button>
@@ -194,7 +194,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onComplete }) => {
               onClick={startRecording}
               className="rounded-full w-20 h-20 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30 transition-all hover:scale-105 active:scale-95 group relative overflow-hidden"
             >
-              <Mic className="w-10 h-10 text-white" />
+              <Mic className="w-10 h-10 text-primary-foreground" />
             </Button>
           </div>
         )}
@@ -213,7 +213,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onComplete }) => {
                 onClick={stopRecording}
                 className="rounded-full w-20 h-20 bg-destructive hover:bg-destructive/90 shadow-lg shadow-destructive/30 relative z-10 transition-all hover:scale-105"
               >
-                <Square className="w-10 h-10 text-white fill-white" />
+                <Square className="w-10 h-10 text-destructive-foreground fill-destructive-foreground" />
               </Button>
             </div>
           </>
@@ -225,13 +225,13 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onComplete }) => {
               onClick={resumeRecording}
               className="rounded-full w-14 h-14 bg-primary hover:bg-primary/90 shadow-md transition-all"
             >
-              <Play className="w-6 h-6 text-white fill-white" />
+              <Play className="w-6 h-6 text-primary-foreground fill-primary-foreground" />
             </Button>
             <Button
               onClick={stopRecording}
               className="rounded-full w-20 h-20 bg-destructive hover:bg-destructive/90 shadow-lg shadow-destructive/30 transition-all hover:scale-105"
             >
-              <Square className="w-10 h-10 text-white fill-white" />
+              <Square className="w-10 h-10 text-destructive-foreground fill-destructive-foreground" />
             </Button>
           </>
         )}
@@ -257,7 +257,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onComplete }) => {
             </Button>
             <Button
               onClick={() => handleUpload()}
-              className="bg-primary hover:bg-primary/90 rounded-pill h-10 px-8 text-white font-bold shadow-soft transition-all active:scale-95"
+              className="bg-primary hover:bg-primary/90 rounded-pill h-10 px-8 text-primary-foreground font-bold shadow-soft transition-all active:scale-95"
             >
               회의록 저장 시작
             </Button>

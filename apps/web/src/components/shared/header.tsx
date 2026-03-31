@@ -209,7 +209,7 @@ export function Header() {
           /* 로그인 필요 UI */
           <div className="flex items-center gap-2">
             <Button variant="ghost" onClick={() => router.push("/login")} className="px-4 font-headings text-sm">로그인</Button>
-            <Button onClick={() => router.push("/signup")} className="px-6 rounded-pill bg-primary text-white font-headings text-sm shadow-soft hover:shadow-md transition-all">시작하기</Button>
+            <Button onClick={() => router.push("/signup")} className="px-6 rounded-pill bg-primary text-primary-foreground font-headings text-sm shadow-soft hover:shadow-md transition-all">시작하기</Button>
           </div>
         )}
       </div>

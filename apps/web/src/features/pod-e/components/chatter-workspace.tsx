@@ -180,7 +180,7 @@ function MessageBubble({ message }: { message: ChatterMessageSummary }) {
           className={cn(
             "rounded-[26px] border px-5 py-4 shadow-soft transition-transform duration-300",
             message.isMine
-              ? "rounded-br-[10px] border-primary bg-primary text-white"
+              ? "rounded-br-[10px] border-primary bg-primary text-primary-foreground"
               : "rounded-tl-[10px] border-background/80 bg-surface/95 text-text"
           )}
         >
@@ -188,7 +188,7 @@ function MessageBubble({ message }: { message: ChatterMessageSummary }) {
             <span
               className={cn(
                 "font-headings text-sm font-semibold",
-                message.isMine ? "text-white/90" : "text-text"
+                message.isMine ? "text-primary-foreground/90" : "text-text"
               )}
             >
               {message.authorName}
@@ -196,7 +196,7 @@ function MessageBubble({ message }: { message: ChatterMessageSummary }) {
             <span
               className={cn(
                 "text-xs font-body",
-                message.isMine ? "text-white/70" : "text-text-muted"
+                message.isMine ? "text-primary-foreground/70" : "text-text-muted"
               )}
             >
               {message.authorRole}
@@ -207,7 +207,7 @@ function MessageBubble({ message }: { message: ChatterMessageSummary }) {
             <p
               className={cn(
                 "whitespace-pre-wrap text-[15px] leading-6",
-                message.isMine ? "text-white" : "text-text"
+                message.isMine ? "text-primary-foreground" : "text-text"
               )}
             >
               {message.content}
@@ -244,23 +244,23 @@ function LinkCard({ item, muted = false }: { item: ChatterLinkCard; muted?: bool
       className={cn(
         "flex items-center gap-3 rounded-[22px] border px-4 py-3",
         muted
-          ? "border-white/10 bg-white/12"
+          ? "border-primary-foreground/10 bg-primary-foreground/10"
           : "border-background/80 bg-surface/80 backdrop-blur-sm"
       )}
     >
       <div
         className={cn(
           "flex h-11 w-11 items-center justify-center rounded-2xl",
-          muted ? "bg-white/15" : "bg-primary/10"
+          muted ? "bg-primary-foreground/15" : "bg-primary/10"
         )}
       >
-        <Icon className={cn("h-5 w-5", muted ? "text-white" : "text-primary")} />
+        <Icon className={cn("h-5 w-5", muted ? "text-primary-foreground" : "text-primary")} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className={cn("truncate font-headings text-sm font-semibold", muted ? "text-white" : "text-text")}>
+        <p className={cn("truncate font-headings text-sm font-semibold", muted ? "text-primary-foreground" : "text-text")}>
           {item.label}
         </p>
-        <p className={cn("truncate text-xs font-body", muted ? "text-white/75" : "text-text-muted")}>
+        <p className={cn("truncate text-xs font-body", muted ? "text-primary-foreground/75" : "text-text-muted")}>
           {item.kind} · {item.meta}
         </p>
       </div>
@@ -572,7 +572,7 @@ export function ChatterWorkspace() {
                     className={cn(
                       "w-full rounded-[24px] border px-4 py-4 text-left transition-all duration-300",
                       isActive
-                        ? "border-primary bg-primary text-white shadow-float"
+                        ? "border-primary bg-primary text-primary-foreground shadow-float"
                         : "border-transparent bg-transparent hover:border-background/80 hover:bg-background/70"
                     )}
                     key={channel.id}
@@ -584,13 +584,13 @@ export function ChatterWorkspace() {
                         <span
                           className={cn(
                             "mt-0.5 flex h-10 w-10 items-center justify-center rounded-full",
-                            isActive ? "bg-white/20" : "bg-primary/10"
+                            isActive ? "bg-primary-foreground/20" : "bg-primary/10"
                           )}
                         >
                           <Icon
                             className={cn(
                               "h-4 w-4",
-                              isActive ? "text-white" : "text-primary"
+                              isActive ? "text-primary-foreground" : "text-primary"
                             )}
                           />
                         </span>
@@ -603,7 +603,7 @@ export function ChatterWorkspace() {
                               className={cn(
                                 "rounded-pill px-2 py-0.5 text-[10px] font-bold",
                                 isActive
-                                  ? "bg-white/15 text-white"
+                                  ? "bg-primary-foreground/15 text-primary-foreground"
                                   : "bg-background text-text-muted"
                               )}
                             >
@@ -613,7 +613,7 @@ export function ChatterWorkspace() {
                           <p
                             className={cn(
                               "mt-1 text-xs",
-                              isActive ? "text-white/75" : "text-text-muted"
+                            isActive ? "text-primary-foreground/75" : "text-text-muted"
                             )}
                           >
                             멤버 {channel.memberCount} ·{" "}
@@ -626,7 +626,7 @@ export function ChatterWorkspace() {
                         <span
                           className={cn(
                             "rounded-pill px-2 py-1 text-[10px] font-bold",
-                            isActive ? "bg-white text-primary" : "bg-primary text-white"
+                            isActive ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground"
                           )}
                         >
                           {channel.unreadCount}
@@ -637,7 +637,7 @@ export function ChatterWorkspace() {
                     <p
                       className={cn(
                         "line-clamp-2 text-sm leading-5",
-                        isActive ? "text-white/85" : "text-text-muted"
+                        isActive ? "text-primary-foreground/85" : "text-text-muted"
                       )}
                     >
                       {channel.lastMessagePreview}
@@ -823,7 +823,7 @@ export function ChatterWorkspace() {
                   <p>문서와 일정은 현재 로그인한 사용자 소유 데이터만 공유됩니다.</p>
                 </div>
                 <button
-                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-pill bg-primary px-5 text-sm font-bold text-white shadow-soft transition-transform hover:scale-[1.02] hover:bg-primary/90 disabled:bg-muted disabled:text-white md:w-auto"
+                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-pill bg-primary px-5 text-sm font-bold text-primary-foreground shadow-soft transition-transform hover:scale-[1.02] hover:bg-primary/90 disabled:bg-muted disabled:text-primary-foreground md:w-auto"
                   disabled={!draft.trim() || !activeChannelId || sendMutation.isPending}
                   onClick={handleSend}
                   type="button"

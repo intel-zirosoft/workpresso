@@ -69,7 +69,7 @@ export function SettingsSidebar({ userRole }: SettingsSidebarProps) {
             >
               <div className={cn(
                 "p-1.5 rounded-lg transition-colors duration-300",
-                isActive ? "bg-white/20" : "bg-primary/5 group-hover:bg-primary/10 text-primary"
+                isActive ? "bg-primary-foreground/20" : "bg-primary/5 group-hover:bg-primary/10 text-primary"
               )}>
                 <Icon className={cn("w-4 h-4", isActive ? "text-primary-foreground" : "text-primary")} />
               </div>

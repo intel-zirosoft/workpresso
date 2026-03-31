@@ -17,10 +17,10 @@ interface Teammate {
 type KanbanColumnId = UserStatus | 'VACATION_HALF_DAY';
 
 const DEPARTMENT_COLORS: Record<string, string> = {
-  '디자인': 'text-rose-500 bg-rose-50',
-  '개발': 'text-blue-500 bg-blue-50',
-  '기획': 'text-amber-500 bg-amber-50',
-  '경영': 'text-emerald-500 bg-emerald-50',
+  '디자인': 'text-destructive bg-destructive-soft',
+  '개발': 'text-info bg-info-soft',
+  '기획': 'text-warning bg-warning-soft',
+  '경영': 'text-success bg-success-soft',
 };
 
 const STATUS_COLUMNS: { id: KanbanColumnId; label: string; color: string; dot: string }[] = [
@@ -210,7 +210,7 @@ export function StatusKanban() {
               })}
               
               {isEmpty && (
-                <div className="h-full min-h-[120px] border-2 border-dashed border-black/5 rounded-xl flex flex-col items-center justify-center p-4 transition-colors hover:bg-surface/40">
+                <div className="h-full min-h-[120px] border-2 border-dashed border-foreground/5 rounded-xl flex flex-col items-center justify-center p-4 transition-colors hover:bg-surface/40">
                   <div className="w-8 h-8 rounded-full bg-background/50 flex items-center justify-center mb-2">
                     <span className="text-text-muted opacity-40 text-lg font-light">+</span>
                   </div>

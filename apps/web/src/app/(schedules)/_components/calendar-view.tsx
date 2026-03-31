@@ -23,11 +23,11 @@ import {
 const TYPE_CONFIG: Record<string, { label: string; color: string; icon: any }> =
   {
     TASK: { label: "업무", color: "bg-primary", icon: Clock },
-    MEETING: { label: "회의", color: "bg-amber-400", icon: Users },
-    VACATION: { label: "휴가", color: "bg-rose-400", icon: Clock },
-    HALF_DAY: { label: "반차", color: "bg-rose-300", icon: Clock },
-    WFH: { label: "재택", color: "bg-blue-400", icon: Clock },
-    OUTSIDE: { label: "외근", color: "bg-emerald-400", icon: Clock },
+    MEETING: { label: "회의", color: "bg-warning", icon: Users },
+    VACATION: { label: "휴가", color: "bg-destructive", icon: Clock },
+    HALF_DAY: { label: "반차", color: "bg-destructive/70", icon: Clock },
+    WFH: { label: "재택", color: "bg-info", icon: Clock },
+    OUTSIDE: { label: "외근", color: "bg-success", icon: Clock },
   };
 
 function getErrorMessage(error: unknown) {
@@ -264,7 +264,7 @@ export function CalendarView({
         </div>
 
         {pageErrorMessage ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+          <div className="rounded-2xl border border-destructive/20 bg-destructive-soft px-4 py-3 text-sm font-medium text-destructive">
             {pageErrorMessage}
           </div>
         ) : null}
@@ -281,7 +281,7 @@ export function CalendarView({
                   setEditingSchedule(null);
                   setIsModalOpen(true);
                 }}
-                className="px-4 py-2 rounded-pill bg-primary text-white font-bold text-sm shadow-sm hover:shadow-soft transition-all"
+                className="px-4 py-2 rounded-pill bg-primary text-primary-foreground font-bold text-sm shadow-sm hover:shadow-soft transition-all"
               >
                 + 새 일정
               </button>
@@ -324,9 +324,9 @@ export function CalendarView({
                         </button>
                         <button
                           onClick={(e) => handleDelete(schedule.id, e)}
-                          className="p-1.5 hover:bg-red-50 rounded-full transition-colors"
+                          className="p-1.5 hover:bg-destructive/10 rounded-full transition-colors"
                         >
-                          <Trash2 size={14} className="text-red-300" />
+                          <Trash2 size={14} className="text-destructive/60" />
                         </button>
                       </div>
                     </div>
@@ -369,7 +369,7 @@ export function CalendarView({
 
       <div className="lg:w-1/2 flex flex-col space-y-4">
         {pageErrorMessage ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+          <div className="rounded-2xl border border-destructive/20 bg-destructive-soft px-4 py-3 text-sm font-medium text-destructive">
             {pageErrorMessage}
           </div>
         ) : null}
@@ -426,9 +426,9 @@ export function CalendarView({
                     </button>
                     <button
                       onClick={(e) => handleDelete(schedule.id, e)}
-                      className="p-1.5 hover:bg-red-50 rounded-full"
+                      className="p-1.5 hover:bg-destructive/10 rounded-full"
                     >
-                      <Trash2 size={14} className="text-red-300" />
+                      <Trash2 size={14} className="text-destructive/60" />
                     </button>
                   </div>
                 </div>

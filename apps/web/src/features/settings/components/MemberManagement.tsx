@@ -188,7 +188,7 @@ export function MemberManagement({ users, currentUserId, teams }: MemberManageme
               <div className="flex items-center gap-2 mb-1">
                 <h4 className="font-headings font-bold text-text truncate tracking-tight">{user.name}</h4>
                 {user.id === currentUserId && (
-                  <span className="text-[10px] bg-primary text-white px-2 py-0.5 rounded-full font-bold shadow-sm">나</span>
+                  <span className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold shadow-sm">나</span>
                 )}
               </div>
               <div className="flex flex-col gap-2 mt-1">
@@ -238,25 +238,25 @@ export function MemberManagement({ users, currentUserId, teams }: MemberManageme
                     className="rounded-xl px-3 py-2 text-sm font-medium gap-3 cursor-pointer focus:bg-primary/5 focus:text-primary"
                     onClick={() => handleQuickRoleChange(user.id, 'SUPER_ADMIN')}
                   >
-                    <Shield className="w-4 h-4 text-red-500" /> 최고 관리자
+                    <Shield className="w-4 h-4 text-destructive" /> 최고 관리자
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="rounded-xl px-3 py-2 text-sm font-medium gap-3 cursor-pointer focus:bg-primary/5 focus:text-primary"
                     onClick={() => handleQuickRoleChange(user.id, 'ORG_ADMIN')}
                   >
-                    <Shield className="w-4 h-4 text-blue-500" /> 조직 관리자
+                    <Shield className="w-4 h-4 text-info" /> 조직 관리자
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="rounded-xl px-3 py-2 text-sm font-medium gap-3 cursor-pointer focus:bg-primary/5 focus:text-primary"
                     onClick={() => handleQuickRoleChange(user.id, 'TEAM_ADMIN')}
                   >
-                    <Shield className="w-4 h-4 text-green-500" /> 팀 관리자
+                    <Shield className="w-4 h-4 text-success" /> 팀 관리자
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="rounded-xl px-3 py-2 text-sm font-medium gap-3 cursor-pointer focus:bg-primary/5 focus:text-primary"
                     onClick={() => handleQuickRoleChange(user.id, 'USER')}
                   >
-                    <UserIcon className="w-4 h-4 text-gray-500" /> 일반 사용자
+                    <UserIcon className="w-4 h-4 text-text-muted" /> 일반 사용자
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

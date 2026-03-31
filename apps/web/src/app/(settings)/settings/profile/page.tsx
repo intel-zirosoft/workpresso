@@ -28,7 +28,7 @@ export default async function ProfileSettingsPage() {
           <div className="w-32 h-32 rounded-full bg-primary/5 border-4 border-surface shadow-md flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:shadow-lg group-hover:scale-105">
             <User className="w-16 h-16 text-primary/40" />
           </div>
-          <button className="absolute bottom-1 right-1 bg-surface p-2 rounded-full shadow-md border border-background/50 text-primary hover:bg-primary hover:text-white transition-all duration-200">
+          <button className="absolute bottom-1 right-1 bg-surface p-2 rounded-full shadow-md border border-background/50 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200">
             <Camera className="w-4 h-4" />
           </button>
         </div>

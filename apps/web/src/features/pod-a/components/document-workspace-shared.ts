@@ -50,9 +50,9 @@ export const statusLabelMap: Record<DocumentStatus, string> = {
 
 export const statusBadgeClassMap: Record<DocumentStatus, string> = {
   DRAFT: "bg-secondary/70 text-text",
-  PENDING: "bg-amber-100 text-amber-700",
-  APPROVED: "bg-emerald-100 text-emerald-700",
-  REJECTED: "bg-rose-100 text-rose-700",
+  PENDING: "bg-warning-soft text-warning",
+  APPROVED: "bg-success-soft text-success",
+  REJECTED: "bg-destructive-soft text-destructive",
 };
 
 export const approvalStepStatusLabelMap: Record<ApprovalStepStatus, string> = {
@@ -67,9 +67,9 @@ export const approvalStepStatusBadgeClassMap: Record<
   string
 > = {
   WAITING: "bg-background text-text-muted",
-  PENDING: "bg-amber-100 text-amber-700",
-  APPROVED: "bg-emerald-100 text-emerald-700",
-  REJECTED: "bg-rose-100 text-rose-700",
+  PENDING: "bg-warning-soft text-warning",
+  APPROVED: "bg-success-soft text-success",
+  REJECTED: "bg-destructive-soft text-destructive",
 };
 
 export const scopeConfig: Array<{

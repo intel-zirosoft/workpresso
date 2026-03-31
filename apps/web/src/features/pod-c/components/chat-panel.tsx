@@ -199,7 +199,7 @@ export function ChatPanel({
                         variant="outline"
                         size="sm"
                         onClick={() => handleQuickCommand(cmd.value)}
-                        className="rounded-pill border-primary/10 bg-surface/80 text-xs transition-all hover:bg-primary hover:text-white"
+                        className="rounded-pill border-primary/10 bg-surface/80 text-xs transition-all hover:bg-primary hover:text-primary-foreground"
                       >
                         <CommandIcon className="mr-1.5 h-3.5 w-3.5" />
                         {cmd.label}
@@ -222,7 +222,7 @@ export function ChatPanel({
                   className={cn(
                     "flex h-8 w-8 shrink-0 items-center justify-center rounded-pill shadow-soft md:h-11 md:w-11",
                     message.role === "user"
-                      ? "bg-primary text-white"
+                      ? "bg-primary text-primary-foreground"
                       : "border border-primary/10 bg-surface text-primary",
                   )}
                 >
@@ -237,7 +237,7 @@ export function ChatPanel({
                   className={cn(
                     "max-w-[85%] rounded-md px-4 py-3 font-body text-sm leading-relaxed shadow-soft transition-all md:max-w-[75%] md:px-6 md:py-4 md:text-[15px]",
                     message.role === "user"
-                      ? "rounded-tr-none bg-primary text-white"
+                      ? "rounded-tr-none bg-primary text-primary-foreground"
                       : "rounded-tl-none border border-primary/5 bg-surface text-text",
                   )}
                 >
@@ -277,7 +277,7 @@ export function ChatPanel({
               <button
                 key={cmd.value}
                 onClick={() => handleQuickCommand(cmd.value)}
-                className="whitespace-nowrap rounded-full border border-primary/10 bg-surface px-3 py-1.5 text-[11px] font-medium text-text-muted shadow-sm transition-colors hover:bg-primary hover:text-white"
+                className="whitespace-nowrap rounded-full border border-primary/10 bg-surface px-3 py-1.5 text-[11px] font-medium text-text-muted shadow-sm transition-colors hover:bg-primary hover:text-primary-foreground"
               >
                 {cmd.label}
               </button>

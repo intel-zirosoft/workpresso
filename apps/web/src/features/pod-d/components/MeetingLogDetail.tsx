@@ -217,7 +217,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
                   size="sm"
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="rounded-pill gap-2 text-xs bg-success hover:bg-success/90 text-white h-9 px-6 shadow-md font-bold"
+                  className="rounded-pill gap-2 text-xs bg-success hover:bg-success/90 text-success-foreground h-9 px-6 shadow-md font-bold"
                 >
                   {isSaving ? (
                     <span className="animate-spin text-sm">⏳</span>

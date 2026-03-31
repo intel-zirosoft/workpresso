@@ -53,21 +53,21 @@ export default async function OrganizationSettingsPage() {
     <div className="animate-in fade-in duration-700 space-y-8 pb-12">
       {/* Sync Warning Banner (If legacy data found) */}
       {legacyUsers.length > 0 && (
-        <div className="p-6 bg-amber-50 rounded-[32px] border border-amber-200 flex flex-col md:flex-row md:items-center justify-between gap-6 animate-in slide-in-from-top-4 duration-500 shadow-soft">
+        <div className="p-6 bg-warning-soft rounded-[32px] border border-warning/20 flex flex-col md:flex-row md:items-center justify-between gap-6 animate-in slide-in-from-top-4 duration-500 shadow-soft">
           <div className="flex gap-4">
-            <div className="bg-amber-100 p-3 rounded-2xl h-fit">
-              <AlertCircle className="w-6 h-6 text-amber-600" />
+            <div className="bg-warning/15 p-3 rounded-2xl h-fit">
+              <AlertCircle className="w-6 h-6 text-warning" />
             </div>
             <div>
-              <h3 className="font-headings font-bold text-amber-900">레거시 데이터 동기화 필요</h3>
-              <p className="text-sm text-amber-700/80 mt-1 font-body">
+              <h3 className="font-headings font-bold text-warning">레거시 데이터 동기화 필요</h3>
+              <p className="text-sm text-warning/80 mt-1 font-body">
                 부서 정보가 텍스트(`department`)로만 남아있는 멤버 <span className="font-bold underline">{legacyUsers.length}명</span>이 감지되었습니다. 
                 이들을 위해 정식 팀 <span className="font-bold underline">{legacyDeptCount}개</span>를 자동으로 구성하고 연동할 수 있습니다.
               </p>
             </div>
           </div>
           <form action={handleSyncAction}>
-            <Button className="rounded-pill px-8 bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-soft whitespace-nowrap gap-2">
+            <Button className="rounded-pill px-8 bg-warning hover:bg-warning/90 text-warning-foreground font-bold shadow-soft whitespace-nowrap gap-2">
               <RefreshCw className="w-4 h-4" /> 지금 동기화하기
             </Button>
           </form>

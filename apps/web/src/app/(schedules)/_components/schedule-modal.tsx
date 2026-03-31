@@ -174,12 +174,12 @@ export function ScheduleModal({
           </div>
 
           {error && (
-            <p className="text-sm font-headings font-semibold text-red-500 animate-pulse ml-1">
+            <p className="text-sm font-headings font-semibold text-destructive animate-pulse ml-1">
               {error}
             </p>
           )}
           {!error && submitError ? (
-            <p className="ml-1 text-sm font-headings font-semibold text-red-500">
+            <p className="ml-1 text-sm font-headings font-semibold text-destructive">
               {submitError}
             </p>
           ) : null}
@@ -190,14 +190,14 @@ export function ScheduleModal({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isPending}
-            className="text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200 rounded-pill h-11 px-6 font-headings"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20 rounded-pill h-11 px-6 font-headings"
           >
             취소
           </Button>
           <Button
             onClick={handleSave}
             disabled={!title.trim() || isPending}
-            className="bg-primary text-white rounded-pill h-11 px-6 font-headings shadow-soft hover:shadow-float transition-all"
+            className="bg-primary text-primary-foreground rounded-pill h-11 px-6 font-headings shadow-soft hover:shadow-float transition-all"
           >
             {isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

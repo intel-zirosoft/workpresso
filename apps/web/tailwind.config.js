@@ -30,6 +30,16 @@ module.exports = {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
         },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+          soft: "hsl(var(--warning-soft))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+          soft: "hsl(var(--info-soft))",
+        },
         surface: {
           DEFAULT: "hsl(var(--surface))",
           muted: "hsl(var(--surface-muted))",
@@ -38,10 +48,15 @@ module.exports = {
           DEFAULT: "hsl(var(--text))",
           muted: "hsl(var(--text-muted))",
         },
-        success: "hsl(var(--success))",
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+          soft: "hsl(var(--success-soft))",
+        },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
+          soft: "hsl(var(--destructive-soft))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -50,6 +65,18 @@ module.exports = {
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
+        },
+        overlay: "hsl(var(--overlay))",
+        brand: {
+          slack: "hsl(var(--brand-slack))",
+          "slack-soft": "hsl(var(--brand-slack-soft))",
+          jira: "hsl(var(--brand-jira))",
+          "jira-soft": "hsl(var(--brand-jira-soft))",
+        },
+        calendar: {
+          sunday: "hsl(var(--calendar-sunday))",
+          today: "hsl(var(--calendar-today))",
+          past: "hsl(var(--calendar-past-marker))",
         },
       },
       fontFamily: {

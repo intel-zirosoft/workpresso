@@ -64,13 +64,13 @@ export function SidebarContent({ onNavigate, mobile = false }: SidebarContentPro
                 "group flex items-center gap-3 transition-all duration-200",
                 mobile ? "rounded-2xl px-4 py-3.5" : "rounded-pill px-4 py-3",
                 isActive
-                  ? "bg-primary text-white shadow-soft"
+                  ? "bg-primary text-primary-foreground shadow-soft"
                   : "text-text-muted hover:bg-background hover:text-text"
               )}
             >
               <item.icon
                 size={20}
-                className={cn(isActive ? "text-white" : "text-text-muted group-hover:text-text")}
+                className={cn(isActive ? "text-primary-foreground" : "text-text-muted group-hover:text-text")}
               />
               <span className="font-headings font-medium">{item.name}</span>
             </Link>
