@@ -1,3 +1,4 @@
+"use client";
 import { useEffect, useRef, useState } from "react";
 import { format, isSameDay, parse, isBefore, startOfDay } from "date-fns";
 import { ko } from "date-fns/locale";
@@ -214,17 +215,17 @@ export function CalendarView({
   // [요청 사항] 금일 날짜를 기준으로 가로 스크롤 맞춤
   const scrollToToday = () => {
     if (variant !== "full") return;
-    
+
     // querySelector 대신 calendarRef.current를 통해 범위를 좁혀 안전하게 접근합니다.
     const calendarEl = (calendarRef.current as any)?.el;
     if (!calendarEl) return;
 
     const todayCell = calendarEl.querySelector(".fc-day-today");
     if (todayCell) {
-      todayCell.scrollIntoView({ 
-        behavior: "smooth", 
-        block: "nearest", 
-        inline: "center" 
+      todayCell.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
       });
     }
   };
@@ -233,7 +234,7 @@ export function CalendarView({
   if (variant === "full") {
     return (
       <div className="flex flex-col gap-6 h-[calc(100vh-14rem)] min-h-[600px]">
-      <div className="flex-1 bg-surface rounded-3xl p-6 shadow-soft border border-background/50 overflow-x-auto custom-scrollbar min-w-0">
+        <div className="flex-1 bg-surface rounded-3xl p-6 shadow-soft border border-background/50 overflow-x-auto custom-scrollbar min-w-0">
           <FullCalendar
             ref={calendarRef}
             plugins={[dayGridPlugin, interactionPlugin]}

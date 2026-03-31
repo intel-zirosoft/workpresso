@@ -18,11 +18,15 @@
 
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getAppBaseUrl } from "@/lib/app-url";
 import {
   buildReminderPayload,
   sendReminderMessage,
 } from "@/lib/slack/reminder-formatter";
+import { getExtensionInternal } from "@/features/settings/services/extensionAction";
 import { addMinutes } from "date-fns";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
@@ -50,7 +54,7 @@ export async function GET() {
 
     if (error) throw error;
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+    const baseUrl = getAppBaseUrl();
     const isDummy = !process.env.SLACK_WEBHOOK_URL;
 
     if (!upcomingMeetings || upcomingMeetings.length === 0) {
@@ -64,7 +68,7 @@ export async function GET() {
     }
 
     const results = await Promise.all(
-      upcomingMeetings.map(async (meeting) => {
+      upcomingMeetings.map(async (meeting: any) => {
         // [더미] 실제 연동 시: Pod A API에서 회의 관련 문서를 조회하여 URL을 가져옵니다.
         const documentUrl = isDummy
           ? `${baseUrl}/documents?search=${encodeURIComponent(meeting.title)}`

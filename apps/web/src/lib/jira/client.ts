@@ -2,33 +2,14 @@
  * [Part 5 - Jira REST API Client]
  *
  * 실제 Jira Cloud REST API v3를 사용하여 이슈를 조회합니다.
- * 환경변수가 없으면 더미 데이터로 자동 폴백합니다.
- *
- * 필요한 환경변수:
- *  - JIRA_BASE_URL      예: https://workpresso.atlassian.net
- *  - JIRA_USER_EMAIL    예: polly.saids@gmail.com
- *  - JIRA_API_TOKEN     Jira에서 발급받은 Personal Access Token
- *  - JIRA_PROJECT_KEY   예: KAN
+ * 중앙 집중식 연동 엔진(extensionAction)을 통해 DB 설정을 우선 조회하며,
+ * 설정이 없는 경우 환경 변수 및 더미 데이터로 폴백합니다.
  *
  * @see https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-search/
  */
 
 import { getDummyJiraIssues, type JiraIssue } from "@/lib/dummy-data/jira";
-
-function getJiraAuthHeader(): string {
-  const email = process.env.JIRA_USER_EMAIL!;
-  const token = process.env.JIRA_API_TOKEN!;
-  return "Basic " + Buffer.from(`${email}:${token}`).toString("base64");
-}
-
-function isJiraConfigured(): boolean {
-  return !!(
-    process.env.JIRA_BASE_URL &&
-    process.env.JIRA_USER_EMAIL &&
-    process.env.JIRA_API_TOKEN &&
-    process.env.JIRA_PROJECT_KEY
-  );
-}
+import { getJiraRuntimeConfig } from "@/features/settings/services/extensionAction";
 
 /**
  * Jira의 우선순위 이름을 내부 타입으로 변환합니다.
@@ -46,24 +27,24 @@ function mapPriority(jiraPriority: string): JiraIssue["priority"] {
 
 /**
  * 오늘 마감이거나 마감이 지난 나에게 할당된 Jira 이슈를 조회합니다.
- * 환경변수가 세팅되지 않은 경우 더미 데이터를 반환합니다.
+ * DB 설정이 된 경우 실제 데이터를, 그렇지 않으면 더미 데이터를 반환합니다.
  */
 export async function getJiraIssuesDueToday(): Promise<{
   issues: JiraIssue[];
   isDummy: boolean;
   error?: string;
 }> {
-  if (!isJiraConfigured()) {
-    console.log("[Jira Client] 환경변수가 없어 더미 데이터를 사용합니다.");
+  const { isConfigured, config } = await getJiraRuntimeConfig();
+
+  if (!isConfigured || !config) {
+    console.log("[Jira Client] 설정이 구성되지 않아 더미 데이터를 사용합니다.");
     return { issues: getDummyJiraIssues(), isDummy: true };
   }
 
-  const baseUrl = process.env.JIRA_BASE_URL;
-  const email = process.env.JIRA_USER_EMAIL!;
-  const projectKey = process.env.JIRA_PROJECT_KEY;
+  const { baseUrl, projectKey, authHeader } = config;
   const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
-  // [변경] 최신 Jira API 규격에 맞춰 POST /rest/api/3/search/jql 사용
+  // 최신 Jira API 규격에 맞춰 POST /rest/api/3/search/jql 사용
   const url = `${baseUrl}/rest/api/3/search/jql`;
   const jqlBody = {
     jql: `project = ${projectKey} AND assignee = currentUser() AND duedate <= "${today}" AND statusCategory != Done ORDER BY priority ASC`,
@@ -75,7 +56,7 @@ export async function getJiraIssuesDueToday(): Promise<{
     const res = await fetch(url, {
       method: "POST",
       headers: {
-        Authorization: getJiraAuthHeader(),
+        Authorization: authHeader,
         "Content-Type": "application/json",
         Accept: "application/json",
       },
@@ -117,15 +98,14 @@ export async function getHighPriorityJiraIssues(): Promise<{
   issues: JiraIssue[];
   isDummy: boolean;
 }> {
-  if (!isJiraConfigured()) {
+  const { isConfigured, config } = await getJiraRuntimeConfig();
+
+  if (!isConfigured || !config) {
     return { issues: getDummyJiraIssues(), isDummy: true };
   }
 
-  const baseUrl = process.env.JIRA_BASE_URL;
-  const email = process.env.JIRA_USER_EMAIL!;
-  const projectKey = process.env.JIRA_PROJECT_KEY;
+  const { baseUrl, projectKey, authHeader } = config;
 
-  // [변경] 최신 Jira API 규격에 맞춰 POST /rest/api/3/search/jql 사용
   const url = `${baseUrl}/rest/api/3/search/jql`;
   const jqlBody = {
     jql: `project = ${projectKey} AND assignee = currentUser() AND priority in (Highest, High) AND statusCategory != Done ORDER BY priority ASC`,
@@ -137,7 +117,7 @@ export async function getHighPriorityJiraIssues(): Promise<{
     const res = await fetch(url, {
       method: "POST",
       headers: {
-        Authorization: getJiraAuthHeader(),
+        Authorization: authHeader,
         "Content-Type": "application/json",
         Accept: "application/json",
       },

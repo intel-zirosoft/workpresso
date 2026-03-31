@@ -20,6 +20,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getHighPriorityJiraIssues } from "@/lib/jira/client";
+import { getJiraRuntimeConfig } from "@/features/settings/services/extensionAction";
 import { startOfDay, endOfDay, addMinutes } from "date-fns";
 
 const FOCUS_BLOCK_DURATION_MINUTES = 90;
@@ -116,10 +117,11 @@ export async function POST() {
     const { issues: highPriorityIssues } = await getHighPriorityJiraIssues();
 
     const created: { title: string; start: string; end: string }[] = [];
-    let currentSchedules: { start_time: string; end_time: string }[] = [
+    let currentSchedules: { start_time: string; end_time: string; title: string }[] = [
       ...((existingSchedules ?? []).map((schedule) => ({
         start_time: schedule.start_time,
         end_time: schedule.end_time,
+        title: schedule.title,
       })) ?? []),
     ];
 
@@ -149,13 +151,16 @@ export async function POST() {
         currentSchedules.push({
           start_time: slot.start.toISOString(),
           end_time: slot.end.toISOString(),
+          title, // 타입 불일치 해결
         });
       }
     }
 
+    const { isConfigured } = await getJiraRuntimeConfig();
+
     return NextResponse.json({
       success: true,
-      isDummy: !process.env.JIRA_API_TOKEN,
+      isDummy: !isConfigured,
       focusBlocksCreated: created.length,
       created,
     });

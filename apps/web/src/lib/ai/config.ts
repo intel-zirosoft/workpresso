@@ -2,6 +2,7 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getDefaultModel, normalizeModelId } from "@/lib/ai/models";
+import { getAppBaseUrl } from "@/lib/app-url";
 import {
   getDecryptedExtensionSecret,
   SYSTEM_LLM_SECRET_NAME,
@@ -44,9 +45,7 @@ export async function getOpenRouterRuntimeConfig(options?: {
   }
 
   const siteUrl =
-    process.env.OPENROUTER_SITE_URL ??
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.NEXT_PUBLIC_SITE_URL;
+    process.env.OPENROUTER_SITE_URL ?? getAppBaseUrl({ fallback: undefined });
   const appName = process.env.OPENROUTER_APP_NAME ?? "WorkPresso";
 
   return {

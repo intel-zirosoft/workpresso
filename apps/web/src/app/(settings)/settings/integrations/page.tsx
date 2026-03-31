@@ -8,12 +8,13 @@ import {
   testSlackConnection,
   testLLMConnection,
   getIntegrationsStatus,
+  sanitizeJiraDomain,
 } from "@/features/settings/services/extensionAction";
 import { APIKeyForm } from "@/features/settings/components/APIKeyForm";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { cn } from "@/lib/utils";
-import { Activity, Cpu, MessageSquare, Link2, Github, Zap } from "lucide-react";
+import { Activity, Cpu, MessageSquare, Link2, Github, Zap, Clock, Calendar, Bell, ShieldCheck, CheckCircle2, AlertCircle } from "lucide-react";
 
 export default async function IntegrationsPage() {
   const profile = await getUserProfile();
@@ -73,10 +74,11 @@ export default async function IntegrationsPage() {
 
   async function updateJira(formData: FormData) {
     "use server";
-    const domain = formData.get("domain") as string;
-    const email = formData.get("email") as string;
-    const projectKey = formData.get("projectKey") as string;
-    const apiToken = formData.get("apiToken") as string;
+    const domainRaw = (formData.get("domain") as string)?.trim();
+    const domain = await sanitizeJiraDomain(domainRaw);
+    const email = (formData.get("email") as string)?.trim();
+    const projectKey = (formData.get("projectKey") as string)?.trim();
+    const apiToken = (formData.get("apiToken") as string)?.trim();
 
     await upsertExtension(
       "jira",
@@ -107,6 +109,75 @@ export default async function IntegrationsPage() {
         <p className="text-sm text-text-muted mt-1 font-body">
           조직에서 사용하는 협업 도구들을 연결하여 업무 효율을 극대화합니다.
         </p>
+      </div>
+
+      {/* 🟢 System Health Dashboard & Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {stats.map((stat) => (
+          <div key={stat.name} className="bg-white rounded-[24px] p-6 border border-background shadow-soft hover:translate-y-[-2px] transition-all duration-300">
+            <div className="flex items-start justify-between">
+              <div className={cn("p-3 rounded-2xl", stat.bg)}>
+                <stat.icon className={cn("w-6 h-6", stat.color)} />
+              </div>
+              <div className={cn(
+                "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                stat.status ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
+              )}>
+                {stat.status ? "Active" : "Inactive"}
+              </div>
+            </div>
+            <div className="mt-4">
+              <h3 className="text-sm font-headings font-bold text-text">{stat.name}</h3>
+              <p className="text-[11px] text-muted mt-1 font-body">
+                {stat.status ? "연동이 정상적으로 가동 중입니다." : "연동 설정이 필요합니다."}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 🔴 Automation Engine Status (Pod-B Core) */}
+      <div className="bg-[#fcfaf6] rounded-[32px] p-8 border border-[#7FA1C3]/10">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary p-2 rounded-xl">
+              <Zap className="w-5 h-5 text-white" />
+            </div>
+            <h2 className="text-xl font-headings font-bold text-text">지능형 자동화 서비스 엔진</h2>
+          </div>
+          <div className="flex items-center gap-2 text-xs font-medium text-primary bg-primary/5 px-4 py-2 rounded-full border border-primary/10">
+            <ShieldCheck className="w-4 h-4" /> 시스템 보호 가동 중
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { name: "데일리 브리핑", active: status.automation.dailyBriefing, icon: Clock, desc: "오늘의 일정 및 전사 이슈 브리핑" },
+            { name: "지라 동기화", active: status.automation.jiraSync, icon: Calendar, desc: "지라 마감일 일정을 캘린더에 동기화" },
+            { name: "관심 시간(Focus)", active: status.automation.jiraSync, icon: Zap, desc: "우선순위 기반 자동 집중 시간 블로킹" },
+            { name: "회의 리마인더", active: status.slack.is_active, icon: Bell, desc: "회의 시작 전 맥락 기반 슬랙 알림" },
+          ].map((service) => (
+            <div key={service.name} className="bg-white rounded-[24px] p-5 border border-background shadow-soft group hover:border-primary/20 transition-all">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-background rounded-lg group-hover:bg-primary/5 transition-colors">
+                  <service.icon className="w-5 h-5 text-muted-foreground group-hover:text-primary" />
+                </div>
+                <h4 className="text-sm font-bold text-text">{service.name}</h4>
+              </div>
+              <p className="text-[11px] text-muted-foreground mb-4 line-clamp-1">{service.desc}</p>
+              <div className="flex items-center gap-2">
+                {service.active ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                ) : (
+                  <AlertCircle className="w-3.5 h-3.5 text-red-400" />
+                )}
+                <span className={cn("text-[10px] font-bold", service.active ? "text-green-600" : "text-red-500")}>
+                  {service.active ? "READY TO RUN" : "IDLE (CONFIG REQ.)"}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Active Integrations Grid */}
@@ -160,6 +231,20 @@ export default async function IntegrationsPage() {
           action={updateJira}
           onTest={handleTestJira}
         />
+        
+        <div className="bg-primary/5 rounded-3xl p-6 border border-primary/10 mt-4 h-fit">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="bg-primary p-2 rounded-lg">
+              <Zap className="w-4 h-4 text-white" />
+            </div>
+            <h4 className="text-sm font-bold text-text">지라 연동 가이드</h4>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed font-body">
+            연동 테스트 성공 후 나타나는 <strong>[사용 가능한 이슈 유형]</strong>을 확인하세요. 
+            Jira 프로젝트 설정에 따라 <code>Task</code> 대신 <code>작업</code>이나 <code>Story</code>를 
+            사용해야 할 수도 있습니다. 권한 오류(401)가 지속되면 해당 유형을 확인해 주세요.
+          </p>
+        </div>
       </div>
 
       {/* GitHub Integration (Coming Soon Card Design) */}

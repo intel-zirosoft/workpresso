@@ -1,6 +1,8 @@
-// tailscale로 dev서버 접속을 위해 임시로 추가합니다.
-// 배포 시 지우는 코드입니다.
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  // Standalone 빌드는 Vercel 배포 시 안정성을 높여줍니다.
+  output: "standalone",
+};
 
-module.exports = {
-  allowedDevOrigins: ['100.110.83.10'],
-}
+module.exports = nextConfig;
