@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
 import { LogOut, Menu, Settings } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -18,7 +18,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { SidebarContent } from "@/components/shared/sidebar";
-import { getCurrentSectionTitle } from "@/components/shared/navigation";
 
 export function Header() {
   const [user, setUser] = useState<User | null>(null);
@@ -26,8 +25,6 @@ export function Header() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const supabase = createClient();
   const router = useRouter();
-  const pathname = usePathname();
-  const currentSectionTitle = getCurrentSectionTitle(pathname);
 
   const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: ['userProfile'],
@@ -91,9 +88,6 @@ export function Header() {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/70">
             Workspace
           </p>
-          <h1 className="truncate font-headings text-lg font-bold text-text md:text-2xl">
-            {currentSectionTitle}
-          </h1>
         </div>
       </div>
 
