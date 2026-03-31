@@ -39,6 +39,10 @@ export async function handleBridgeMessage(
       return;
     }
 
+    case 'WEB_RUNTIME_ERROR': {
+      return;
+    }
+
     case 'WEB_SESSION_STATUS': {
       return;
     }

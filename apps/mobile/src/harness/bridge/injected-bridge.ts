@@ -55,6 +55,10 @@ export function buildInjectedBridgeScript(webBaseOrigin: string) {
         postMessage('WEB_SESSION_STATUS', Object.assign({ kind: kind }, payload || {}));
       }
 
+      function reportRuntimeError(payload) {
+        postMessage('WEB_RUNTIME_ERROR', payload || {});
+      }
+
       function reportRouteChange() {
         postMessage('WEB_ROUTE_CHANGED', {
           title: document.title || '',
@@ -182,6 +186,27 @@ export function buildInjectedBridgeScript(webBaseOrigin: string) {
 
       document.addEventListener('click', handleAnchorClick, true);
       window.addEventListener('popstate', reportCurrentLocation);
+      window.addEventListener('error', function(event) {
+        reportRuntimeError({
+          kind: 'error',
+          message: event.message || 'Unknown runtime error',
+          source: event.filename || '',
+          line: event.lineno || 0,
+          column: event.colno || 0,
+        });
+      });
+      window.addEventListener('unhandledrejection', function(event) {
+        var reason = event.reason;
+        var message =
+          reason && typeof reason === 'object' && 'message' in reason
+            ? String(reason.message || 'Unhandled promise rejection')
+            : String(reason || 'Unhandled promise rejection');
+
+        reportRuntimeError({
+          kind: 'unhandledrejection',
+          message: message,
+        });
+      });
 
       window.WorkPressoMobile = {
         __initialized: true,
