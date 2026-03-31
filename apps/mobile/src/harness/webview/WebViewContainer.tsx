@@ -31,7 +31,10 @@ import type {
 
 import { handleBridgeMessage } from '../bridge/bridge-handler';
 import { buildInjectedBridgeScript } from '../bridge/injected-bridge';
-import type { BridgeMessage } from '../bridge/bridge-types';
+import type {
+  BridgeMessage,
+  WebSessionStatusPayload,
+} from '../bridge/bridge-types';
 import { parseBridgeMessage } from '../bridge/bridge-handler';
 import {
   getWebBaseOrigin,
@@ -61,6 +64,7 @@ export type WebViewContainerHandle = {
 };
 
 type WebViewContainerProps = {
+  onAuthWarningChange?: (message: string | null) => void;
   onBridgeLog?: (entry: BridgeLogEntry) => void;
   path: string;
   onStateChange?: (state: WebViewControlState) => void;
@@ -71,7 +75,10 @@ const LOAD_TIMEOUT_MS = 15000;
 export const WebViewContainer = forwardRef<
   WebViewContainerHandle,
   WebViewContainerProps
->(function WebViewContainer({ path, onBridgeLog, onStateChange }, ref) {
+>(function WebViewContainer(
+  { path, onAuthWarningChange, onBridgeLog, onStateChange },
+  ref,
+) {
   const webViewRef = useRef<WebView>(null);
   const bridgeLogIdRef = useRef(0);
   const loadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -92,6 +99,32 @@ export const WebViewContainer = forwardRef<
   );
   const hasError = Boolean(errorMessage);
   const currentUrl = navigationState.currentUrl || uri;
+
+  const publishAuthWarning = useCallback(
+    (message: string | null) => {
+      onAuthWarningChange?.(message);
+    },
+    [onAuthWarningChange],
+  );
+
+  const buildAuthWarningMessage = useCallback(
+    (payload?: WebSessionStatusPayload) => {
+      if (!payload) {
+        return null;
+      }
+
+      if (payload.kind === 'LOGIN_PAGE') {
+        return '로그인 페이지로 이동했습니다. WebView 세션이 유지되지 않았을 수 있습니다.';
+      }
+
+      if (payload.kind === 'API_UNAUTHORIZED') {
+        return `기능 요청이 인증 실패(${payload.status ?? 401})로 차단됐습니다. 다시 로그인해 주세요.`;
+      }
+
+      return null;
+    },
+    [],
+  );
 
   const publishBridgeLog = useCallback(
     (
@@ -291,10 +324,11 @@ export const WebViewContainer = forwardRef<
 
   const handleLoadStart = useCallback(() => {
     scheduleLoadTimeout();
+    publishAuthWarning(null);
     setIsLoading(true);
     setErrorMessage(null);
     publishState({ hasError: false, isLoading: true });
-  }, [publishState, scheduleLoadTimeout]);
+  }, [publishAuthWarning, publishState, scheduleLoadTimeout]);
 
   const handleLoadEnd = useCallback(() => {
     clearLoadTimeout();
@@ -381,6 +415,14 @@ export const WebViewContainer = forwardRef<
             parsedMessage?.type ?? 'INVALID_MESSAGE',
             parsedMessage?.payload ?? event.nativeEvent.data,
           );
+
+          if (parsedMessage?.type === 'WEB_SESSION_STATUS') {
+            publishAuthWarning(
+              buildAuthWarningMessage(
+                parsedMessage.payload as WebSessionStatusPayload | undefined,
+              ),
+            );
+          }
 
           void handleBridgeMessage(event.nativeEvent.data, {
             openExternalUrl,

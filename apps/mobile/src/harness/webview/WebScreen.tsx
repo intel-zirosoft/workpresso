@@ -22,6 +22,7 @@ const INITIAL_CONTROL_STATE: WebViewControlState = {
 };
 
 export function WebScreen({ path, title }: WebScreenProps) {
+  const [authWarning, setAuthWarning] = useState<string | null>(null);
   const webViewRef = useRef<WebViewContainerHandle>(null);
   const [bridgeLogs, setBridgeLogs] = useState<BridgeLogEntry[]>([]);
   const [controlState, setControlState] = useState<WebViewControlState>(
@@ -111,6 +112,11 @@ export function WebScreen({ path, title }: WebScreenProps) {
         </View>
         {__DEV__ ? (
           <View style={styles.bridgePanel}>
+            {authWarning ? (
+              <View style={styles.authWarningBox}>
+                <Text style={styles.authWarningText}>{authWarning}</Text>
+              </View>
+            ) : null}
             <View style={styles.bridgePanelHeader}>
               <Text style={styles.bridgePanelTitle}>브리지 확인</Text>
               <View style={styles.bridgeTestActions}>
@@ -144,6 +150,7 @@ export function WebScreen({ path, title }: WebScreenProps) {
       </SafeAreaView>
       <WebViewContainer
         ref={webViewRef}
+        onAuthWarningChange={setAuthWarning}
         onBridgeLog={handleBridgeLog}
         path={path}
         onStateChange={handleStateChange}
@@ -215,6 +222,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     gap: 6,
+  },
+  authWarningBox: {
+    borderRadius: 12,
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  authWarningText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#92400e',
   },
   bridgePanelHeader: {
     flexDirection: 'row',

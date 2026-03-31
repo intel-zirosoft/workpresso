@@ -35,6 +35,10 @@ export async function handleBridgeMessage(
       return;
     }
 
+    case 'WEB_SESSION_STATUS': {
+      return;
+    }
+
     case 'OPEN_EXTERNAL_URL': {
       const url = typeof message.payload === 'object' && message.payload && 'url' in message.payload
         ? String((message.payload as { url?: string }).url ?? '')

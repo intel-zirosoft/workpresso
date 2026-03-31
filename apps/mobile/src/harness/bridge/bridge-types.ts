@@ -1,5 +1,6 @@
 export type BridgeEventType =
   | 'BRIDGE_READY'
+  | 'WEB_SESSION_STATUS'
   | 'OPEN_NATIVE_RECORDER'
   | 'PICK_FILE'
   | 'OPEN_SHARE_SHEET'
@@ -18,4 +19,10 @@ export type BridgeEventType =
 export type BridgeMessage<TPayload = unknown> = {
   type: BridgeEventType;
   payload?: TPayload;
+};
+
+export type WebSessionStatusPayload = {
+  kind: 'API_UNAUTHORIZED' | 'LOGIN_PAGE';
+  status?: number;
+  url?: string;
 };
