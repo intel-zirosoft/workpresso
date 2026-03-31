@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -25,8 +25,8 @@ export function SidebarContent({ onNavigate, mobile = false }: SidebarContentPro
     async function checkRole() {
       try {
         const profile = await getUserProfile();
-        setIsAdmin(profile.role === 'SUPER_ADMIN' || profile.role === 'ORG_ADMIN');
-      } catch (e) {
+        setIsAdmin(profile.role === "SUPER_ADMIN" || profile.role === "ORG_ADMIN");
+      } catch (error) {
         setIsAdmin(false);
       }
     }
@@ -78,7 +78,7 @@ export function SidebarContent({ onNavigate, mobile = false }: SidebarContentPro
         })}
       </nav>
 
-      <div className={cn("mt-auto border-t border-background/50 space-y-2", mobile ? "p-3" : "p-6")}>
+      <div className={cn("mt-auto space-y-2 border-t border-background/50", mobile ? "p-3" : "p-6")}>
         {isAdmin && ADMIN_NAV_ITEMS.map((item: AppNavItem) => {
           const isActive = isActivePath(pathname, item.href);
           return (
@@ -90,7 +90,7 @@ export function SidebarContent({ onNavigate, mobile = false }: SidebarContentPro
                 "group flex items-center gap-3 transition-all duration-200",
                 mobile ? "rounded-2xl px-4 py-3.5" : "rounded-pill px-4 py-3",
                 isActive
-                  ? "bg-primary/10 text-primary border border-primary/20"
+                  ? "border border-primary/20 bg-primary/10 text-primary"
                   : "text-text-muted hover:bg-background hover:text-text"
               )}
             >
@@ -105,7 +105,7 @@ export function SidebarContent({ onNavigate, mobile = false }: SidebarContentPro
 
         <button
           onClick={handleSignOut}
-          className="flex w-full items-center gap-3 rounded-pill px-4 py-3 text-text-muted transition-all duration-200 hover:bg-destructive/10 hover:text-destructive group"
+          className="group flex w-full items-center gap-3 rounded-pill px-4 py-3 text-text-muted transition-all duration-200 hover:bg-destructive/10 hover:text-destructive"
         >
           <LogOut size={20} />
           <span className="font-headings font-medium">로그아웃</span>
@@ -117,7 +117,7 @@ export function SidebarContent({ onNavigate, mobile = false }: SidebarContentPro
 
 export function Sidebar() {
   return (
-    <aside className="w-[260px] h-screen sticky top-0 bg-surface border-r border-transparent shadow-soft flex flex-col z-40">
+    <aside className="app-shell-sidebar sticky top-0 z-40 flex h-screen w-[260px] flex-col border-r border-transparent bg-surface shadow-soft">
       <SidebarContent />
     </aside>
   );

@@ -5,33 +5,33 @@
 @layer base {
   :root {
     /* Soft & Trustworthy Workpresso Palette */
-    --background: 34 29% 98%;   /* #FDFBF7 (Warm Off-white) */
-    --foreground: 216 26% 23%;  /* #2C394B (Deep Navy) */
-    --surface: 0 0% 100%;       /* #FFFFFF */
+    --background: 34 29% 98%; /* #FDFBF7 (Warm Off-white) */
+    --foreground: 216 26% 23%; /* #2C394B (Deep Navy) */
+    --surface: 0 0% 100%; /* #FFFFFF */
     --surface-muted: 34 35% 94%; /* #F6F1E8 */
-    --text: 216 26% 23%;        /* #2C394B */
-    --text-muted: 214 18% 56%;  /* #7F8FA1 */
-    
-    --card: 0 0% 100%;          /* #FFFFFF */
+    --text: 216 26% 23%; /* #2C394B */
+    --text-muted: 214 18% 56%; /* #7F8FA1 */
+
+    --card: 0 0% 100%; /* #FFFFFF */
     --card-foreground: 216 26% 23%;
-    
+
     --popover: 0 0% 100%;
     --popover-foreground: 216 26% 23%;
-    
-    --primary: 210 38% 63%;     /* #7FA1C3 (Dusty Blue) */
+
+    --primary: 210 38% 63%; /* #7FA1C3 (Dusty Blue) */
     --primary-foreground: 0 0% 100%;
-    
-    --secondary: 32 83% 75%;    /* #F2C18D (Warm Peach) */
+
+    --secondary: 32 83% 75%; /* #F2C18D (Warm Peach) */
     --secondary-foreground: 216 26% 23%;
 
-    --success: 111 27% 68%;     /* #A1C398 */
-    
+    --success: 111 27% 68%; /* #A1C398 */
+
     --muted: 214 18% 86%;
     --muted-foreground: 214 18% 52%;
-    
+
     --accent: 32 83% 75%;
     --accent-foreground: 216 26% 23%;
-    
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
@@ -41,17 +41,33 @@
 
     --shadow-soft: 0 8px 24px rgba(127, 161, 195, 0.12);
     --shadow-float: 0 16px 32px rgba(127, 161, 195, 0.16);
-    
+    --glass-background-image:
+      radial-gradient(
+        circle at top left,
+        rgba(255, 255, 255, 0),
+        rgba(255, 255, 255, 0)
+      ),
+      linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0));
+    --glass-panel-background: hsl(var(--surface) / 1);
+    --glass-panel-border: hsl(var(--border) / 0.7);
+    --glass-input-background: hsl(var(--background) / 0.72);
+    --glass-page-x: 50%;
+    --glass-page-y: 24%;
+    --calendar-today-pill: #3b82f6;
+    --calendar-past-background: hsl(var(--background) / 0.5);
+    --calendar-past-marker: rgba(71, 85, 105, 0.4);
+    --calendar-past-number: hsl(var(--foreground) / 0.4);
+
     --radius: 24px;
   }
 
   [data-theme="dark"] {
-    --background: 214 31% 11%;   /* #121B25 */
-    --foreground: 206 43% 95%;   /* #EDF3F8 */
-    --surface: 210 25% 20%;      /* #253240 */
+    --background: 214 31% 11%; /* #121B25 */
+    --foreground: 206 43% 95%; /* #EDF3F8 */
+    --surface: 210 25% 20%; /* #253240 */
     --surface-muted: 211 24% 16%; /* #1D2833 */
-    --text: 206 43% 95%;         /* #EDF3F8 */
-    --text-muted: 210 34% 89%;   /* #D5E2EF */
+    --text: 206 43% 95%; /* #EDF3F8 */
+    --text-muted: 210 34% 89%; /* #D5E2EF */
 
     --card: 210 28% 19%;
     --card-foreground: 206 43% 95%;
@@ -59,13 +75,13 @@
     --popover: 210 28% 19%;
     --popover-foreground: 206 43% 95%;
 
-    --primary: 210 42% 72%;      /* #9AB8D6 */
+    --primary: 210 42% 72%; /* #9AB8D6 */
     --primary-foreground: 213 29% 13%;
 
-    --secondary: 29 69% 69%;     /* #E7B07A */
+    --secondary: 29 69% 69%; /* #E7B07A */
     --secondary-foreground: 213 29% 13%;
 
-    --success: 114 25% 64%;      /* #8FB78B */
+    --success: 114 25% 64%; /* #8FB78B */
 
     --muted: 210 18% 28%;
     --muted-foreground: 210 31% 84%;
@@ -81,6 +97,113 @@
     --shadow-float: 0 18px 40px rgba(7, 12, 18, 0.34);
   }
 
+  [data-theme="light"][data-theme-preset="liquid-glass"] {
+    --background: 210 33% 96%;
+    --foreground: 220 36% 20%;
+    --surface: 210 43% 99%;
+    --surface-muted: 211 37% 95%;
+    --text: 220 36% 20%;
+    --text-muted: 218 18% 44%;
+    --card: 210 43% 99%;
+    --card-foreground: 220 36% 20%;
+    --popover: 210 43% 99%;
+    --popover-foreground: 220 36% 20%;
+    --primary: 203 82% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 195 73% 86%;
+    --secondary-foreground: 220 36% 20%;
+    --accent: 198 70% 87%;
+    --accent-foreground: 220 36% 20%;
+    --muted: 210 28% 88%;
+    --muted-foreground: 218 18% 44%;
+    --border: 210 34% 78%;
+    --input: 210 34% 78%;
+    --ring: 203 82% 58%;
+    --shadow-soft:
+      0 16px 36px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    --shadow-float:
+      0 24px 56px rgba(15, 23, 42, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.48);
+    --glass-background-image:
+      radial-gradient(
+        circle at 12% 18%,
+        rgba(125, 211, 252, 0.24),
+        transparent 28%
+      ),
+      radial-gradient(
+        circle at 82% 14%,
+        rgba(191, 219, 254, 0.34),
+        transparent 24%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.82),
+        rgba(226, 236, 248, 0.72)
+      );
+    --glass-panel-background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.82),
+      rgba(255, 255, 255, 0.58)
+    );
+    --glass-panel-border: rgba(255, 255, 255, 0.58);
+    --glass-input-background: rgba(255, 255, 255, 0.54);
+    --calendar-today-pill: #38bdf8;
+    --calendar-past-background: rgba(226, 232, 240, 0.34);
+    --calendar-past-marker: rgba(71, 85, 105, 0.28);
+    --calendar-past-number: rgba(51, 65, 85, 0.5);
+  }
+
+  [data-theme="dark"][data-theme-preset="liquid-glass"] {
+    --background: 220 40% 11%;
+    --foreground: 210 40% 96%;
+    --surface: 217 40% 18%;
+    --surface-muted: 218 34% 15%;
+    --text: 210 40% 96%;
+    --text-muted: 214 20% 74%;
+    --card: 217 40% 18%;
+    --card-foreground: 210 40% 96%;
+    --popover: 217 40% 18%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 197 92% 68%;
+    --primary-foreground: 217 42% 12%;
+    --secondary: 214 39% 29%;
+    --secondary-foreground: 210 40% 96%;
+    --accent: 214 39% 29%;
+    --accent-foreground: 210 40% 96%;
+    --muted: 215 28% 24%;
+    --muted-foreground: 214 20% 74%;
+    --border: 214 32% 35%;
+    --input: 214 32% 35%;
+    --ring: 197 92% 68%;
+    --shadow-soft:
+      0 18px 40px rgba(2, 8, 23, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    --shadow-float:
+      0 28px 60px rgba(2, 8, 23, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    --glass-background-image:
+      radial-gradient(
+        circle at 16% 18%,
+        rgba(56, 189, 248, 0.18),
+        transparent 24%
+      ),
+      radial-gradient(
+        circle at 84% 12%,
+        rgba(96, 165, 250, 0.16),
+        transparent 22%
+      ),
+      linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(12, 18, 32, 0.96));
+    --glass-panel-background: linear-gradient(
+      180deg,
+      rgba(30, 41, 59, 0.72),
+      rgba(15, 23, 42, 0.56)
+    );
+    --glass-panel-border: rgba(148, 163, 184, 0.22);
+    --glass-input-background: rgba(15, 23, 42, 0.42);
+    --calendar-today-pill: #38bdf8;
+    --calendar-past-background: rgba(15, 23, 42, 0.24);
+    --calendar-past-marker: rgba(148, 163, 184, 0.22);
+    --calendar-past-number: rgba(226, 232, 240, 0.42);
+  }
+
   html {
     background-color: hsl(var(--background));
   }
@@ -88,13 +211,24 @@
   * {
     @apply border-transparent; /* 대부분의 디자인이 테두리 대신 그림자/대비 사용 */
   }
-  
+
   body {
     @apply bg-background text-foreground font-body;
     -webkit-font-smoothing: antialiased;
+    background-image: var(--glass-background-image);
+    background-attachment: fixed;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+    isolation: isolate;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-headings;
   }
 }
@@ -103,9 +237,16 @@
   .soft-card {
     @apply bg-surface rounded-md shadow-soft hover:shadow-float transition-shadow duration-300;
   }
-  
+
   .pill-button {
     @apply rounded-pill px-spacing-sm py-spacing-xs font-bold transition-all;
+  }
+
+  .app-shell-panel {
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease,
+      box-shadow 200ms ease;
   }
 
   .custom-scrollbar::-webkit-scrollbar {
@@ -123,9 +264,439 @@
   }
 }
 
+@keyframes liquid-glass-body-flow {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2%, 1%, 0) scale(1.04);
+  }
+  100% {
+    transform: translate3d(-1%, 2%, 0) scale(1.02);
+  }
+}
+
+@keyframes liquid-glass-caustic-drift {
+  0% {
+    transform: translate3d(-2%, -4%, 0) scale(1.02);
+  }
+  50% {
+    transform: translate3d(3%, 2%, 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(-1%, 4%, 0) scale(1.04);
+  }
+}
+
+@keyframes liquid-glass-droplet-float {
+  0% {
+    transform: translate3d(-4%, -2%, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(4%, 3%, 0) rotate(8deg);
+  }
+  100% {
+    transform: translate3d(-3%, 4%, 0) rotate(-6deg);
+  }
+}
+
+[data-theme-preset="liquid-glass"] .app-shell-header,
+[data-theme-preset="liquid-glass"] .app-shell-sidebar,
+[data-theme-preset="liquid-glass"] .app-shell-panel,
+[data-theme-preset="liquid-glass"] [data-ui="card"],
+[data-theme-preset="liquid-glass"] [data-ui="dialog-content"],
+[data-theme-preset="liquid-glass"] [data-ui="dropdown-content"] {
+  background: var(--glass-panel-background);
+  border-color: var(--glass-panel-border);
+  box-shadow: var(--shadow-float);
+  backdrop-filter: blur(22px) saturate(135%);
+  -webkit-backdrop-filter: blur(22px) saturate(135%);
+}
+
+[data-theme-preset="liquid-glass"] body::before,
+[data-theme-preset="liquid-glass"] body::after {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: -14%;
+}
+
+[data-theme-preset="liquid-glass"] body::before {
+  z-index: 0;
+  background:
+    radial-gradient(
+      32rem 24rem at var(--glass-page-x) var(--glass-page-y),
+      rgba(125, 211, 252, 0.18),
+      transparent 60%
+    ),
+    radial-gradient(
+      22rem 18rem at calc(100% - var(--glass-page-x)) 12%,
+      rgba(191, 219, 254, 0.16),
+      transparent 62%
+    ),
+    radial-gradient(
+      18rem 14rem at 18% 84%,
+      rgba(255, 255, 255, 0.12),
+      transparent 64%
+    );
+  filter: blur(22px) saturate(135%);
+  animation: liquid-glass-body-flow 16s ease-in-out infinite alternate;
+}
+
+[data-theme-preset="liquid-glass"] body::after {
+  z-index: 0;
+  opacity: 0.9;
+  background:
+    radial-gradient(
+      14rem 10rem at calc(var(--glass-page-x) + 6%)
+        calc(var(--glass-page-y) - 8%),
+      rgba(255, 255, 255, 0.24),
+      transparent 58%
+    ),
+    radial-gradient(
+      10rem 8rem at calc(var(--glass-page-x) - 18%)
+        calc(var(--glass-page-y) + 20%),
+      rgba(255, 255, 255, 0.16),
+      transparent 64%
+    );
+  filter: blur(30px);
+  mix-blend-mode: screen;
+  animation: liquid-glass-droplet-float 18s ease-in-out infinite alternate;
+}
+
+[data-theme-preset="liquid-glass"] body > * {
+  position: relative;
+  z-index: 1;
+}
+
+[data-theme-preset="liquid-glass"] [data-ui="input"],
+[data-theme-preset="liquid-glass"] [data-ui="button"][data-variant="outline"] {
+  background:
+    radial-gradient(
+      12rem 8rem at var(--glass-pointer-x, 50%) var(--glass-pointer-y, 50%),
+      rgba(255, 255, 255, 0.18),
+      transparent 58%
+    ),
+    var(--glass-input-background);
+  border-color: hsl(var(--border) / 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 24px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+[data-theme-preset="liquid-glass"] .app-shell-header,
+[data-theme-preset="liquid-glass"] .app-shell-sidebar,
+[data-theme-preset="liquid-glass"] .app-shell-panel,
+[data-theme-preset="liquid-glass"] [data-ui="card"],
+[data-theme-preset="liquid-glass"] [data-ui="dialog-content"],
+[data-theme-preset="liquid-glass"] [data-ui="dropdown-content"] {
+  overflow: hidden;
+  position: relative;
+  isolation: isolate;
+}
+
+[data-theme-preset="liquid-glass"] .app-shell-header > *,
+[data-theme-preset="liquid-glass"] .app-shell-sidebar > *,
+[data-theme-preset="liquid-glass"] .app-shell-panel > *,
+[data-theme-preset="liquid-glass"] [data-ui="card"] > *,
+[data-theme-preset="liquid-glass"] [data-ui="dialog-content"] > *,
+[data-theme-preset="liquid-glass"] [data-ui="dropdown-content"] > * {
+  position: relative;
+  z-index: 1;
+}
+
+[data-theme-preset="liquid-glass"] .app-shell-header::before,
+[data-theme-preset="liquid-glass"] .app-shell-sidebar::before,
+[data-theme-preset="liquid-glass"] .app-shell-panel::before,
+[data-theme-preset="liquid-glass"] [data-ui="card"]::before,
+[data-theme-preset="liquid-glass"] [data-ui="dialog-content"]::before,
+[data-theme-preset="liquid-glass"] [data-ui="dropdown-content"]::before {
+  content: "";
+  position: absolute;
+  inset: -24%;
+  z-index: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(
+      48% 38% at calc(var(--glass-page-x) - 6%) calc(var(--glass-page-y) - 8%),
+      rgba(255, 255, 255, 0.34),
+      transparent 58%
+    ),
+    radial-gradient(
+      18% 16% at 20% 26%,
+      rgba(255, 255, 255, 0.24),
+      transparent 62%
+    ),
+    radial-gradient(
+      14% 18% at 72% 68%,
+      rgba(125, 211, 252, 0.2),
+      transparent 64%
+    ),
+    var(--glass-background-image);
+  background-attachment: fixed;
+  filter: saturate(145%);
+  opacity: 0.95;
+  animation: liquid-glass-caustic-drift 14s ease-in-out infinite alternate;
+}
+
+[data-theme-preset="liquid-glass"] .app-shell-header::after,
+[data-theme-preset="liquid-glass"] .app-shell-sidebar::after,
+[data-theme-preset="liquid-glass"] .app-shell-panel::after,
+[data-theme-preset="liquid-glass"] [data-ui="card"]::after,
+[data-theme-preset="liquid-glass"] [data-ui="dialog-content"]::after,
+[data-theme-preset="liquid-glass"] [data-ui="dropdown-content"]::after {
+  content: "";
+  position: absolute;
+  inset: 6%;
+  z-index: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(
+      14rem 10rem at calc(var(--glass-page-x) + 10%)
+        calc(var(--glass-page-y) - 6%),
+      rgba(255, 255, 255, 0.3),
+      transparent 56%
+    ),
+    radial-gradient(
+      8rem 6rem at 18% 78%,
+      rgba(255, 255, 255, 0.2),
+      transparent 60%
+    ),
+    radial-gradient(
+      9rem 7rem at 82% 18%,
+      rgba(191, 219, 254, 0.22),
+      transparent 64%
+    );
+  filter: blur(14px);
+  mix-blend-mode: screen;
+  opacity: 0.88;
+  animation: liquid-glass-droplet-float 11s ease-in-out infinite alternate;
+}
+
+[data-theme-preset="liquid-glass"] [data-ui="button"],
+[data-theme-preset="liquid-glass"] [role="switch"],
+[data-theme-preset="liquid-glass"] .app-shell-header button,
+[data-theme-preset="liquid-glass"] .app-shell-header a,
+[data-theme-preset="liquid-glass"] .app-shell-sidebar button,
+[data-theme-preset="liquid-glass"] .app-shell-sidebar a,
+[data-theme-preset="liquid-glass"] .app-shell-panel button,
+[data-theme-preset="liquid-glass"] .app-shell-panel a {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    filter 180ms ease;
+}
+
+[data-theme-preset="liquid-glass"] [data-ui="button"] > *,
+[data-theme-preset="liquid-glass"] [role="switch"] > *,
+[data-theme-preset="liquid-glass"] .app-shell-header button > *,
+[data-theme-preset="liquid-glass"] .app-shell-header a > *,
+[data-theme-preset="liquid-glass"] .app-shell-sidebar button > *,
+[data-theme-preset="liquid-glass"] .app-shell-sidebar a > *,
+[data-theme-preset="liquid-glass"] .app-shell-panel button > *,
+[data-theme-preset="liquid-glass"] .app-shell-panel a > * {
+  position: relative;
+  z-index: 1;
+}
+
+[data-theme-preset="liquid-glass"] [data-ui="button"]::before,
+[data-theme-preset="liquid-glass"] [role="switch"]::before,
+[data-theme-preset="liquid-glass"] .app-shell-header button::before,
+[data-theme-preset="liquid-glass"] .app-shell-header a::before,
+[data-theme-preset="liquid-glass"] .app-shell-sidebar button::before,
+[data-theme-preset="liquid-glass"] .app-shell-sidebar a::before,
+[data-theme-preset="liquid-glass"] .app-shell-panel button::before,
+[data-theme-preset="liquid-glass"] .app-shell-panel a::before {
+  content: "";
+  position: absolute;
+  inset: -18%;
+  z-index: 0;
+  opacity: 0.45;
+  background:
+    radial-gradient(
+      9rem 7rem at var(--glass-pointer-x, 50%) var(--glass-pointer-y, 50%),
+      rgba(255, 255, 255, 0.42),
+      transparent 46%
+    ),
+    radial-gradient(
+      5rem 4rem at 22% 22%,
+      rgba(255, 255, 255, 0.2),
+      transparent 54%
+    ),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0));
+  filter: blur(6px);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+[data-theme-preset="liquid-glass"] [data-ui="button"]::after,
+[data-theme-preset="liquid-glass"] [role="switch"]::after,
+[data-theme-preset="liquid-glass"] .app-shell-header button::after,
+[data-theme-preset="liquid-glass"] .app-shell-header a::after,
+[data-theme-preset="liquid-glass"] .app-shell-sidebar button::after,
+[data-theme-preset="liquid-glass"] .app-shell-sidebar a::after,
+[data-theme-preset="liquid-glass"] .app-shell-panel button::after,
+[data-theme-preset="liquid-glass"] .app-shell-panel a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.25;
+  border-radius: inherit;
+  background:
+    linear-gradient(130deg, rgba(255, 255, 255, 0.32), transparent 34%),
+    linear-gradient(310deg, rgba(125, 211, 252, 0.18), transparent 46%);
+  transition: opacity 180ms ease;
+}
+
+[data-theme-preset="liquid-glass"]
+  [data-ui="button"][data-glass-hovered="true"],
+[data-theme-preset="liquid-glass"] [role="switch"][data-glass-hovered="true"],
+[data-theme-preset="liquid-glass"]
+  .app-shell-header
+  button[data-glass-hovered="true"],
+[data-theme-preset="liquid-glass"]
+  .app-shell-header
+  a[data-glass-hovered="true"],
+[data-theme-preset="liquid-glass"]
+  .app-shell-sidebar
+  button[data-glass-hovered="true"],
+[data-theme-preset="liquid-glass"]
+  .app-shell-sidebar
+  a[data-glass-hovered="true"],
+[data-theme-preset="liquid-glass"]
+  .app-shell-panel
+  button[data-glass-hovered="true"],
+[data-theme-preset="liquid-glass"]
+  .app-shell-panel
+  a[data-glass-hovered="true"] {
+  transform: perspective(1000px)
+    rotateX(calc(var(--glass-tilt-y, 0) * -0.75deg))
+    rotateY(calc(var(--glass-tilt-x, 0) * 0.75deg)) translateY(-1px) scale(1.01);
+  box-shadow:
+    0 18px 34px rgba(15, 23, 42, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  filter: saturate(118%);
+}
+
+[data-theme-preset="liquid-glass"]
+  [data-ui="button"][data-glass-hovered="true"]::before,
+[data-theme-preset="liquid-glass"]
+  [role="switch"][data-glass-hovered="true"]::before,
+[data-theme-preset="liquid-glass"]
+  .app-shell-header
+  button[data-glass-hovered="true"]::before,
+[data-theme-preset="liquid-glass"]
+  .app-shell-header
+  a[data-glass-hovered="true"]::before,
+[data-theme-preset="liquid-glass"]
+  .app-shell-sidebar
+  button[data-glass-hovered="true"]::before,
+[data-theme-preset="liquid-glass"]
+  .app-shell-sidebar
+  a[data-glass-hovered="true"]::before,
+[data-theme-preset="liquid-glass"]
+  .app-shell-panel
+  button[data-glass-hovered="true"]::before,
+[data-theme-preset="liquid-glass"]
+  .app-shell-panel
+  a[data-glass-hovered="true"]::before {
+  opacity: 0.92;
+  transform: scale(1.06);
+}
+
+[data-theme-preset="liquid-glass"]
+  [data-ui="button"][data-glass-pressed="true"],
+[data-theme-preset="liquid-glass"] [role="switch"][data-glass-pressed="true"],
+[data-theme-preset="liquid-glass"]
+  .app-shell-header
+  button[data-glass-pressed="true"],
+[data-theme-preset="liquid-glass"]
+  .app-shell-header
+  a[data-glass-pressed="true"],
+[data-theme-preset="liquid-glass"]
+  .app-shell-sidebar
+  button[data-glass-pressed="true"],
+[data-theme-preset="liquid-glass"]
+  .app-shell-sidebar
+  a[data-glass-pressed="true"],
+[data-theme-preset="liquid-glass"]
+  .app-shell-panel
+  button[data-glass-pressed="true"],
+[data-theme-preset="liquid-glass"]
+  .app-shell-panel
+  a[data-glass-pressed="true"] {
+  transform: perspective(1000px)
+    rotateX(calc(var(--glass-tilt-y, 0) * -0.45deg))
+    rotateY(calc(var(--glass-tilt-x, 0) * 0.45deg)) translateY(1px) scale(0.99);
+}
+
+[data-theme-preset="liquid-glass"] [data-ui="input"]:focus-visible,
+[data-theme-preset="liquid-glass"] [data-ui="input"]:hover {
+  background:
+    radial-gradient(
+      12rem 8rem at var(--glass-pointer-x, 50%) var(--glass-pointer-y, 50%),
+      rgba(255, 255, 255, 0.24),
+      transparent 56%
+    ),
+    var(--glass-input-background);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 16px 30px rgba(15, 23, 42, 0.12);
+}
+
+[data-theme-preset="liquid-glass"]
+  [data-ui="dropdown-content"]
+  [data-radix-collection-item],
+[data-theme-preset="liquid-glass"] [data-ui="dialog-content"] button,
+[data-theme-preset="liquid-glass"] [data-ui="dialog-content"] a {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+[data-theme-preset="liquid-glass"]
+  [data-ui="dropdown-content"]
+  [data-radix-collection-item][data-highlighted] {
+  background:
+    radial-gradient(
+      10rem 6rem at var(--glass-pointer-x, 50%) var(--glass-pointer-y, 50%),
+      rgba(255, 255, 255, 0.18),
+      transparent 54%
+    ),
+    hsl(var(--accent) / 0.34);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme-preset="liquid-glass"] body::before,
+  [data-theme-preset="liquid-glass"] body::after,
+  [data-theme-preset="liquid-glass"] .app-shell-header::before,
+  [data-theme-preset="liquid-glass"] .app-shell-sidebar::before,
+  [data-theme-preset="liquid-glass"] .app-shell-panel::before,
+  [data-theme-preset="liquid-glass"] [data-ui="card"]::before,
+  [data-theme-preset="liquid-glass"] [data-ui="dialog-content"]::before,
+  [data-theme-preset="liquid-glass"] [data-ui="dropdown-content"]::before,
+  [data-theme-preset="liquid-glass"] .app-shell-header::after,
+  [data-theme-preset="liquid-glass"] .app-shell-sidebar::after,
+  [data-theme-preset="liquid-glass"] .app-shell-panel::after,
+  [data-theme-preset="liquid-glass"] [data-ui="card"]::after,
+  [data-theme-preset="liquid-glass"] [data-ui="dialog-content"]::after,
+  [data-theme-preset="liquid-glass"] [data-ui="dropdown-content"]::after {
+    animation: none;
+  }
+}
+
 /* --- Calendar Final Styles (Marker & Sundays) --- */
 .fc .fc-daygrid-day.fc-day-past:not(.fc-day-today) {
-  background-color: rgba(241, 245, 249, 0.5) !important; /* 연한 회색 배경 */
+  background-color: var(--calendar-past-background) !important;
   position: relative !important;
 }
 
@@ -135,8 +706,8 @@
   top: 55% !important;
   left: -2px !important;
   right: -2px !important;
-  height: 14px !important; /* 더 두꺼운 마커 펜 느낌 */
-  background-color: rgba(51, 65, 85, 0.8) !important; /* 훨씬 더 진한 다크 그레이-블루 */
+  height: 14px !important;
+  background-color: var(--calendar-past-marker) !important;
   transform: translateY(-50%) !important;
   pointer-events: none !important;
   z-index: 20 !important;
@@ -158,7 +729,7 @@
 }
 
 .fc .fc-day-past:not(.fc-day-today) .fc-daygrid-day-number {
-  color: rgba(30, 41, 59, 0.5) !important;
+  color: var(--calendar-past-number) !important;
   z-index: 25 !important;
   position: relative !important;
 }

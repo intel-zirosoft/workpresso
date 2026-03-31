@@ -1,10 +1,11 @@
-import { getUserProfile, updateUserProfile } from '@/features/settings/services/userAction';
+﻿import { getUserProfile, updateUserProfile } from '@/features/settings/services/userAction';
+import { ThemeAppearanceSettings } from '@/features/settings/components/ThemeAppearanceSettings';
 import { UserRoleBadge } from '@/features/settings/components/UserRoleBadge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { revalidatePath } from 'next/cache';
-import { User, Mail, Building2, ShieldCheck, Camera } from 'lucide-react';
+import { User, Building2, ShieldCheck, Camera } from 'lucide-react';
 
 export default async function ProfileSettingsPage() {
   const profile = await getUserProfile();
@@ -13,7 +14,7 @@ export default async function ProfileSettingsPage() {
     'use server';
     const name = formData.get('name') as string;
     const department = formData.get('department') as string;
-    
+
     if (name) {
       await updateUserProfile(name, department);
       revalidatePath('/settings/profile');
@@ -22,22 +23,21 @@ export default async function ProfileSettingsPage() {
 
   return (
     <div className="animate-in fade-in duration-700">
-      {/* Identity Header */}
       <div className="relative mb-12 flex flex-col items-center">
-        <div className="relative group mb-4">
-          <div className="w-32 h-32 rounded-full bg-primary/5 border-4 border-surface shadow-md flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:shadow-lg group-hover:scale-105">
-            <User className="w-16 h-16 text-primary/40" />
+        <div className="group relative mb-4">
+          <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-4 border-surface bg-primary/5 shadow-md transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg">
+            <User className="h-16 w-16 text-primary/40" />
           </div>
-          <button className="absolute bottom-1 right-1 bg-surface p-2 rounded-full shadow-md border border-background/50 text-primary hover:bg-primary hover:text-white transition-all duration-200">
-            <Camera className="w-4 h-4" />
+          <button className="absolute bottom-1 right-1 rounded-full border border-background/50 bg-surface p-2 text-primary shadow-md transition-all duration-200 hover:bg-primary hover:text-white">
+            <Camera className="h-4 w-4" />
           </button>
         </div>
-        
+
         <div className="text-center">
-          <h1 className="text-3xl font-headings font-bold text-text mb-2">{profile.name}</h1>
+          <h1 className="mb-2 text-3xl font-headings font-bold text-text">{profile.name}</h1>
           <div className="flex items-center justify-center gap-2">
             <UserRoleBadge role={profile.role || 'USER'} />
-            <span className="text-sm text-text-muted font-medium">{profile.department || '부서 미지정'}</span>
+            <span className="text-sm font-medium text-text-muted">{profile.department || '부서 미지정'}</span>
           </div>
         </div>
       </div>
@@ -45,37 +45,37 @@ export default async function ProfileSettingsPage() {
       <div className="grid grid-cols-1 gap-12">
         <section className="space-y-8">
           <div className="flex items-center gap-3 border-b border-background pb-4">
-            <div className="bg-primary/10 p-2 rounded-xl">
-              <ShieldCheck className="w-5 h-5 text-primary" />
+            <div className="rounded-xl bg-primary/10 p-2">
+              <ShieldCheck className="h-5 w-5 text-primary" />
             </div>
             <h2 className="text-xl font-headings font-bold text-text">개인 정보 설정</h2>
           </div>
 
-          <form action={updateProfile} className="space-y-8 max-w-2xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form action={updateProfile} className="mx-auto max-w-2xl space-y-8">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-2.5">
-                <Label htmlFor="name" className="text-sm font-bold text-text-muted px-4">이름 (표시명)</Label>
-                <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-primary transition-colors" />
+                <Label htmlFor="name" className="px-4 text-sm font-bold text-text-muted">이름 (표시명)</Label>
+                <div className="group relative">
+                  <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted transition-colors group-focus-within:text-primary" />
                   <Input
                     id="name"
                     name="name"
                     defaultValue={profile.name}
                     required
-                    className="rounded-pill bg-background/50 border-transparent hover:border-primary/20 focus:border-primary focus:bg-surface focus:ring-4 focus:ring-primary/10 h-12 pl-12 transition-all font-body font-medium"
+                    className="h-12 rounded-pill border-transparent bg-background/50 pl-12 font-body font-medium transition-all hover:border-primary/20 focus:border-primary focus:bg-surface focus:ring-4 focus:ring-primary/10"
                   />
                 </div>
               </div>
 
               <div className="space-y-2.5">
-                <Label htmlFor="department" className="text-sm font-bold text-text-muted px-4">소속 부서</Label>
-                <div className="relative group">
-                  <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-primary transition-colors" />
+                <Label htmlFor="department" className="px-4 text-sm font-bold text-text-muted">소속 부서</Label>
+                <div className="group relative">
+                  <Building2 className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted transition-colors group-focus-within:text-primary" />
                   <Input
                     id="department"
                     name="department"
                     defaultValue={profile.department || ''}
-                    className="rounded-pill bg-background/50 border-transparent hover:border-primary/20 focus:border-primary focus:bg-surface focus:ring-4 focus:ring-primary/10 h-12 pl-12 transition-all font-body font-medium"
+                    className="h-12 rounded-pill border-transparent bg-background/50 pl-12 font-body font-medium transition-all hover:border-primary/20 focus:border-primary focus:bg-surface focus:ring-4 focus:ring-primary/10"
                     placeholder="부서명을 입력해주세요"
                   />
                 </div>
@@ -83,12 +83,14 @@ export default async function ProfileSettingsPage() {
             </div>
 
             <div className="flex justify-center pt-8">
-              <Button type="submit" className="rounded-pill px-12 h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-soft hover:shadow-md transition-all active:scale-95">
+              <Button type="submit" className="h-12 rounded-pill px-12 font-bold text-primary-foreground shadow-soft transition-all hover:shadow-md active:scale-95">
                 변경 사항 저장
               </Button>
             </div>
           </form>
         </section>
+
+        <ThemeAppearanceSettings />
       </div>
     </div>
   );

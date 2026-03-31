@@ -39,6 +39,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "dotenv": "^17.3.1",
+    "liquid-glass-react": "https://codeload.github.com/rdev/liquid-glass-react/tar.gz/refs/heads/master",
     "lucide-react": "^0.441.0",
     "next": "14.2.13",
     "openai": "^4.61.0",

@@ -14,6 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import { CalendarView } from "@/app/(schedules)/_components/calendar-view";
+import { LiquidGlassFrame } from "@/components/theme/liquid-glass-frame";
 import { Button } from "@/components/ui/button";
 
 const QUICK_ACTIONS = [
@@ -50,15 +51,18 @@ const QUICK_ACTIONS = [
 const START_GUIDE = [
   {
     title: "가장 먼저 일정 확인",
-    description: "오늘 일정이 비어 있으면 우선 해야 할 일부터 시간 블록을 잡아두세요.",
+    description:
+      "오늘 일정이 비어 있으면 우선 해야 할 일부터 시간 블록을 잡아두세요.",
   },
   {
     title: "문서와 대화 분리",
-    description: "정리할 내용은 문서로, 빠른 소통은 채터로 나누면 찾기 쉬워집니다.",
+    description:
+      "정리할 내용은 문서로, 빠른 소통은 채터로 나누면 찾기 쉬워집니다.",
   },
   {
     title: "막히면 AI 활용",
-    description: "초안 작성, 요약, 다음 액션 정리부터 AI에게 맡기면 시작 비용이 줄어듭니다.",
+    description:
+      "초안 작성, 요약, 다음 액션 정리부터 AI에게 맡기면 시작 비용이 줄어듭니다.",
   },
 ];
 
@@ -86,71 +90,95 @@ const COLLABORATION_LINKS = [
 export default function HomePage() {
   return (
     <div className="space-y-6 md:space-y-10">
-      <header className="overflow-hidden rounded-[28px] border border-background/60 bg-surface px-5 py-6 shadow-soft md:px-8 md:py-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-              <CalendarDays className="h-3.5 w-3.5" />
-              오늘의 워크스페이스
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-2xl font-headings font-bold tracking-tight text-text md:text-4xl">
-                해야 할 일을 바로 시작할 수 있게 준비했어요.
-              </h1>
-              <p className="max-w-xl text-sm leading-6 text-text-muted md:text-base">
-                일정 확인, 문서 작성, AI 질문, 팀 협업까지 자주 쓰는 흐름을 홈에서
-                바로 이어갈 수 있도록 정리했습니다.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
-            <Button asChild className="h-12 rounded-pill px-6 text-sm font-bold shadow-soft">
-              <Link href="/documents">
-                <Plus className="h-4 w-4" />
-                문서 작성 시작
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              className="h-12 rounded-pill border-background/70 bg-surface px-6 text-sm font-bold text-text hover:bg-background"
-            >
-              <Link href="/chat">
-                <Bot className="h-4 w-4" />
-                AI에게 질문
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {QUICK_ACTIONS.map((action) => (
-            <Link
-              key={action.title}
-              href={action.href}
-              className="group rounded-[24px] border border-background/60 bg-background/40 p-4 transition-all hover:-translate-y-1 hover:bg-surface hover:shadow-soft"
-            >
-              <div
-                className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl ${action.tone}`}
-              >
-                <action.icon className="h-5 w-5" />
+      <LiquidGlassFrame
+        mode="shader"
+        overLight
+        padding="24px 20px"
+        cornerRadius={28}
+        style={{ width: "100%" }}
+        className="overflow-hidden rounded-[28px] border border-background/60 bg-surface shadow-soft md:px-3 md:py-2"
+      >
+        <header>
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl space-y-3">
+              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+                <CalendarDays className="h-3.5 w-3.5" />
+                오늘의 워크스페이스
               </div>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between gap-3">
-                  <h2 className="font-headings text-base font-bold text-text">
-                    {action.title}
-                  </h2>
-                  <ArrowRight className="h-4 w-4 text-text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
-                </div>
-                <p className="text-sm leading-5 text-text-muted">
-                  {action.description}
+              <div className="space-y-2">
+                <h1 className="text-2xl font-headings font-bold tracking-tight text-text md:text-4xl">
+                  해야 할 일을 바로 시작할 수 있게 준비했어요.
+                </h1>
+                <p className="max-w-xl text-sm leading-6 text-text-muted md:text-base">
+                  일정 확인, 문서 작성, AI 질문, 팀 협업까지 자주 쓰는 흐름을
+                  홈에서 바로 이어갈 수 있도록 정리했습니다.
                 </p>
               </div>
-            </Link>
-          ))}
-        </div>
-      </header>
+            </div>
+
+            <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
+              <LiquidGlassFrame interactive padding="0" cornerRadius={999}>
+                <Button
+                  asChild
+                  className="h-12 rounded-pill px-6 text-sm font-bold shadow-soft"
+                >
+                  <Link href="/documents">
+                    <Plus className="h-4 w-4" />
+                    문서 작성 시작
+                  </Link>
+                </Button>
+              </LiquidGlassFrame>
+              <LiquidGlassFrame interactive padding="0" cornerRadius={999}>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="h-12 rounded-pill border-background/70 bg-surface px-6 text-sm font-bold text-text hover:bg-background"
+                >
+                  <Link href="/chat">
+                    <Bot className="h-4 w-4" />
+                    AI에게 질문
+                  </Link>
+                </Button>
+              </LiquidGlassFrame>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {QUICK_ACTIONS.map((action) => (
+              <LiquidGlassFrame
+                key={action.title}
+                interactive
+                padding="0"
+                cornerRadius={24}
+                mode="prominent"
+                style={{ width: "100%" }}
+              >
+                <Link
+                  href={action.href}
+                  className="group block rounded-[24px] border border-background/60 bg-background/40 p-4 transition-all hover:-translate-y-1 hover:bg-surface hover:shadow-soft"
+                >
+                  <div
+                    className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl ${action.tone}`}
+                  >
+                    <action.icon className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <h2 className="font-headings text-base font-bold text-text">
+                        {action.title}
+                      </h2>
+                      <ArrowRight className="h-4 w-4 text-text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+                    </div>
+                    <p className="text-sm leading-5 text-text-muted">
+                      {action.description}
+                    </p>
+                  </div>
+                </Link>
+              </LiquidGlassFrame>
+            ))}
+          </div>
+        </header>
+      </LiquidGlassFrame>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
         <div className="space-y-6 lg:col-span-2 md:space-y-8">
@@ -201,7 +229,8 @@ export default function HomePage() {
                   내 일정 한눈에 보기
                 </h2>
                 <p className="mt-1 text-sm text-text-muted">
-                  날짜를 눌러 일정을 확인하고, 필요한 경우 바로 추가할 수 있어요.
+                  날짜를 눌러 일정을 확인하고, 필요한 경우 바로 추가할 수
+                  있어요.
                 </p>
               </div>
             </div>

@@ -2,13 +2,13 @@
 .fc {
   --fc-button-bg-color: transparent;
   --fc-button-border-color: transparent;
-  --fc-button-hover-bg-color: hsla(var(--primary), 0.1);
-  --fc-button-active-bg-color: hsla(var(--primary), 0.2);
-  --fc-button-text-color: var(--text);
-  --fc-border-color: hsla(var(--background), 0.5);
-  --fc-today-bg-color: hsla(var(--primary), 0.05);
+  --fc-button-hover-bg-color: hsl(var(--primary) / 0.1);
+  --fc-button-active-bg-color: hsl(var(--primary) / 0.2);
+  --fc-button-text-color: hsl(var(--text));
+  --fc-border-color: hsl(var(--border) / 0.55);
+  --fc-today-bg-color: hsl(var(--primary) / 0.08);
   --fc-page-bg-color: transparent;
-  
+
   font-family: inherit;
 }
 
@@ -16,15 +16,22 @@
 .fc .fc-toolbar-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--text);
+  color: hsl(var(--text));
 }
 
 .fc .fc-button-primary {
-  border: 1px solid rgba(var(--background), 1);
+  border: 1px solid hsl(var(--border) / 0.75);
   border-radius: 9999px;
   padding: 0.5rem 1rem;
   transition: all 0.2s;
-  color: var(--text);
+  background-color: hsl(var(--surface) / 0.7);
+  color: hsl(var(--text));
+  box-shadow: var(--shadow-soft);
+}
+
+.fc .fc-button-primary:hover {
+  border-color: hsl(var(--primary) / 0.35);
+  background-color: hsl(var(--surface) / 0.95);
 }
 
 .fc .fc-button-primary:not(:disabled):active,
@@ -44,7 +51,7 @@
   padding: 8px;
   font-weight: 500;
   font-size: 0.875rem;
-  color: var(--text);
+  color: hsl(var(--text));
   text-decoration: none;
 }
 
@@ -54,14 +61,14 @@
 }
 
 .fc .fc-daygrid-day.fc-day-today {
-  background-color: hsla(var(--primary), 0.08) !important;
+  background-color: hsl(var(--primary) / 0.08) !important;
 }
 
 .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
-  background-color: #3b82f6 !important; /* 더 선명한 파란색으로 변경 */
+  background-color: var(--calendar-today-pill) !important;
   color: white !important;
   border-radius: 50%;
-  width: 32px; /* 크기 키워서 잘림 방지 */
+  width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
@@ -79,7 +86,7 @@
 
 /* Past Dates styling - Thick Marker Stroke Effect (High Visibility) */
 .fc .fc-day-past:not(.fc-day-today) {
-  background-color: hsla(var(--background), 0.5) !important;
+  background-color: var(--calendar-past-background) !important;
   position: relative !important;
 }
 
@@ -89,8 +96,8 @@
   top: 55% !important;
   left: -2px !important;
   right: -2px !important;
-  height: 14px !important; /* 더 두꺼운 마커 느낌 */
-  background-color: rgba(71, 85, 105, 0.4) !important; /* 더 진한 마커 색상 */
+  height: 14px !important;
+  background-color: var(--calendar-past-marker) !important;
   transform: translateY(-50%) !important;
   pointer-events: none !important;
   z-index: 20 !important;
@@ -112,7 +119,7 @@
 }
 
 .fc .fc-day-past:not(.fc-day-today) .fc-daygrid-day-number {
-  color: hsla(var(--foreground), 0.4) !important;
+  color: var(--calendar-past-number) !important;
   z-index: 25 !important;
 }
 
@@ -156,9 +163,24 @@
 /* 요일(일월화수목금토) 및 날짜 섹션 여백 추가 */
 .fc .fc-col-header-cell {
   padding: 12px 0 !important;
-  background-color: hsla(var(--background), 0.5);
+  background-color: hsl(var(--background) / 0.5);
 }
 
 .fc .fc-daygrid-day-frame {
   padding-top: 4px;
+}
+
+[data-theme-preset="liquid-glass"] .fc .fc-scrollgrid,
+[data-theme-preset="liquid-glass"] .fc .fc-daygrid-day-frame,
+[data-theme-preset="liquid-glass"] .fc .fc-col-header-cell {
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+[data-theme-preset="liquid-glass"] .fc .fc-scrollgrid {
+  border-color: hsl(var(--border) / 0.4);
+}
+
+[data-theme-preset="liquid-glass"] .fc .fc-daygrid-day-frame {
+  background: hsl(var(--surface) / 0.18);
 }
