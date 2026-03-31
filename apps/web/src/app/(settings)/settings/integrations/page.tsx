@@ -109,7 +109,11 @@ export default async function IntegrationsPage() {
     const webhookUrl = formData.get("webhookUrl") as string;
     const botToken = formData.get("botToken") as string;
 
-    await upsertExtension("slack", { webhookUrl, botToken }, !!webhookUrl);
+    await upsertExtension(
+      "slack",
+      { webhookUrl, botToken },
+      !!webhookUrl || !!botToken,
+    );
     revalidatePath("/settings/integrations");
   }
 

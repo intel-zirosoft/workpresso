@@ -10,7 +10,6 @@ import {
 import {
   createWorkflowDocument,
   listDocumentsForViewer,
-  processPendingDocumentSideEffectJobs,
 } from "@/features/pod-a/services/document-server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -32,12 +31,6 @@ export async function GET(request: Request) {
 
   if (authError || !user) {
     return unauthorizedResponse();
-  }
-
-  try {
-    await processPendingDocumentSideEffectJobs({ adminSupabase });
-  } catch (jobError) {
-    console.error("document side effect flush failed:", jobError);
   }
 
   const requestUrl = new URL(request.url);
