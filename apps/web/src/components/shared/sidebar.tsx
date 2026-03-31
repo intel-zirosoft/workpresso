@@ -6,8 +6,7 @@ import { LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { APP_NAV_ITEMS, ADMIN_NAV_ITEMS, isActivePath, type AppNavItem } from "@/components/shared/navigation";
-import { useEffect, useState } from "react";
-import { getUserProfile } from "@/features/settings/services/userAction";
+import { useCurrentUser } from "@/features/settings/hooks/use-current-user";
 
 interface SidebarContentProps {
   onNavigate?: () => void;
@@ -18,20 +17,9 @@ export function SidebarContent({ onNavigate, mobile = false }: SidebarContentPro
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
-
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    async function checkRole() {
-      try {
-        const profile = await getUserProfile();
-        setIsAdmin(profile.role === 'SUPER_ADMIN' || profile.role === 'ORG_ADMIN');
-      } catch (e) {
-        setIsAdmin(false);
-      }
-    }
-    checkRole();
-  }, []);
+  const { data: currentUser } = useCurrentUser();
+  const isAdmin =
+    currentUser?.role === "SUPER_ADMIN" || currentUser?.role === "ORG_ADMIN";
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();

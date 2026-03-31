@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { User } from "@supabase/supabase-js";
-import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { LogOut, Menu, Moon, Settings, Sun } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -17,55 +16,22 @@ import {
 } from "@/components/ui/dialog";
 import { SidebarContent } from "@/components/shared/sidebar";
 import { UserRoleBadge } from "@/features/settings/components/UserRoleBadge";
-import { getUserProfile } from "@/features/settings/services/userAction";
+import { useCurrentUser } from "@/features/settings/hooks/use-current-user";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/providers/theme-provider";
 
 export function Header() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
+  const queryClient = useQueryClient();
   const router = useRouter();
   const { resolvedTheme, setThemePreference } = useTheme();
-
-  const { data: profile, isLoading: isProfileLoading } = useQuery({
-    queryKey: ["userProfile"],
-    queryFn: () => getUserProfile(),
-    retry: 1,
-    enabled: !!user,
-  });
-
-  useEffect(() => {
-    const initAuth = async () => {
-      const {
-        data: { user: initialUser },
-      } = await supabase.auth.getUser();
-
-      if (initialUser) {
-        setUser(initialUser);
-      }
-
-      setLoading(false);
-    };
-
-    initAuth();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase]);
+  const { data: currentUser, isLoading } = useCurrentUser();
 
   const handleSignOut = async () => {
-    setLoading(true);
     await supabase.auth.signOut();
+    queryClient.setQueryData(["currentUser"], null);
     window.location.href = "/login";
   };
 
@@ -150,7 +116,7 @@ export function Header() {
           </span>
         </button>
 
-        {loading || (user && isProfileLoading) ? (
+        {isLoading ? (
           <div className="flex items-center gap-3 rounded-md border border-background/50 bg-surface/70 p-2 shadow-soft">
             <div className="h-9 w-9 animate-pulse rounded-full bg-muted" />
             <div className="flex flex-col gap-1">
@@ -158,32 +124,32 @@ export function Header() {
               <div className="h-2 w-12 animate-pulse rounded bg-muted/50" />
             </div>
           </div>
-        ) : user ? (
+        ) : currentUser ? (
           <div className="flex items-center gap-2 rounded-md border border-background/50 bg-surface/70 p-2 shadow-soft backdrop-blur-sm transition-all hover:bg-surface md:gap-3 md:pr-4">
             <Avatar className="h-9 w-9 border border-primary/10 shadow-sm">
               <AvatarImage
-                src={`https://api.dicebear.com/7.x/notionists/svg?seed=${profile?.name || user.email}`}
+                src={`https://api.dicebear.com/7.x/notionists/svg?seed=${currentUser.name || currentUser.email}`}
               />
               <AvatarFallback className="bg-secondary/30 text-xs font-bold text-primary">
-                {(profile?.name || user.email || "U")[0].toUpperCase()}
+                {(currentUser.name || currentUser.email || "U")[0].toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="hidden min-w-[120px] flex-col md:flex">
               <div className="flex items-center gap-2">
                 <p className="max-w-[100px] truncate text-sm font-bold leading-tight text-text">
-                  {profile?.name || user.user_metadata?.name || user.email?.split("@")[0]}
+                  {currentUser.name || currentUser.email?.split("@")[0]}
                 </p>
-                {profile?.role && (
-                  <UserRoleBadge role={profile.role} className="origin-left scale-75" />
+                {currentUser.role && (
+                  <UserRoleBadge role={currentUser.role} className="origin-left scale-75" />
                 )}
               </div>
               <div className="mt-0.5 flex items-center gap-1.5">
                 <p className="text-[10px] font-medium leading-tight text-text-muted">
-                  {profile?.department || "구성원"}
+                  {currentUser.department || "구성원"}
                 </p>
                 <span className="h-1 w-1 rounded-full bg-muted/30" />
                 <p className="text-[10px] font-medium leading-tight text-primary/60">
-                  {user.email}
+                  {currentUser.email}
                 </p>
               </div>
             </div>
