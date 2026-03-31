@@ -12,18 +12,9 @@ import {
 import { Button } from "@/components/ui/button";
 
 const HERO_PROMPTS = [
-  {
-    label: "오늘 일정 요약",
-    href: "/chat",
-  },
-  {
-    label: "회의록 3줄 요약",
-    href: "/chat",
-  },
-  {
-    label: "사내 규약 검색",
-    href: "/chat",
-  },
+  { label: "오늘 일정 요약", href: "/chat" },
+  { label: "회의록 3줄 요약", href: "/chat" },
+  { label: "사내 규약 검색", href: "/chat" },
 ];
 
 const SUMMARY_CARDS = [
@@ -48,22 +39,13 @@ const SUMMARY_CARDS = [
     icon: Bot,
     tone: "bg-violet-100 text-violet-600",
   },
-];
+] as const;
 
 const PRIORITY_ITEMS = [
-  {
-    title: "오늘 일정 먼저 점검",
-    description: "비어 있는 시간에 집중 블록이나 회의 준비 시간을 먼저 확보하세요.",
-  },
-  {
-    title: "문서/대화 분리 운영",
-    description: "결정사항은 문서로, 빠른 확인은 채터로 남기면 추적이 쉬워집니다.",
-  },
-  {
-    title: "AI로 시작 비용 줄이기",
-    description: "초안 작성, 회의 요약, 규약 검색은 AI에서 먼저 물어보는 흐름이 효율적입니다.",
-  },
-];
+  "오늘 일정 먼저 점검",
+  "문서/대화 분리 운영",
+  "AI로 시작 비용 줄이기",
+] as const;
 
 const QUICK_ACTIONS = [
   {
@@ -81,7 +63,7 @@ const QUICK_ACTIONS = [
     href: "/chat",
     icon: Bot,
   },
-];
+] as const;
 
 export default function HomePage() {
   return (
@@ -129,16 +111,18 @@ export default function HomePage() {
               className="group rounded-[18px] border border-background/60 bg-background/40 p-3 transition-all hover:-translate-y-1 hover:bg-white hover:shadow-soft"
             >
               <div className="flex items-center gap-3">
-                <div className={`inline-flex h-9 w-9 items-center justify-center rounded-xl ${card.tone}`}>
+                <div
+                  className={`inline-flex h-9 w-9 items-center justify-center rounded-xl ${card.tone}`}
+                >
                   <card.icon className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-headings text-sm font-bold text-text">{card.title}</p>
+                  <p className="truncate font-headings text-sm font-bold text-text">
+                    {card.title}
+                  </p>
                   <p className="text-xs font-bold text-text/70">{card.value}</p>
                 </div>
-                <div className="shrink-0">
-                  <ArrowRight className="h-4 w-4 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
-                </div>
+                <ArrowRight className="h-4 w-4 shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
               </div>
             </Link>
           ))}
@@ -147,23 +131,21 @@ export default function HomePage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
         <section className="rounded-[24px] border border-background/60 bg-surface p-4 shadow-soft">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold text-primary">오늘 우선</p>
-              <h2 className="mt-1 font-headings text-lg font-bold text-text">
-                핵심만 확인하세요.
-              </h2>
-            </div>
+          <div className="mb-3">
+            <p className="text-xs font-bold text-primary">오늘 우선</p>
+            <h2 className="mt-1 font-headings text-lg font-bold text-text">
+              핵심만 확인하세요.
+            </h2>
           </div>
 
           <div className="grid gap-2 md:grid-cols-3">
-            {PRIORITY_ITEMS.map((item, index) => (
-              <div key={item.title} className="rounded-[18px] bg-background/50 px-3 py-3">
+            {PRIORITY_ITEMS.map((title, index) => (
+              <div key={title} className="rounded-[18px] bg-background/50 px-3 py-3">
                 <div className="flex items-center gap-3">
                   <div className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs font-black text-primary shadow-sm">
                     {index + 1}
                   </div>
-                  <h3 className="font-headings text-sm font-bold text-text">{item.title}</h3>
+                  <h3 className="font-headings text-sm font-bold text-text">{title}</h3>
                 </div>
               </div>
             ))}
@@ -187,11 +169,11 @@ export default function HomePage() {
                       <action.icon className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-headings text-sm font-bold text-text">{action.title}</h3>
+                      <h3 className="font-headings text-sm font-bold text-text">
+                        {action.title}
+                      </h3>
                     </div>
-                    <div className="shrink-0">
-                      <ArrowRight className="h-4 w-4 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
-                    </div>
+                    <ArrowRight className="h-4 w-4 shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
                   </div>
                 </Link>
               ))}
@@ -203,9 +185,7 @@ export default function HomePage() {
               <CheckCircle2 className="h-3.5 w-3.5 text-success" />
               AI
             </div>
-            <h2 className="font-headings text-base font-bold text-text">
-              바로 시작
-            </h2>
+            <h2 className="font-headings text-base font-bold text-text">바로 시작</h2>
             <ul className="mt-2 space-y-1.5 text-sm leading-5 text-text/80">
               <li>• 오늘 일정 기준으로 우선순위를 정리해줘</li>
               <li>• 회의록 초안을 3줄로 요약해줘</li>

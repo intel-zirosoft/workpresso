@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { format, isSameDay, parse, isBefore, startOfDay } from "date-fns";
 import { ko } from "date-fns/locale";
 import { Plus, Clock, Trash2, Loader2, Pencil, Users } from "lucide-react";
@@ -7,10 +8,6 @@ import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { ScheduleModal } from "./schedule-modal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import FullCalendar from "@fullcalendar/react";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import interactionPlugin from "@fullcalendar/interaction";
-import "@/styles/calendar.css";
 import {
   createSchedule,
   deleteSchedule,
@@ -21,14 +18,27 @@ import {
   updateSchedule,
 } from "./schedule-api";
 
+const FullCalendarClient = dynamic(
+  () =>
+    import("./full-calendar-client").then((module) => module.FullCalendarClient),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full min-h-[420px] items-center justify-center rounded-2xl border border-dashed border-background/60 bg-background/20">
+        <Loader2 className="h-6 w-6 animate-spin text-text-muted" />
+      </div>
+    ),
+  },
+);
+
 const TYPE_CONFIG: Record<string, { label: string; color: string; icon: any }> =
   {
     TASK: { label: "업무", color: "bg-primary", icon: Clock },
-    MEETING: { label: "회의", color: "bg-amber-400", icon: Users },
-    VACATION: { label: "휴가", color: "bg-rose-400", icon: Clock },
-    HALF_DAY: { label: "반차", color: "bg-rose-300", icon: Clock },
-    WFH: { label: "재택", color: "bg-blue-400", icon: Clock },
-    OUTSIDE: { label: "외근", color: "bg-emerald-400", icon: Clock },
+    MEETING: { label: "회의", color: "bg-warning", icon: Users },
+    VACATION: { label: "휴가", color: "bg-destructive", icon: Clock },
+    HALF_DAY: { label: "반차", color: "bg-destructive/70", icon: Clock },
+    WFH: { label: "재택", color: "bg-info", icon: Clock },
+    OUTSIDE: { label: "외근", color: "bg-success", icon: Clock },
   };
 
 function getErrorMessage(error: unknown) {
@@ -67,7 +77,7 @@ export function CalendarView({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
   const queryClient = useQueryClient();
-  const calendarRef = useRef<FullCalendar>(null);
+  const calendarRef = useRef<any>(null);
 
   // 일정 목록 가져오기 (GET)
   const {
@@ -235,44 +245,32 @@ export function CalendarView({
     return (
       <div className="flex flex-col gap-6 h-[calc(100vh-14rem)] min-h-[600px]">
         <div className="flex-1 bg-surface rounded-3xl p-6 shadow-soft border border-background/50 overflow-x-auto custom-scrollbar min-w-0">
-          <FullCalendar
-            ref={calendarRef}
-            plugins={[dayGridPlugin, interactionPlugin]}
-            initialView="dayGridMonth"
-            locale="ko"
-            headerToolbar={{
-              left: "prev,next today",
-              center: "title",
-              right: "dayGridMonth,dayGridWeek",
-            }}
+          <FullCalendarClient
+            calendarRef={calendarRef}
             events={calendarEvents}
-            dateClick={handleDateClick}
-            datesSet={() => {
-              // 렌더링이 완료된 시점에 스크롤을 시도합니다.
-              // 약간의 지연(v-sync)을 주어 DOM 렌더링 완료를 보장할 수 있습니다.
+            onDateClick={handleDateClick}
+            onDatesSet={() => {
               requestAnimationFrame(scrollToToday);
             }}
-            eventClick={(info) => {
+            onEventClick={(info) => {
               const schedule = schedules.find((s) => s.id === info.event.id);
-              if (schedule)
+              if (schedule) {
                 handleEdit(schedule, { stopPropagation: () => {} } as any);
+              }
             }}
-            eventContent={renderEventContent}
-            height="100%"
-            dayMaxEvents={3}
-            selectable={true}
+            renderEventContent={renderEventContent}
           />
         </div>
 
         {pageErrorMessage ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+          <div className="rounded-2xl border border-destructive/20 bg-destructive-soft px-4 py-3 text-sm font-medium text-destructive">
             {pageErrorMessage}
           </div>
         ) : null}
 
         {/* 선택된 날짜의 일정 목록 (하단 또는 측면 보조) */}
         {date && (
-          <div className="bg-white/50 rounded-2xl p-6 border border-dashed border-background/80">
+          <div className="bg-surface/60 rounded-2xl p-6 border border-dashed border-background/80">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-lg font-headings font-bold text-text">
                 {format(date, "MM월 dd일 (EEEE)", { locale: ko })}
@@ -282,7 +280,7 @@ export function CalendarView({
                   setEditingSchedule(null);
                   setIsModalOpen(true);
                 }}
-                className="px-4 py-2 rounded-pill bg-primary text-white font-bold text-sm shadow-sm hover:shadow-soft transition-all"
+                className="px-4 py-2 rounded-pill bg-primary text-primary-foreground font-bold text-sm shadow-sm hover:shadow-soft transition-all"
               >
                 + 새 일정
               </button>
@@ -291,14 +289,14 @@ export function CalendarView({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {isLoading ? (
                 <div className="col-span-full flex min-h-24 items-center justify-center">
-                  <Loader2 className="animate-spin text-muted" size={24} />
+                  <Loader2 className="animate-spin text-text-muted" size={24} />
                 </div>
               ) : null}
               {!isLoading &&
                 selectedDateSchedules.map((schedule) => (
                   <div
                     key={schedule.id}
-                    className="p-4 rounded-xl bg-white border border-background shadow-xs relative overflow-hidden group"
+                    className="p-4 rounded-xl bg-surface border border-background shadow-xs relative overflow-hidden group"
                   >
                     <div
                       className={cn(
@@ -308,7 +306,7 @@ export function CalendarView({
                     />
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="text-[10px] text-muted font-bold uppercase mb-1">
+                        <p className="text-[10px] text-text-muted font-bold uppercase mb-1">
                           {format(new Date(schedule.start_time), "HH:mm")} -{" "}
                           {format(new Date(schedule.end_time), "HH:mm")}
                         </p>
@@ -325,16 +323,16 @@ export function CalendarView({
                         </button>
                         <button
                           onClick={(e) => handleDelete(schedule.id, e)}
-                          className="p-1.5 hover:bg-red-50 rounded-full transition-colors"
+                          className="p-1.5 hover:bg-destructive/10 rounded-full transition-colors"
                         >
-                          <Trash2 size={14} className="text-red-300" />
+                          <Trash2 size={14} className="text-destructive/60" />
                         </button>
                       </div>
                     </div>
                   </div>
                 ))}
               {!isLoading && selectedDateSchedules.length === 0 && (
-                <p className="col-span-full text-center py-4 text-muted text-sm font-medium italic">
+                <p className="col-span-full text-center py-4 text-text-muted text-sm font-medium italic">
                   해당 날짜에 일정이 없습니다.
                 </p>
               )}
@@ -370,7 +368,7 @@ export function CalendarView({
 
       <div className="lg:w-1/2 flex flex-col space-y-4">
         {pageErrorMessage ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+          <div className="rounded-2xl border border-destructive/20 bg-destructive-soft px-4 py-3 text-sm font-medium text-destructive">
             {pageErrorMessage}
           </div>
         ) : null}
@@ -396,13 +394,13 @@ export function CalendarView({
         <div className="space-y-3 flex-1 overflow-y-auto max-h-[300px] pr-2">
           {isLoading ? (
             <div className="flex justify-center items-center h-40">
-              <Loader2 className="animate-spin text-muted" size={24} />
+              <Loader2 className="animate-spin text-text-muted" size={24} />
             </div>
           ) : selectedDateSchedules.length > 0 ? (
             selectedDateSchedules.map((schedule) => (
               <div
                 key={schedule.id}
-                className="flex flex-col p-4 rounded-xl bg-white border border-background shadow-sm hover:shadow-soft transition-shadow relative overflow-hidden group"
+                className="flex flex-col p-4 rounded-xl bg-surface border border-background shadow-sm hover:shadow-soft transition-shadow relative overflow-hidden group"
               >
                 <div
                   className={cn(
@@ -427,9 +425,9 @@ export function CalendarView({
                     </button>
                     <button
                       onClick={(e) => handleDelete(schedule.id, e)}
-                      className="p-1.5 hover:bg-red-50 rounded-full"
+                      className="p-1.5 hover:bg-destructive/10 rounded-full"
                     >
-                      <Trash2 size={14} className="text-red-300" />
+                      <Trash2 size={14} className="text-destructive/60" />
                     </button>
                   </div>
                 </div>
@@ -437,7 +435,7 @@ export function CalendarView({
               </div>
             ))
           ) : (
-            <div className="flex flex-col items-center justify-center h-40 text-muted space-y-3 bg-background/30 rounded-2xl border border-dashed border-background/50">
+            <div className="flex flex-col items-center justify-center h-40 text-text-muted space-y-3 bg-background/30 rounded-2xl border border-dashed border-background/50">
               <p className="text-sm">일정이 없습니다.</p>
             </div>
           )}

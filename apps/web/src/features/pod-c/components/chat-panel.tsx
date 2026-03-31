@@ -155,7 +155,7 @@ export function ChatPanel({
           >
             업무 비서
           </h1>
-          <p className="mt-1 font-body text-xs text-muted md:text-base">
+          <p className="mt-1 font-body text-xs text-text-muted md:text-base">
             일정과 문서, 회의록까지 한 번에 찾는 AI 비서입니다.
           </p>
         </div>
@@ -184,7 +184,7 @@ export function ChatPanel({
                   <h3 className="text-xl font-headings font-semibold text-text md:text-2xl">
                     무엇을 도와드릴까요?
                   </h3>
-                  <p className="mx-auto max-w-[280px] font-body text-xs text-muted md:max-w-xs md:text-sm">
+                  <p className="mx-auto max-w-[280px] font-body text-xs text-text-muted md:max-w-xs md:text-sm">
                     아래 명령어를 클릭하거나 질문을 입력해 보세요.
                   </p>
                 </div>
@@ -199,7 +199,7 @@ export function ChatPanel({
                         variant="outline"
                         size="sm"
                         onClick={() => handleQuickCommand(cmd.value)}
-                        className="rounded-pill border-primary/10 bg-white/50 text-xs transition-all hover:bg-primary hover:text-white"
+                        className="rounded-pill border-primary/10 bg-surface/80 text-xs transition-all hover:bg-primary hover:text-primary-foreground"
                       >
                         <CommandIcon className="mr-1.5 h-3.5 w-3.5" />
                         {cmd.label}
@@ -222,8 +222,8 @@ export function ChatPanel({
                   className={cn(
                     "flex h-8 w-8 shrink-0 items-center justify-center rounded-pill shadow-soft md:h-11 md:w-11",
                     message.role === "user"
-                      ? "bg-primary text-white"
-                      : "border border-primary/10 bg-white text-primary",
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-primary/10 bg-surface text-primary",
                   )}
                 >
                   {message.role === "user" ? (
@@ -237,8 +237,8 @@ export function ChatPanel({
                   className={cn(
                     "max-w-[85%] rounded-md px-4 py-3 font-body text-sm leading-relaxed shadow-soft transition-all md:max-w-[75%] md:px-6 md:py-4 md:text-[15px]",
                     message.role === "user"
-                      ? "rounded-tr-none bg-primary text-white"
-                      : "rounded-tl-none border border-primary/5 bg-white text-text",
+                      ? "rounded-tr-none bg-primary text-primary-foreground"
+                      : "rounded-tl-none border border-primary/5 bg-surface text-text",
                   )}
                 >
                   <ReactMarkdown
@@ -258,10 +258,10 @@ export function ChatPanel({
             {isLoading &&
               messages[messages.length - 1]?.role !== "assistant" && (
                 <div className="flex animate-in items-start gap-2 fade-in duration-300 md:gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-pill border border-primary/10 bg-white text-primary shadow-soft md:h-11 md:w-11">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-pill border border-primary/10 bg-surface text-primary shadow-soft md:h-11 md:w-11">
                     <Bot className="h-4 w-4 md:h-5 md:w-5" />
                   </div>
-                  <div className="rounded-md rounded-tl-none border border-primary/5 bg-white px-6 py-4 shadow-soft">
+                  <div className="rounded-md rounded-tl-none border border-primary/5 bg-surface px-6 py-4 shadow-soft">
                     <CoffeeLoader />
                   </div>
                 </div>
@@ -277,7 +277,7 @@ export function ChatPanel({
               <button
                 key={cmd.value}
                 onClick={() => handleQuickCommand(cmd.value)}
-                className="whitespace-nowrap rounded-full border border-primary/10 bg-surface px-3 py-1.5 text-[11px] font-medium text-muted shadow-sm transition-colors hover:bg-primary hover:text-white"
+                className="whitespace-nowrap rounded-full border border-primary/10 bg-surface px-3 py-1.5 text-[11px] font-medium text-text-muted shadow-sm transition-colors hover:bg-primary hover:text-primary-foreground"
               >
                 {cmd.label}
               </button>
@@ -292,12 +292,12 @@ export function ChatPanel({
             isWidget ? "" : "pb-4 md:pb-0",
           )}
         >
-          <div className="relative flex items-center rounded-pill border-2 border-transparent bg-white p-1 shadow-soft focus-within:border-primary/20">
+          <div className="relative flex items-center rounded-pill border-2 border-transparent bg-surface p-1 shadow-soft focus-within:border-primary/20">
             <Input
               value={input}
               onChange={handleInputChange}
               placeholder="명령어를 입력하거나 질문을 작성하세요..."
-              className="h-12 flex-1 border-none bg-transparent pl-5 pr-14 font-body text-sm shadow-none placeholder:text-muted focus-visible:ring-0 md:h-14 md:pl-8 md:pr-16 md:text-base"
+              className="h-12 flex-1 border-none bg-transparent pl-5 pr-14 font-body text-sm text-text shadow-none placeholder:text-text-muted focus-visible:ring-0 md:h-14 md:pl-8 md:pr-16 md:text-base"
             />
             <Button
               type="submit"

@@ -71,7 +71,7 @@ export function DocumentWorkspaceShell({
       <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between px-2 flex-shrink-0">
         <div>
           <h1 className="text-3xl font-headings font-bold tracking-tight text-text">문서 워크스페이스</h1>
-          <p className="text-sm text-muted font-medium mt-1">업무의 흐름을 한눈에 파악하고 결재를 진행하세요.</p>
+          <p className="text-sm text-text-muted font-medium mt-1">업무의 흐름을 한눈에 파악하고 결재를 진행하세요.</p>
         </div>
         <div className="flex items-center gap-3">
           <Button
@@ -98,10 +98,10 @@ export function DocumentWorkspaceShell({
       {/* Status Metrics Dashboard */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-2 flex-shrink-0">
         {[
-          { label: "전체 문서", count: documents.length, color: "bg-blue-50/80 border-blue-200/50 text-blue-600", dot: "bg-blue-400" },
-          { label: "결재 대기", count: documents.filter(d => d.status === 'PENDING').length, color: "bg-amber-50/80 border-amber-200/50 text-amber-600", dot: "bg-amber-400" },
-          { label: "승인 완료", count: documents.filter(d => d.status === 'APPROVED').length, color: "bg-emerald-50/80 border-emerald-200/50 text-emerald-600", dot: "bg-emerald-400" },
-          { label: "반려/취소", count: documents.filter(d => d.status === 'REJECTED').length, color: "bg-rose-50/80 border-rose-200/50 text-rose-600", dot: "bg-rose-400" },
+          { label: "전체 문서", count: documents.length, color: "bg-info-soft border-info/20 text-info", dot: "bg-info" },
+          { label: "결재 대기", count: documents.filter(d => d.status === 'PENDING').length, color: "bg-warning-soft border-warning/20 text-warning", dot: "bg-warning" },
+          { label: "승인 완료", count: documents.filter(d => d.status === 'APPROVED').length, color: "bg-success-soft border-success/20 text-success", dot: "bg-success" },
+          { label: "반려/취소", count: documents.filter(d => d.status === 'REJECTED').length, color: "bg-destructive-soft border-destructive/20 text-destructive", dot: "bg-destructive" },
         ].map((stat, i) => (
           <div key={i} className={cn(
             "p-5 rounded-2xl border flex flex-col gap-1 transition-all hover:shadow-md hover:-translate-y-0.5",
@@ -128,9 +128,9 @@ export function DocumentWorkspaceShell({
                     onClick={() => onScopeChange(item.value)}
                     className={cn(
                       "px-5 py-2 text-[13px] font-bold rounded-xl transition-all whitespace-nowrap",
-                      isActive 
-                        ? "bg-white text-primary shadow-sm" 
-                        : "text-text/50 hover:text-text hover:bg-white/40"
+                      isActive
+                        ? "bg-surface text-primary shadow-sm"
+                        : "text-text/50 hover:text-text hover:bg-surface/40"
                     )}
                   >
                     {item.label}
@@ -149,8 +149,8 @@ export function DocumentWorkspaceShell({
                     onClick={() => onStatusFilterChange(filter.value)}
                     className={cn(
                       "px-3 py-1 text-xs font-bold rounded-lg transition-all",
-                      isActive 
-                        ? "bg-primary text-white shadow-sm" 
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-sm"
                         : "text-text/60 hover:bg-background/50 hover:text-text"
                     )}
                   >
@@ -198,20 +198,20 @@ export function DocumentWorkspaceShell({
                         "group relative flex flex-col p-6 rounded-3xl border transition-all text-left",
                         isSelected
                           ? "bg-primary border-primary shadow-lg shadow-primary/20 ring-4 ring-primary/5 scale-[1.02] z-10"
-                          : "bg-surface border-background/70 hover:border-primary/40 hover:bg-white hover:shadow-md hover:-translate-y-1"
+                          : "bg-surface border-background/70 hover:border-primary/40 hover:bg-surface hover:shadow-md hover:-translate-y-1"
                       )}
                     >
                       <div className="flex items-start justify-between mb-5">
                         <div className={cn(
                           "w-11 h-11 rounded-2xl flex items-center justify-center transition-colors shadow-sm",
-                          isSelected ? "bg-white/20 text-white" : "bg-background/80 text-primary group-hover:bg-primary/5"
+                          isSelected ? "bg-primary-foreground/20 text-primary-foreground" : "bg-background/80 text-primary group-hover:bg-primary/5"
                         )}>
                           <FileText size={22} strokeWidth={2.5} />
                         </div>
                         <span className={cn(
                           "px-3 py-1.5 rounded-pill text-[10px] font-black uppercase tracking-wider shadow-sm border",
-                          isSelected 
-                            ? "bg-white/20 text-white border-white/20" 
+                          isSelected
+                            ? "bg-primary-foreground/20 text-primary-foreground border-primary-foreground/20"
                             : badgeClassName
                         )}>
                           {badgeLabel}
@@ -221,13 +221,13 @@ export function DocumentWorkspaceShell({
                       <div className="flex-1 min-w-0 mb-6">
                         <h3 className={cn(
                           "font-headings font-bold text-lg leading-tight mb-2 line-clamp-2",
-                          isSelected ? "text-white" : "text-text"
+                          isSelected ? "text-primary-foreground" : "text-text"
                         )}>
                           {document.title}
                         </h3>
                         <div className={cn(
                           "flex items-center gap-2 text-[11px] font-bold",
-                          isSelected ? "text-white/70" : "text-text/40"
+                          isSelected ? "text-primary-foreground/70" : "text-text/40"
                         )}>
                           <span>{renderUserName(document.author)}</span>
                           <span className="opacity-40">•</span>
@@ -237,17 +237,17 @@ export function DocumentWorkspaceShell({
 
                       <div className={cn(
                         "pt-4 border-t flex items-center justify-between",
-                        isSelected ? "border-white/20" : "border-background/60"
+                        isSelected ? "border-primary-foreground/20" : "border-background/60"
                       )}>
                         <div className={cn(
                           "text-[10px] font-black uppercase tracking-tighter opacity-80",
-                          isSelected ? "text-white" : "text-text/60"
+                          isSelected ? "text-primary-foreground" : "text-text/60"
                         )}>
                           {document.currentStepLabel || "초안 단계"}
                         </div>
                         {isSelected && (
-                          <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-                            <Plus size={14} className="text-white rotate-45" />
+                          <div className="w-6 h-6 rounded-full bg-primary-foreground/20 flex items-center justify-center">
+                            <Plus size={14} className="text-primary-foreground rotate-45" />
                           </div>
                         )}
                       </div>

@@ -7,7 +7,7 @@ export default function TeammatesPage() {
         <h1 className="text-3xl font-headings font-bold text-text tracking-tight">
           팀 멤버 현황
         </h1>
-        <p className="text-muted font-headings font-medium mt-1">
+        <p className="text-text-muted font-headings font-medium mt-1">
           동료들의 현재 상태를 확인하고 소통하세요.
         </p>
       </header>

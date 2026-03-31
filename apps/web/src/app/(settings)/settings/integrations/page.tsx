@@ -36,16 +36,16 @@ export default async function IntegrationsPage() {
       name: "Slack 연동",
       status: status.slack.is_active,
       icon: MessageSquare,
-      color: "text-[#4A154B]",
-      bg: "bg-[#4A154B]/5",
+      color: "text-brand-slack",
+      bg: "bg-brand-slack-soft",
       updatedAt: 'updated_at' in status.slack ? status.slack.updated_at : null,
     },
     {
       name: "Jira 연동",
       status: status.jira.is_active,
       icon: Activity,
-      color: "text-[#0052CC]",
-      bg: "bg-[#0052CC]/5",
+      color: "text-brand-jira",
+      bg: "bg-brand-jira-soft",
       updatedAt: 'updated_at' in status.jira ? status.jira.updated_at : null,
     },
     {
@@ -106,8 +106,8 @@ export default async function IntegrationsPage() {
         <h1 className="text-3xl font-headings font-bold text-text flex items-center gap-3">
           <Link2 className="w-8 h-8 text-primary" /> 외부 도구 연동
         </h1>
-        <p className="text-sm text-muted mt-1 font-body">
-          조직에서 사용하는 협업 도구들을 연결하고, AI 자동화 엔진의 가동 상태를 모니터링합니다.
+        <p className="text-sm text-text-muted mt-1 font-body">
+          조직에서 사용하는 협업 도구들을 연결하여 업무 효율을 극대화합니다.
         </p>
       </div>
 
@@ -250,7 +250,7 @@ export default async function IntegrationsPage() {
       {/* GitHub Integration (Coming Soon Card Design) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-primary/5 rounded-3xl p-8 border border-primary/10 flex flex-col md:flex-row items-center gap-6">
-          <div className="bg-white p-5 rounded-3xl shadow-soft">
+          <div className="bg-surface p-5 rounded-3xl shadow-soft">
             <Zap className="w-10 h-10 text-primary animate-pulse" />
           </div>
           <div className="text-center md:text-left">
@@ -265,12 +265,12 @@ export default async function IntegrationsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl p-8 border border-background shadow-soft flex flex-col items-center justify-center text-center group cursor-not-allowed">
+        <div className="bg-surface rounded-3xl p-8 border border-background shadow-soft flex flex-col items-center justify-center text-center group cursor-not-allowed">
           <div className="w-16 h-16 bg-background rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-            <Github className="w-8 h-8 text-muted" />
+            <Github className="w-8 h-8 text-text-muted" />
           </div>
           <h4 className="font-bold text-muted-foreground">GitHub 연동</h4>
-          <p className="text-xs text-muted mt-1 italic">Coming Soon</p>
+          <p className="text-xs text-text-muted mt-1 italic">Coming Soon</p>
         </div>
       </div>
     </div>

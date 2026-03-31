@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
-import { LogOut, Menu, Settings } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getUserProfile } from "@/features/settings/services/userAction";
-import { UserRoleBadge } from "@/features/settings/components/UserRoleBadge";
+import { LogOut, Menu, Moon, Settings, Sun } from "lucide-react";
+import { useRouter } from "next/navigation";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +16,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { SidebarContent } from "@/components/shared/sidebar";
+import { UserRoleBadge } from "@/features/settings/components/UserRoleBadge";
+import { getUserProfile } from "@/features/settings/services/userAction";
+import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
+import { useTheme } from "@/providers/theme-provider";
 
 export function Header() {
   const [user, setUser] = useState<User | null>(null);
@@ -25,9 +28,10 @@ export function Header() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const supabase = createClient();
   const router = useRouter();
+  const { resolvedTheme, setThemePreference } = useTheme();
 
   const { data: profile, isLoading: isProfileLoading } = useQuery({
-    queryKey: ['userProfile'],
+    queryKey: ["userProfile"],
     queryFn: () => getUserProfile(),
     retry: 1,
     enabled: !!user,
@@ -35,16 +39,22 @@ export function Header() {
 
   useEffect(() => {
     const initAuth = async () => {
-      const { data: { user: initialUser } } = await supabase.auth.getUser();
+      const {
+        data: { user: initialUser },
+      } = await supabase.auth.getUser();
+
       if (initialUser) {
         setUser(initialUser);
       }
+
       setLoading(false);
     };
 
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
       setLoading(false);
@@ -57,6 +67,12 @@ export function Header() {
     setLoading(true);
     await supabase.auth.signOut();
     window.location.href = "/login";
+  };
+
+  const isDarkMode = resolvedTheme === "dark";
+
+  const handleThemeToggle = () => {
+    setThemePreference(isDarkMode ? "light" : "dark");
   };
 
   return (
@@ -92,67 +108,120 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-3 md:gap-4">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={isDarkMode}
+          aria-label={isDarkMode ? "라이트 테마로 변경" : "다크 테마로 변경"}
+          onClick={handleThemeToggle}
+          className="hidden items-center gap-2.5 rounded-pill border border-background/60 bg-surface/80 px-2.5 py-2 shadow-soft transition-colors hover:bg-surface sm:flex"
+        >
+          <span className="flex h-5 w-5 items-center justify-center">
+            <Sun
+              className={cn(
+                "h-4 w-4 transition-colors",
+                isDarkMode ? "text-text-muted" : "text-primary",
+              )}
+            />
+          </span>
+          <span
+            className={cn(
+              "relative h-7 w-12 shrink-0 rounded-full transition-colors",
+              isDarkMode ? "bg-primary/20" : "bg-secondary/80",
+            )}
+          >
+            <span
+              className={cn(
+                "absolute left-1 top-1 h-5 w-5 rounded-full bg-primary shadow-sm transition-transform",
+                isDarkMode ? "translate-x-6" : "translate-x-0",
+              )}
+            />
+          </span>
+          <span className="flex h-5 w-5 items-center justify-center">
+            <Moon
+              className={cn(
+                "h-4 w-4 transition-colors",
+                isDarkMode ? "text-primary" : "text-text-muted",
+              )}
+            />
+          </span>
+          <span className="hidden w-10 shrink-0 text-center text-xs font-semibold text-text-muted lg:inline-block">
+            {isDarkMode ? "다크" : "라이트"}
+          </span>
+        </button>
+
         {loading || (user && isProfileLoading) ? (
-          <div className="flex items-center gap-3 p-2 rounded-md bg-white/50 shadow-soft border border-background/50">
-            <div className="w-9 h-9 rounded-full bg-muted animate-pulse" />
+          <div className="flex items-center gap-3 rounded-md border border-background/50 bg-surface/70 p-2 shadow-soft">
+            <div className="h-9 w-9 animate-pulse rounded-full bg-muted" />
             <div className="flex flex-col gap-1">
-              <div className="h-3 w-16 bg-muted animate-pulse rounded" />
-              <div className="h-2 w-12 bg-muted/50 animate-pulse rounded" />
+              <div className="h-3 w-16 animate-pulse rounded bg-muted" />
+              <div className="h-2 w-12 animate-pulse rounded bg-muted/50" />
             </div>
           </div>
         ) : user ? (
-          /* 로그인 성공 UI */
-          <div className="flex items-center gap-2 rounded-md border border-background/50 bg-white/50 p-2 shadow-soft backdrop-blur-sm transition-all hover:bg-white/80 md:gap-3 md:pr-4">
-            <Avatar className="h-9 w-9 shadow-sm border border-primary/10">
-              <AvatarImage src={`https://api.dicebear.com/7.x/notionists/svg?seed=${profile?.name || user.email}`} />
-              <AvatarFallback className="bg-secondary/30 text-primary font-bold text-xs">
+          <div className="flex items-center gap-2 rounded-md border border-background/50 bg-surface/70 p-2 shadow-soft backdrop-blur-sm transition-all hover:bg-surface md:gap-3 md:pr-4">
+            <Avatar className="h-9 w-9 border border-primary/10 shadow-sm">
+              <AvatarImage
+                src={`https://api.dicebear.com/7.x/notionists/svg?seed=${profile?.name || user.email}`}
+              />
+              <AvatarFallback className="bg-secondary/30 text-xs font-bold text-primary">
                 {(profile?.name || user.email || "U")[0].toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="hidden min-w-[120px] flex-col md:flex">
               <div className="flex items-center gap-2">
-                <p className="text-sm font-bold text-text leading-tight truncate max-w-[100px]">
-                  {profile?.name || user.user_metadata?.name || user.email?.split('@')[0]}
+                <p className="max-w-[100px] truncate text-sm font-bold leading-tight text-text">
+                  {profile?.name || user.user_metadata?.name || user.email?.split("@")[0]}
                 </p>
                 {profile?.role && (
-                  <UserRoleBadge role={profile.role} className="scale-75 origin-left" />
+                  <UserRoleBadge role={profile.role} className="origin-left scale-75" />
                 )}
               </div>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <p className="text-[10px] font-medium text-muted/80 leading-tight">
+              <div className="mt-0.5 flex items-center gap-1.5">
+                <p className="text-[10px] font-medium leading-tight text-text-muted">
                   {profile?.department || "구성원"}
                 </p>
-                <span className="w-1 h-1 rounded-full bg-muted/30" />
-                <p className="text-[10px] font-medium text-primary/60 leading-tight">
+                <span className="h-1 w-1 rounded-full bg-muted/30" />
+                <p className="text-[10px] font-medium leading-tight text-primary/60">
                   {user.email}
                 </p>
               </div>
             </div>
             <div className="mx-1 hidden h-8 w-[1px] bg-background/50 md:block" />
             <div className="flex items-center gap-1">
-              <button 
-                onClick={() => router.push("/settings/profile")}
-                className="text-muted hover:text-primary transition-all p-1.5 hover:bg-primary/10 rounded-full"
+              <button
+                onClick={() => router.push("/settings/integrations")}
+                className="rounded-full p-1.5 text-text-muted transition-all hover:bg-primary/10 hover:text-primary"
                 title="설정"
                 aria-label="설정으로 이동"
               >
-                <Settings className="w-4 h-4" />
+                <Settings className="h-4 w-4" />
               </button>
-              <button 
+              <button
                 onClick={handleSignOut}
-                className="text-muted hover:text-destructive transition-all p-1.5 hover:bg-destructive/10 rounded-full"
+                className="rounded-full p-1.5 text-text-muted transition-all hover:bg-destructive/10 hover:text-destructive"
                 title="로그아웃"
                 aria-label="로그아웃"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="h-4 w-4" />
               </button>
             </div>
           </div>
         ) : (
-          /* 로그인 필요 UI */
           <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={() => router.push("/login")} className="px-4 font-headings text-sm">로그인</Button>
-            <Button onClick={() => router.push("/signup")} className="px-6 rounded-pill bg-primary text-white font-headings text-sm shadow-soft hover:shadow-md transition-all">시작하기</Button>
+            <Button
+              variant="ghost"
+              onClick={() => router.push("/login")}
+              className="px-4 font-headings text-sm"
+            >
+              로그인
+            </Button>
+            <Button
+              onClick={() => router.push("/signup")}
+              className="rounded-pill bg-primary px-6 font-headings text-sm text-primary-foreground shadow-soft transition-all hover:shadow-md"
+            >
+              시작하기
+            </Button>
           </div>
         )}
       </div>

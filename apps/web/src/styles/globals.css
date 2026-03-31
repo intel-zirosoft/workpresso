@@ -7,6 +7,10 @@
     /* Soft & Trustworthy Workpresso Palette */
     --background: 34 29% 98%;   /* #FDFBF7 (Warm Off-white) */
     --foreground: 216 26% 23%;  /* #2C394B (Deep Navy) */
+    --surface: 0 0% 100%;       /* #FFFFFF */
+    --surface-muted: 34 35% 94%; /* #F6F1E8 */
+    --text: 216 26% 23%;        /* #2C394B */
+    --text-muted: 214 18% 56%;  /* #7F8FA1 */
     
     --card: 0 0% 100%;          /* #FFFFFF */
     --card-foreground: 216 26% 23%;
@@ -19,21 +23,111 @@
     
     --secondary: 32 83% 75%;    /* #F2C18D (Warm Peach) */
     --secondary-foreground: 216 26% 23%;
-    
-    --muted: 214 12% 69%;       /* #A5AEBA (Soft Slate) */
-    --muted-foreground: 216 26% 23%;
+
+    --warning: 34 85% 62%;
+    --warning-foreground: 216 26% 23%;
+    --warning-soft: 34 100% 95%;
+
+    --info: 214 76% 58%;
+    --info-foreground: 0 0% 100%;
+    --info-soft: 214 100% 95%;
+
+    --success: 111 27% 68%;     /* #A1C398 */
+    --success-foreground: 216 26% 23%;
+    --success-soft: 112 45% 94%;
+
+    --muted: 214 18% 86%;
+    --muted-foreground: 214 18% 52%;
     
     --accent: 32 83% 75%;
     --accent-foreground: 216 26% 23%;
     
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
+    --destructive-soft: 0 100% 97%;
 
-    --border: 214 12% 69%;
-    --input: 214 12% 69%;
+    --border: 214 20% 84%;
+    --input: 214 20% 84%;
     --ring: 210 38% 63%;
+    --overlay: 216 26% 10%;
+
+    --brand-slack: 300 53% 18%;
+    --brand-slack-soft: 300 40% 96%;
+    --brand-jira: 216 100% 40%;
+    --brand-jira-soft: 214 100% 96%;
+
+    --calendar-sunday: 0 84% 60%;
+    --calendar-today: 214 76% 58%;
+    --calendar-past-marker: 214 20% 45%;
+
+    --shadow-soft: 0 8px 24px rgba(127, 161, 195, 0.12);
+    --shadow-float: 0 16px 32px rgba(127, 161, 195, 0.16);
     
     --radius: 24px;
+  }
+
+  [data-theme="dark"] {
+    --background: 214 31% 11%;   /* #121B25 */
+    --foreground: 206 43% 95%;   /* #EDF3F8 */
+    --surface: 210 25% 20%;      /* #253240 */
+    --surface-muted: 211 24% 16%; /* #1D2833 */
+    --text: 206 43% 95%;         /* #EDF3F8 */
+    --text-muted: 210 34% 89%;   /* #D5E2EF */
+
+    --card: 210 28% 19%;
+    --card-foreground: 206 43% 95%;
+
+    --popover: 210 28% 19%;
+    --popover-foreground: 206 43% 95%;
+
+    --primary: 210 42% 72%;      /* #9AB8D6 */
+    --primary-foreground: 213 29% 13%;
+
+    --secondary: 29 69% 69%;     /* #E7B07A */
+    --secondary-foreground: 213 29% 13%;
+
+    --warning: 32 78% 66%;
+    --warning-foreground: 213 29% 13%;
+    --warning-soft: 32 36% 24%;
+
+    --info: 211 74% 68%;
+    --info-foreground: 213 29% 13%;
+    --info-soft: 211 34% 24%;
+
+    --success: 114 25% 64%;      /* #8FB78B */
+    --success-foreground: 213 29% 13%;
+    --success-soft: 114 20% 24%;
+
+    --muted: 210 18% 28%;
+    --muted-foreground: 210 31% 84%;
+
+    --accent: 29 69% 69%;
+    --accent-foreground: 213 29% 13%;
+
+    --destructive: 0 74% 66%;
+    --destructive-foreground: 213 29% 13%;
+    --destructive-soft: 0 28% 24%;
+
+    --border: 210 20% 37%;
+    --input: 210 20% 37%;
+    --ring: 210 47% 82%;
+    --overlay: 216 26% 4%;
+
+    --brand-slack: 300 30% 74%;
+    --brand-slack-soft: 300 24% 22%;
+    --brand-jira: 214 85% 72%;
+    --brand-jira-soft: 214 30% 23%;
+
+    --calendar-sunday: 0 78% 72%;
+    --calendar-today: 211 74% 68%;
+    --calendar-past-marker: 211 18% 64%;
+
+    --shadow-soft: 0 10px 30px rgba(7, 12, 18, 0.28);
+    --shadow-float: 0 18px 40px rgba(7, 12, 18, 0.34);
+  }
+
+  html {
+    background-color: hsl(var(--background));
   }
 
   * {
@@ -76,7 +170,7 @@
 
 /* --- Calendar Final Styles (Marker & Sundays) --- */
 .fc .fc-daygrid-day.fc-day-past:not(.fc-day-today) {
-  background-color: rgba(241, 245, 249, 0.5) !important; /* 연한 회색 배경 */
+  background-color: hsl(var(--background) / 0.5) !important;
   position: relative !important;
 }
 
@@ -87,7 +181,7 @@
   left: -2px !important;
   right: -2px !important;
   height: 14px !important; /* 더 두꺼운 마커 펜 느낌 */
-  background-color: rgba(51, 65, 85, 0.8) !important; /* 훨씬 더 진한 다크 그레이-블루 */
+  background-color: hsl(var(--calendar-past-marker) / 0.8) !important;
   transform: translateY(-50%) !important;
   pointer-events: none !important;
   z-index: 20 !important;
@@ -109,7 +203,7 @@
 }
 
 .fc .fc-day-past:not(.fc-day-today) .fc-daygrid-day-number {
-  color: rgba(30, 41, 59, 0.5) !important;
+  color: hsl(var(--foreground) / 0.5) !important;
   z-index: 25 !important;
   position: relative !important;
 }
@@ -117,7 +211,7 @@
 /* Sunday coloring (Red) */
 .fc .fc-day-sun .fc-daygrid-day-number,
 .fc .fc-daygrid-day.fc-day-sun .fc-daygrid-day-number {
-  color: #ef4444 !important;
+  color: hsl(var(--calendar-sunday)) !important;
   z-index: 30 !important;
   position: relative !important;
 }

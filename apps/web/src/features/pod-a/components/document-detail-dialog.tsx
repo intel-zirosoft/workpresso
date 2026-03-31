@@ -32,10 +32,10 @@ const approvalStepStatusLabelMap = {
 } as const;
 
 const approvalStepStatusClassMap = {
-  WAITING: "bg-slate-200 text-slate-600",
-  PENDING: "bg-amber-100 text-amber-700",
-  APPROVED: "bg-emerald-100 text-emerald-700",
-  REJECTED: "bg-rose-100 text-rose-700",
+  WAITING: "bg-background text-text-muted",
+  PENDING: "bg-warning-soft text-warning",
+  APPROVED: "bg-success-soft text-success",
+  REJECTED: "bg-destructive-soft text-destructive",
 } as const;
 
 type DocumentDetailDialogProps = {
@@ -73,20 +73,20 @@ export function DocumentDetailDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[calc(100vh-1rem)] max-h-[calc(100vh-1rem)] w-[calc(100vw-1rem)] max-w-7xl flex-row gap-0 overflow-hidden border-none bg-white p-0 shadow-2xl sm:h-[95vh]">
-        <aside className="flex w-[280px] shrink-0 flex-col border-r border-slate-100 bg-slate-50 p-8">
+      <DialogContent className="flex h-[calc(100vh-1rem)] max-h-[calc(100vh-1rem)] w-[calc(100vw-1rem)] max-w-7xl flex-row gap-0 overflow-hidden border-none bg-surface p-0 shadow-2xl sm:h-[95vh]">
+        <aside className="flex w-[280px] shrink-0 flex-col border-r border-background/60 bg-background/60 p-8">
           <div className="mb-10">
             <h2 className="mb-1 text-[11px] font-black uppercase tracking-[0.2em] text-primary">
               Detail
             </h2>
-            <p className="text-[13px] font-medium tracking-tight text-slate-400">
+            <p className="text-[13px] font-medium tracking-tight text-text-muted">
               Document Overview
             </p>
           </div>
 
           <div className="space-y-6">
-            <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-              <div className="mb-2 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
+            <section className="rounded-3xl border border-background/60 bg-surface p-5 shadow-sm">
+              <div className="mb-2 text-[11px] font-black uppercase tracking-[0.18em] text-text-muted">
                 상태
               </div>
               <span
@@ -94,50 +94,50 @@ export function DocumentDetailDialog({
                   "inline-flex rounded-full px-3 py-1 text-xs font-bold",
                   document
                     ? statusBadgeClassMap[document.status]
-                    : "bg-slate-200 text-slate-600",
+                    : "bg-background text-text-muted",
                 )}
               >
                 {document ? statusLabelMap[document.status] : "로딩 중"}
               </span>
 
-              <div className="mt-4 space-y-3 text-sm text-slate-500">
+              <div className="mt-4 space-y-3 text-sm text-text-muted">
                 <div>
-                  <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-300">
+                  <div className="text-[11px] font-black uppercase tracking-[0.16em] text-text/30">
                     작성자
                   </div>
-                  <div className="mt-1 font-medium text-slate-700">
+                  <div className="mt-1 font-medium text-text">
                     {renderUserName(document?.author)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-300">
+                  <div className="text-[11px] font-black uppercase tracking-[0.16em] text-text/30">
                     최종 수정
                   </div>
-                  <div className="mt-1 font-medium text-slate-700">
+                  <div className="mt-1 font-medium text-text">
                     {formatDate(document?.updatedAt ?? null)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-300">
+                  <div className="text-[11px] font-black uppercase tracking-[0.16em] text-text/30">
                     제출 시각
                   </div>
-                  <div className="mt-1 font-medium text-slate-700">
+                  <div className="mt-1 font-medium text-text">
                     {formatDate(document?.submittedAt ?? null)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-300">
+                  <div className="text-[11px] font-black uppercase tracking-[0.16em] text-text/30">
                     현재 단계
                   </div>
-                  <div className="mt-1 font-medium text-slate-700">
+                  <div className="mt-1 font-medium text-text">
                     {document?.currentStepLabel ?? "없음"}
                   </div>
                 </div>
               </div>
             </section>
 
-            <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-              <div className="mb-4 flex items-center gap-2 text-sm font-bold text-slate-800">
+            <section className="rounded-3xl border border-background/60 bg-surface p-5 shadow-sm">
+              <div className="mb-4 flex items-center gap-2 text-sm font-bold text-text">
                 <GitBranch className="h-4 w-4 text-primary" />
                 결재선
               </div>
@@ -146,14 +146,14 @@ export function DocumentDetailDialog({
                   document.approvalSteps.map((step) => (
                     <div
                       key={step.id}
-                      className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4"
+                      className="rounded-2xl border border-background/60 bg-background/70 p-4"
                     >
                       <div className="mb-2 flex items-start justify-between gap-3">
                         <div>
-                          <div className="text-sm font-bold text-slate-800">
+                          <div className="text-sm font-bold text-text">
                             {step.stepOrder}. {step.stepLabel}
                           </div>
-                          <div className="mt-1 text-xs text-slate-500">
+                          <div className="mt-1 text-xs text-text-muted">
                             {renderUserName(step.approver)}
                           </div>
                         </div>
@@ -166,21 +166,21 @@ export function DocumentDetailDialog({
                           {approvalStepStatusLabelMap[step.status]}
                         </span>
                       </div>
-                      <div className="text-[11px] font-medium text-slate-400">
+                      <div className="text-[11px] font-medium text-text-muted">
                         처리 시각 {formatDate(step.actedAt)}
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-5 text-sm text-slate-500">
+                  <div className="rounded-2xl border border-dashed border-background bg-background/60 px-4 py-5 text-sm text-text-muted">
                     등록된 결재선이 없습니다.
                   </div>
                 )}
               </div>
             </section>
 
-            <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-              <div className="mb-4 flex items-center gap-2 text-sm font-bold text-slate-800">
+            <section className="rounded-3xl border border-background/60 bg-surface p-5 shadow-sm">
+              <div className="mb-4 flex items-center gap-2 text-sm font-bold text-text">
                 <UserPlus className="h-4 w-4 text-primary" />
                 공람 대상
               </div>
@@ -195,23 +195,23 @@ export function DocumentDetailDialog({
                     </span>
                   ))
                 ) : (
-                  <span className="text-sm text-slate-500">공람자 없음</span>
+                  <span className="text-sm text-text-muted">공람자 없음</span>
                 )}
               </div>
             </section>
           </div>
         </aside>
 
-        <div className="relative flex min-w-0 flex-1 flex-col bg-white">
+        <div className="relative flex min-w-0 flex-1 flex-col bg-surface">
           {errorMessage ? (
-            <div className="border-b border-rose-100 bg-rose-50 px-8 py-3 text-sm font-medium text-rose-600">
+            <div className="border-b border-destructive/20 bg-destructive-soft px-8 py-3 text-sm font-medium text-destructive">
               {errorMessage}
             </div>
           ) : null}
 
           <div className="min-h-0 flex-1 overflow-y-auto px-12 pb-24 pt-16">
             {isLoading ? (
-              <div className="flex min-h-full items-center justify-center gap-2 text-sm text-slate-500">
+              <div className="flex min-h-full items-center justify-center gap-2 text-sm text-text-muted">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 문서 상세를 불러오는 중입니다.
               </div>
@@ -223,29 +223,29 @@ export function DocumentDetailDialog({
                   <div className="mb-4 inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest text-primary shadow-sm ring-1 ring-primary/5">
                     DETAIL VIEW
                   </div>
-                  <h1 className="mb-3 text-4xl font-black tracking-tight text-slate-800">
+                  <h1 className="mb-3 text-4xl font-black tracking-tight text-text">
                     {document.title}
                   </h1>
-                  <p className="max-w-2xl text-[15px] font-medium leading-relaxed text-slate-400">
+                  <p className="max-w-2xl text-[15px] font-medium leading-relaxed text-text-muted">
                     작성 화면과 동일한 정보 흐름으로 내용을 먼저 읽고, 필요한 경우에만 편집 또는 결재 액션으로 이어집니다.
                   </p>
-                  <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold text-slate-500">
-                    <span className="rounded-full bg-slate-100 px-3 py-1.5">
+                  <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold text-text-muted">
+                    <span className="rounded-full bg-background px-3 py-1.5">
                       작성자 {renderUserName(document.author)}
                     </span>
-                    <span className="rounded-full bg-slate-100 px-3 py-1.5">
+                    <span className="rounded-full bg-background px-3 py-1.5">
                       수정 {formatDate(document.updatedAt)}
                     </span>
                     {document.currentStepLabel ? (
-                      <span className="rounded-full bg-slate-100 px-3 py-1.5">
+                      <span className="rounded-full bg-background px-3 py-1.5">
                         현재 단계 {document.currentStepLabel}
                       </span>
                     ) : null}
                   </div>
                 </header>
 
-                <section className="rounded-[32px] border border-slate-100 bg-white p-8 shadow-sm">
-                  <div className="mb-6 flex items-center gap-2 text-sm font-bold text-slate-800">
+                <section className="rounded-[32px] border border-background/60 bg-surface p-8 shadow-sm">
+                  <div className="mb-6 flex items-center gap-2 text-sm font-bold text-text">
                     <FileText className="h-4 w-4 text-primary" />
                     문서 본문
                   </div>
@@ -254,7 +254,7 @@ export function DocumentDetailDialog({
                       <MarkdownContent>{document.content}</MarkdownContent>
                     </article>
                   ) : (
-                    <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-6 py-10 text-center text-sm text-slate-500">
+                    <div className="rounded-2xl border border-dashed border-background bg-background/60 px-6 py-10 text-center text-sm text-text-muted">
                       본문이 비어 있습니다.
                     </div>
                   )}
@@ -263,19 +263,19 @@ export function DocumentDetailDialog({
             ) : null}
 
             {!isLoading && !document ? (
-              <div className="mx-auto max-w-3xl rounded-[32px] border border-dashed border-slate-200 bg-slate-50/60 px-8 py-14 text-center text-sm leading-6 text-slate-500">
+              <div className="mx-auto max-w-3xl rounded-[32px] border border-dashed border-background bg-background/60 px-8 py-14 text-center text-sm leading-6 text-text-muted">
                 문서를 찾지 못했거나 접근 권한이 없습니다.
               </div>
             ) : null}
           </div>
 
           {document ? (
-            <div className="z-10 flex h-20 shrink-0 items-center border-t border-slate-100 bg-white px-12">
+            <div className="z-10 flex h-20 shrink-0 items-center border-t border-background/60 bg-surface px-12">
               <div className="flex-1">
-                <div className="text-[10px] font-black tracking-wider text-slate-400">
+                <div className="text-[10px] font-black tracking-wider text-text-muted">
                   DOCUMENT STATUS
                 </div>
-                <div className="mt-1 text-sm font-semibold text-slate-700">
+                <div className="mt-1 text-sm font-semibold text-text">
                   {statusLabelMap[document.status]}
                   {document.currentStepLabel
                     ? ` · 현재 단계 ${document.currentStepLabel}`
@@ -301,7 +301,7 @@ export function DocumentDetailDialog({
                   <Button
                     type="button"
                     variant="outline"
-                    className="rounded-pill border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                    className="rounded-pill border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive"
                     onClick={onDelete}
                     disabled={isActionPending}
                   >

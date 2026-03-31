@@ -4,8 +4,8 @@
   --fc-button-border-color: transparent;
   --fc-button-hover-bg-color: hsla(var(--primary), 0.1);
   --fc-button-active-bg-color: hsla(var(--primary), 0.2);
-  --fc-button-text-color: var(--text);
-  --fc-border-color: hsla(var(--background), 0.5);
+  --fc-button-text-color: hsl(var(--text));
+  --fc-border-color: hsl(var(--background) / 0.5);
   --fc-today-bg-color: hsla(var(--primary), 0.05);
   --fc-page-bg-color: transparent;
   
@@ -16,21 +16,21 @@
 .fc .fc-toolbar-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--text);
+  color: hsl(var(--text));
 }
 
 .fc .fc-button-primary {
-  border: 1px solid rgba(var(--background), 1);
+  border: 1px solid hsl(var(--background));
   border-radius: 9999px;
   padding: 0.5rem 1rem;
   transition: all 0.2s;
-  color: var(--text);
+  color: hsl(var(--text));
 }
 
 .fc .fc-button-primary:not(:disabled):active,
 .fc .fc-button-primary:not(:disabled).fc-button-active {
   background-color: hsl(var(--primary));
-  color: white;
+  color: hsl(var(--primary-foreground));
   border-color: hsl(var(--primary));
 }
 
@@ -44,13 +44,13 @@
   padding: 8px;
   font-weight: 500;
   font-size: 0.875rem;
-  color: var(--text);
+  color: hsl(var(--text));
   text-decoration: none;
 }
 
 /* Sunday coloring (Red) */
 .fc .fc-day-sun .fc-daygrid-day-number {
-  color: #ef4444 !important;
+  color: hsl(var(--calendar-sunday)) !important;
 }
 
 .fc .fc-daygrid-day.fc-day-today {
@@ -58,8 +58,8 @@
 }
 
 .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
-  background-color: #3b82f6 !important; /* 더 선명한 파란색으로 변경 */
-  color: white !important;
+  background-color: hsl(var(--calendar-today)) !important;
+  color: hsl(var(--info-foreground)) !important;
   border-radius: 50%;
   width: 32px; /* 크기 키워서 잘림 방지 */
   height: 32px;
@@ -74,7 +74,7 @@
 .fc .fc-day-sun,
 .fc .fc-day-sun .fc-daygrid-day-number,
 .fc .fc-daygrid-day.fc-day-sun .fc-daygrid-day-number {
-  color: #ef4444 !important;
+  color: hsl(var(--calendar-sunday)) !important;
 }
 
 /* Past Dates styling - Thick Marker Stroke Effect (High Visibility) */
@@ -90,7 +90,7 @@
   left: -2px !important;
   right: -2px !important;
   height: 14px !important; /* 더 두꺼운 마커 느낌 */
-  background-color: rgba(71, 85, 105, 0.4) !important; /* 더 진한 마커 색상 */
+  background-color: hsl(var(--calendar-past-marker) / 0.4) !important;
   transform: translateY(-50%) !important;
   pointer-events: none !important;
   z-index: 20 !important;
@@ -112,7 +112,7 @@
 }
 
 .fc .fc-day-past:not(.fc-day-today) .fc-daygrid-day-number {
-  color: hsla(var(--foreground), 0.4) !important;
+  color: hsl(var(--foreground) / 0.4) !important;
   z-index: 25 !important;
 }
 

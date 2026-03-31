@@ -39,7 +39,7 @@ export function SettingsSidebar({ userRole }: SettingsSidebarProps) {
                   "inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2.5 text-sm font-bold transition-all",
                   isActive
                     ? "border-primary bg-primary text-primary-foreground shadow-soft"
-                    : "border-background/70 bg-white text-muted hover:border-primary/20 hover:text-primary"
+                    : "border-background/70 bg-surface text-text-muted hover:border-primary/20 hover:text-primary"
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -50,8 +50,8 @@ export function SettingsSidebar({ userRole }: SettingsSidebarProps) {
         </div>
       </nav>
 
-      <nav className="hidden w-64 min-h-[calc(100vh-4rem)] flex-col gap-2 border-r border-gray-100 bg-white p-6 md:flex">
-        <h2 className="mb-8 px-2 text-xl font-headings font-bold tracking-tight text-gray-900">설정</h2>
+      <nav className="hidden w-64 min-h-[calc(100vh-4rem)] flex-col gap-2 border-r border-background/50 bg-surface p-6 md:flex">
+        <h2 className="mb-8 px-2 text-xl font-headings font-bold tracking-tight text-text">설정</h2>
         <div className="flex flex-col gap-2">
         {filteredItems.map(item => {
           const isActive = pathname.startsWith(item.href);
@@ -64,12 +64,12 @@ export function SettingsSidebar({ userRole }: SettingsSidebarProps) {
                 "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 font-headings text-sm font-bold group",
                 isActive 
                   ? "bg-primary text-primary-foreground shadow-md translate-x-1" 
-                  : "text-muted hover:bg-primary/5 hover:text-primary hover:translate-x-1"
+                  : "text-text-muted hover:bg-primary/5 hover:text-primary hover:translate-x-1"
               )}
             >
               <div className={cn(
                 "p-1.5 rounded-lg transition-colors duration-300",
-                isActive ? "bg-white/20" : "bg-primary/5 group-hover:bg-primary/10 text-primary"
+                isActive ? "bg-primary-foreground/20" : "bg-primary/5 group-hover:bg-primary/10 text-primary"
               )}>
                 <Icon className={cn("w-4 h-4", isActive ? "text-primary-foreground" : "text-primary")} />
               </div>
