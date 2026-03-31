@@ -31,6 +31,21 @@ const chatRequestSchema = z.object({
 
 type CreateScheduleArgs = z.infer<typeof createScheduleToolSchema>;
 type NormalizedChatMessage = Omit<Message, "id">;
+const isDebugChatError =
+  process.env.NODE_ENV !== "production" || process.env.VERCEL_ENV === "preview";
+
+function getChatStreamErrorMessage(error: unknown) {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "An error occurred.";
+
+  console.error("Chat stream error:", error);
+
+  return isDebugChatError ? message : "An error occurred.";
+}
 
 function extractMessageText(content: unknown): string {
   if (typeof content === "string") {
@@ -141,7 +156,9 @@ export async function POST(req: Request) {
       },
     });
 
-    return result.toDataStreamResponse();
+    return result.toDataStreamResponse({
+      getErrorMessage: getChatStreamErrorMessage,
+    });
   } catch (error: any) {
     console.error("Fatal Error:", error.message);
     return new Response(error.message, { status: 500 });
