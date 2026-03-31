@@ -10,10 +10,9 @@ const {
   mockCreateClient,
   mockCreateAdminClient,
   mockCreateEmbedding,
-  mockGetChatLanguageModel,
+  mockGetResolvedAiConfig,
+  mockCreateOpenRouterClient,
   mockCreateScheduleViaPodBApi,
-  mockStreamText,
-  mockConvertToCoreMessages,
   mockTool,
   mockRpc,
   mockUpsertKnowledgeSource,
@@ -23,10 +22,9 @@ const {
   mockCreateClient: vi.fn(),
   mockCreateAdminClient: vi.fn(),
   mockCreateEmbedding: vi.fn(),
-  mockGetChatLanguageModel: vi.fn(),
+  mockGetResolvedAiConfig: vi.fn(),
+  mockCreateOpenRouterClient: vi.fn(),
   mockCreateScheduleViaPodBApi: vi.fn(),
-  mockStreamText: vi.fn(),
-  mockConvertToCoreMessages: vi.fn(),
   mockTool: vi.fn(),
   mockRpc: vi.fn(),
   mockUpsertKnowledgeSource: vi.fn(),
@@ -45,8 +43,12 @@ vi.mock("@/lib/ai/embeddings", () => ({
   createEmbedding: mockCreateEmbedding,
 }));
 
-vi.mock("@/lib/ai/chat", () => ({
-  getChatLanguageModel: mockGetChatLanguageModel,
+vi.mock("@/lib/ai/config", () => ({
+  getResolvedAiConfig: mockGetResolvedAiConfig,
+}));
+
+vi.mock("@/lib/ai/openrouter", () => ({
+  createOpenRouterClient: mockCreateOpenRouterClient,
 }));
 
 vi.mock("@/features/pod-b/services/pod-b-schedule-api-adapter", async () => {
@@ -66,8 +68,6 @@ vi.mock("@/features/pod-c/services/knowledge-sync", () => ({
 }));
 
 vi.mock("ai", () => ({
-  convertToCoreMessages: mockConvertToCoreMessages,
-  streamText: mockStreamText,
   tool: mockTool,
 }));
 
@@ -183,10 +183,9 @@ describe("POST /api/chat schedule integration", () => {
     mockCreateClient.mockReset();
     mockCreateAdminClient.mockReset();
     mockCreateEmbedding.mockReset();
-    mockGetChatLanguageModel.mockReset();
+    mockGetResolvedAiConfig.mockReset();
+    mockCreateOpenRouterClient.mockReset();
     mockCreateScheduleViaPodBApi.mockReset();
-    mockStreamText.mockReset();
-    mockConvertToCoreMessages.mockReset();
     mockTool.mockReset();
     mockRpc.mockReset();
     mockUpsertKnowledgeSource.mockReset();
@@ -205,12 +204,19 @@ describe("POST /api/chat schedule integration", () => {
     mockCreateEmbedding.mockResolvedValue({
       embedding: [0.1, 0.2, 0.3],
     });
-    mockGetChatLanguageModel.mockResolvedValue("mock-model");
+    mockGetResolvedAiConfig.mockResolvedValue({
+      provider: "openrouter",
+      chatModel: "openai/gpt-4o-mini",
+      embeddingModel: "openai/text-embedding-3-small",
+      meetingRefineModel: "google/gemini-2.0-flash-001",
+      sttModel: "openai/gpt-4o-audio-preview",
+      fallbackModels: [],
+      isActive: true,
+    });
     mockRpc.mockResolvedValue({
       data: [],
       error: null,
     });
-    mockConvertToCoreMessages.mockImplementation((messages) => messages);
     mockTool.mockImplementation((config) => config);
     mockBuildScheduleKnowledgeContent.mockImplementation(
       ({ title, startTime, endTime, type }) =>
@@ -274,19 +280,56 @@ describe("POST /api/chat schedule integration", () => {
       };
     });
 
-    mockStreamText.mockImplementation(async (options) => {
-      const toolResult = await options.tools.create_schedule.execute({
-        title: "디자인 리뷰",
-        start_time: "2026-03-31T05:00:00.000Z",
-        end_time: "2026-03-31T06:00:00.000Z",
-        type: "MEETING",
-        description: "Pod-C가 회의 메모를 바탕으로 생성",
-        attendee_ids: [],
-      });
-
-      return {
-        toDataStreamResponse: () => Response.json({ toolResult }),
-      };
+    mockCreateOpenRouterClient.mockResolvedValue({
+      chat: {
+        completions: {
+          create: vi
+            .fn()
+            .mockResolvedValueOnce({
+              choices: [
+                {
+                  message: {
+                    content: "",
+                    tool_calls: [
+                      {
+                        id: "call_123",
+                        type: "function",
+                        function: {
+                          name: "create_schedule",
+                          arguments: JSON.stringify({
+                            title: "디자인 리뷰",
+                            start_time: "2026-03-31T05:00:00.000Z",
+                            end_time: "2026-03-31T06:00:00.000Z",
+                            type: "MEETING",
+                            description: "Pod-C가 회의 메모를 바탕으로 생성",
+                            attendee_ids: [],
+                          }),
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+              usage: {
+                prompt_tokens: 1,
+                completion_tokens: 1,
+              },
+            })
+            .mockResolvedValueOnce({
+              choices: [
+                {
+                  message: {
+                    content: "일정 등록을 완료했습니다.",
+                  },
+                },
+              ],
+              usage: {
+                prompt_tokens: 1,
+                completion_tokens: 1,
+              },
+            }),
+        },
+      },
     });
 
     const response = await postChat(
@@ -305,14 +348,15 @@ describe("POST /api/chat schedule integration", () => {
         }),
       }),
     );
-    const body = await response.json();
+    const body = await response.text();
 
     expect(response.status).toBe(200);
-    expect(body.toolResult.message).toBe("일정 '디자인 리뷰' 등록 완료");
-    expect(body.toolResult.schedule.link).toBe("http://localhost:3000/schedules");
+    expect(body).toContain("일정 등록을 완료했습니다.");
     expect(mockUpsertKnowledgeSource).toHaveBeenCalledTimes(1);
 
-    const createdScheduleId = body.toolResult.schedule.id;
+    const createdScheduleId =
+      mockCreateScheduleViaPodBApi.mock.results[0]?.value &&
+      (await mockCreateScheduleViaPodBApi.mock.results[0].value).id;
     createdScheduleIds.add(createdScheduleId);
 
     const { data: storedSchedule, error } = await adminSupabase
