@@ -55,6 +55,13 @@ export function buildInjectedBridgeScript(webBaseOrigin: string) {
         postMessage('WEB_SESSION_STATUS', Object.assign({ kind: kind }, payload || {}));
       }
 
+      function reportRouteChange() {
+        postMessage('WEB_ROUTE_CHANGED', {
+          title: document.title || '',
+          url: window.location.href
+        });
+      }
+
       function reportAuthRequiredIfNeeded(url, status) {
         var absoluteUrl = buildAbsoluteUrl(url);
         var parsed = safeParseUrl(absoluteUrl);
@@ -153,6 +160,7 @@ export function buildInjectedBridgeScript(webBaseOrigin: string) {
       }
 
       function reportCurrentLocation() {
+        reportRouteChange();
         reportAuthRequiredIfNeeded(window.location.href, 200);
       }
 

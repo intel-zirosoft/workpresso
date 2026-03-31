@@ -416,6 +416,30 @@ export const WebViewContainer = forwardRef<
             parsedMessage?.payload ?? event.nativeEvent.data,
           );
 
+          if (parsedMessage?.type === 'WEB_ROUTE_CHANGED') {
+            const payload =
+              parsedMessage.payload && typeof parsedMessage.payload === 'object'
+                ? (parsedMessage.payload as { url?: string })
+                : undefined;
+            const nextUrl =
+              payload?.url && typeof payload.url === 'string'
+                ? payload.url
+                : currentUrl;
+
+            clearLoadTimeout();
+            setErrorMessage(null);
+            setIsLoading(false);
+            setNavigationState((previous) => ({
+              ...previous,
+              currentUrl: nextUrl,
+            }));
+            publishState({
+              currentUrl: nextUrl,
+              hasError: false,
+              isLoading: false,
+            });
+          }
+
           if (parsedMessage?.type === 'WEB_SESSION_STATUS') {
             publishAuthWarning(
               buildAuthWarningMessage(

@@ -1,5 +1,6 @@
 export type BridgeEventType =
   | 'BRIDGE_READY'
+  | 'WEB_ROUTE_CHANGED'
   | 'WEB_SESSION_STATUS'
   | 'OPEN_NATIVE_RECORDER'
   | 'PICK_FILE'

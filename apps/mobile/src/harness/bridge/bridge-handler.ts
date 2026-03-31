@@ -35,6 +35,10 @@ export async function handleBridgeMessage(
       return;
     }
 
+    case 'WEB_ROUTE_CHANGED': {
+      return;
+    }
+
     case 'WEB_SESSION_STATUS': {
       return;
     }
