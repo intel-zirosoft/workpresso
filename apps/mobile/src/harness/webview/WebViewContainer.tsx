@@ -438,6 +438,7 @@ export const WebViewContainer = forwardRef<
               hasError: false,
               isLoading: false,
             });
+            publishAuthWarning(null);
           }
 
           if (parsedMessage?.type === 'WEB_SESSION_STATUS') {

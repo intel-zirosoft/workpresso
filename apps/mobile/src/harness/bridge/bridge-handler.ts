@@ -39,6 +39,10 @@ export async function handleBridgeMessage(
       return;
     }
 
+    case 'WEB_ROUTE_SNAPSHOT': {
+      return;
+    }
+
     case 'WEB_RUNTIME_ERROR': {
       return;
     }

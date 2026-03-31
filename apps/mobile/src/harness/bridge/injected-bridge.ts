@@ -66,6 +66,21 @@ export function buildInjectedBridgeScript(webBaseOrigin: string) {
         });
       }
 
+      function reportRouteSnapshot(label) {
+        var bodyText = document.body && typeof document.body.innerText === 'string'
+          ? document.body.innerText.replace(/\s+/g, ' ').trim()
+          : '';
+
+        postMessage('WEB_ROUTE_SNAPSHOT', {
+          bodyText: bodyText.slice(0, 140),
+          childElementCount: document.body ? document.body.childElementCount : 0,
+          label: label || 'snapshot',
+          readyState: document.readyState,
+          title: document.title || '',
+          url: window.location.href
+        });
+      }
+
       function reportAuthRequiredIfNeeded(url, status) {
         var absoluteUrl = buildAbsoluteUrl(url);
         var parsed = safeParseUrl(absoluteUrl);
@@ -166,6 +181,12 @@ export function buildInjectedBridgeScript(webBaseOrigin: string) {
       function reportCurrentLocation() {
         reportRouteChange();
         reportAuthRequiredIfNeeded(window.location.href, 200);
+        window.setTimeout(function() {
+          reportRouteSnapshot('after-route-change');
+        }, 0);
+        window.setTimeout(function() {
+          reportRouteSnapshot('after-route-settle');
+        }, 400);
       }
 
       if (originalPushState) {
