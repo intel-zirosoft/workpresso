@@ -364,7 +364,6 @@ async function buildDocumentDetails(
         viewerRole,
       ),
       jiraLinks,
-      permissions: buildPermissions(document, approvalSteps, viewerId, viewerRole),
     });
   });
 }
@@ -458,10 +457,13 @@ async function processDocumentKnowledgeSyncJob(params: {
     return;
   }
 
+  const viewerRole = await fetchViewerRole(adminSupabase, document.authorId);
+
   const [detail] = await buildDocumentDetails(
     adminSupabase,
     [document],
     document.authorId,
+    viewerRole,
   );
 
   if (!detail) {
@@ -1362,6 +1364,7 @@ export async function getDocumentDetailForViewer(params: {
         adminSupabase,
         [normalizeDocumentRow(data)],
         viewerId,
+        viewerRole,
       );
 
       return refreshedDetail;

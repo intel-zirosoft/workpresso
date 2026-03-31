@@ -51,11 +51,15 @@ function createApprovedDocumentDetail() {
       },
     ],
     ccRecipients: [],
+    viewerApprovalStatus: null,
+    jiraLinks: [],
     permissions: {
       canEdit: false,
       canSubmit: false,
       canApprove: false,
       canReject: false,
+      canDelete: false,
+      canSyncJira: false,
     },
   };
 }
