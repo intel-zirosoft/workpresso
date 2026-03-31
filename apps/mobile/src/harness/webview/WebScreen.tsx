@@ -117,6 +117,12 @@ export function WebScreen({ path, title }: WebScreenProps) {
                 <Text style={styles.authWarningText}>{authWarning}</Text>
               </View>
             ) : null}
+            <View style={styles.currentUrlBox}>
+              <Text style={styles.currentUrlLabel}>현재 URL</Text>
+              <Text style={styles.currentUrlText}>
+                {controlState.currentUrl || path}
+              </Text>
+            </View>
             <View style={styles.bridgePanelHeader}>
               <Text style={styles.bridgePanelTitle}>브리지 확인</Text>
               <View style={styles.bridgeTestActions}>
@@ -233,6 +239,22 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: '#92400e',
+  },
+  currentUrlBox: {
+    borderRadius: 12,
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 4,
+  },
+  currentUrlLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  currentUrlText: {
+    fontSize: 11,
+    color: '#0f172a',
   },
   bridgePanelHeader: {
     flexDirection: 'row',
