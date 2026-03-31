@@ -306,7 +306,7 @@ export function ChatPanel({
                 "h-10 w-10 rounded-pill p-0 shadow-soft transition-all duration-300 md:h-12 md:w-12",
                 input.trim()
                   ? "bg-primary hover:bg-primary/90"
-                  : "bg-muted/20 text-muted",
+                  : "bg-muted/20 text-text-muted",
               )}
             >
               {isLoading ? (

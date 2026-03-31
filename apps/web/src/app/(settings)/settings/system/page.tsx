@@ -123,7 +123,7 @@ export default async function SystemSettingsPage() {
       {/* Infrastructure Note */}
       <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10 flex items-start gap-4">
         <Globe2 className="w-5 h-5 text-primary mt-1" />
-        <p className="text-xs text-muted-foreground leading-relaxed">
+        <p className="text-xs text-text-muted leading-relaxed">
           <span className="font-bold text-primary">안내:</span> 시스템 설정 변경은 전역 인프라에 즉시 반영됩니다. 
           OpenRouter API 키는 서버 DB에 암호화 저장되며, 저장된 키가 없을 때만 환경변수 fallback을 사용합니다.
         </p>

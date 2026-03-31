@@ -100,7 +100,7 @@ export default function HomePage() {
               <h1 className="text-2xl font-headings font-bold tracking-tight text-text md:text-4xl">
                 해야 할 일을 바로 시작할 수 있게 준비했어요.
               </h1>
-              <p className="max-w-xl text-sm leading-6 text-muted md:text-base">
+              <p className="max-w-xl text-sm leading-6 text-text-muted md:text-base">
                 일정 확인, 문서 작성, AI 질문, 팀 협업까지 자주 쓰는 흐름을
                 홈에서 바로 이어갈 수 있도록 정리했습니다.
               </p>
@@ -206,7 +206,7 @@ export default function HomePage() {
                 <h2 className="font-headings text-2xl font-bold text-text">
                   내 일정 한눈에 보기
                 </h2>
-                <p className="mt-1 text-sm text-muted">
+                <p className="mt-1 text-sm text-text-muted">
                   날짜를 눌러 일정을 확인하고, 필요한 경우 바로 추가할 수
                   있어요.
                 </p>

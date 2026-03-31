@@ -177,7 +177,7 @@ export default async function IntegrationsPage() {
         {stats.map((stat) => (
           <div
             key={stat.name}
-            className="rounded-[24px] border border-background bg-white p-6 shadow-soft transition-all duration-300 hover:-translate-y-0.5"
+            className="rounded-[24px] border border-background bg-surface p-6 shadow-soft transition-all duration-300 hover:-translate-y-0.5"
           >
             <div className="flex items-start justify-between">
               <div className={cn("rounded-2xl p-3", stat.bg)}>
@@ -187,8 +187,8 @@ export default async function IntegrationsPage() {
                 className={cn(
                   "rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider",
                   stat.status
-                    ? "bg-green-100 text-green-600"
-                    : "bg-red-100 text-red-600",
+                    ? "bg-success-soft text-success"
+                    : "bg-destructive-soft text-destructive",
                 )}
               >
                 {stat.status ? "Active" : "Inactive"}
@@ -198,7 +198,7 @@ export default async function IntegrationsPage() {
               <h3 className="text-sm font-bold font-headings text-text">
                 {stat.name}
               </h3>
-              <p className="mt-1 text-[11px] font-body text-muted">
+              <p className="mt-1 text-[11px] font-body text-text-muted">
                 {stat.status
                   ? "연동이 정상적으로 가동 중입니다."
                   : "연동 설정이 필요합니다."}
@@ -208,11 +208,11 @@ export default async function IntegrationsPage() {
         ))}
       </div>
 
-      <div className="rounded-[32px] border border-[#7FA1C3]/10 bg-[#fcfaf6] p-8">
+      <div className="rounded-[32px] border border-background bg-background/40 p-8">
         <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-primary p-2">
-              <Zap className="h-5 w-5 text-white" />
+              <Zap className="h-5 w-5 text-primary-foreground" />
             </div>
             <h2 className="text-xl font-bold font-headings text-text">
               지능형 자동화 서비스 엔진
@@ -252,27 +252,27 @@ export default async function IntegrationsPage() {
           ].map((service) => (
             <div
               key={service.name}
-              className="group rounded-[24px] border border-background bg-white p-5 shadow-soft transition-all hover:border-primary/20"
+              className="group rounded-[24px] border border-background bg-surface p-5 shadow-soft transition-all hover:border-primary/20"
             >
               <div className="mb-4 flex items-center gap-3">
                 <div className="rounded-lg bg-background p-2 transition-colors group-hover:bg-primary/5">
-                  <service.icon className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
+                  <service.icon className="h-5 w-5 text-text-muted group-hover:text-primary" />
                 </div>
                 <h4 className="text-sm font-bold text-text">{service.name}</h4>
               </div>
-              <p className="mb-4 line-clamp-1 text-[11px] text-muted-foreground">
+              <p className="mb-4 line-clamp-1 text-[11px] text-text-muted">
                 {service.desc}
               </p>
               <div className="flex items-center gap-2">
                 {service.active ? (
-                  <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                  <CheckCircle2 className="h-3.5 w-3.5 text-success" />
                 ) : (
-                  <AlertCircle className="h-3.5 w-3.5 text-red-400" />
+                  <AlertCircle className="h-3.5 w-3.5 text-destructive" />
                 )}
                 <span
                   className={cn(
                     "text-[10px] font-bold",
-                    service.active ? "text-green-600" : "text-red-500",
+                    service.active ? "text-success" : "text-destructive",
                   )}
                 >
                   {service.active ? "READY TO RUN" : "IDLE (CONFIG REQ.)"}
@@ -358,11 +358,11 @@ export default async function IntegrationsPage() {
           <div className="h-fit rounded-3xl border border-primary/10 bg-primary/5 p-6">
             <div className="mb-3 flex items-center gap-3">
               <div className="rounded-lg bg-primary p-2">
-                <Zap className="h-4 w-4 text-white" />
+                <Zap className="h-4 w-4 text-primary-foreground" />
               </div>
               <h4 className="text-sm font-bold text-text">지라 연동 가이드</h4>
             </div>
-            <p className="text-xs font-body leading-relaxed text-muted-foreground">
+            <p className="text-xs font-body leading-relaxed text-text-muted">
               연동 테스트 성공 후 나타나는 <strong>[사용 가능한 이슈 유형]</strong>을
               확인하세요. Jira 프로젝트 설정에 따라 <code>Task</code> 대신
               <code>작업</code>이나 <code>Story</code>를 사용해야 할 수도 있습니다.
@@ -381,7 +381,7 @@ export default async function IntegrationsPage() {
             <h3 className="text-xl font-bold font-headings text-text">
               지능형 자동화 라이브러리 확장 중
             </h3>
-            <p className="mt-2 max-w-lg text-sm font-body leading-relaxed text-muted-foreground">
+            <p className="mt-2 max-w-lg text-sm font-body leading-relaxed text-text-muted">
               GitHub, Notion, Google Calendar 연동이 곧 추가됩니다. 회의록
               요약이 자동으로 Notion 페이지에 기록되고, 개발 태스크가 GitHub
               Issue로 생성되는 미래를 준비하고 있습니다.
@@ -393,7 +393,7 @@ export default async function IntegrationsPage() {
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-background transition-transform group-hover:scale-110">
             <Github className="h-8 w-8 text-text-muted" />
           </div>
-          <h4 className="font-bold text-muted-foreground">GitHub 연동</h4>
+          <h4 className="font-bold text-text-muted">GitHub 연동</h4>
           <p className="mt-1 text-xs italic text-text-muted">Coming Soon</p>
         </div>
       </div>

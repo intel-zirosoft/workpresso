@@ -104,7 +104,7 @@ export function SlackIdentityMappingForm({
   };
 
   return (
-    <div className="bg-white border border-background shadow-soft rounded-3xl p-6 transition-all hover:shadow-md space-y-5">
+    <div className="bg-surface border border-background shadow-soft rounded-3xl p-6 transition-all hover:shadow-md space-y-5">
       <form action={handleSubmit} className="space-y-6">
         <div className="flex flex-col gap-3 border-b border-background pb-4">
           <div className="flex items-center gap-3">
@@ -115,12 +115,12 @@ export function SlackIdentityMappingForm({
               <h3 className="text-lg font-headings font-bold text-text tracking-tight">
                 Slack 사용자 매핑
               </h3>
-              <p className="text-xs text-muted mt-1 font-body">
+              <p className="text-xs text-text-muted mt-1 font-body">
                 WorkPresso 사용자와 Slack 멤버를 드롭다운으로 연결합니다.
               </p>
             </div>
           </div>
-          <div className="rounded-2xl border border-primary/10 bg-primary/5 px-4 py-3 text-xs leading-6 text-muted-foreground font-body">
+          <div className="rounded-2xl border border-primary/10 bg-primary/5 px-4 py-3 text-xs leading-6 text-text-muted font-body">
             Slack Bot Token으로 읽어온 멤버 목록을 사용합니다. DM 전송 대상 매핑을 빠르게 관리할 수 있습니다.
           </div>
         </div>
@@ -132,7 +132,7 @@ export function SlackIdentityMappingForm({
         ) : null}
 
         <div className="space-y-2">
-          <div className="hidden md:grid md:grid-cols-[1fr_1fr_auto] md:items-center md:gap-4 px-1 text-xs font-bold text-muted">
+          <div className="hidden md:grid md:grid-cols-[1fr_1fr_auto] md:items-center md:gap-4 px-1 text-xs font-bold text-text-muted">
             <span>WorkPresso 사용자</span>
             <span>Slack 사용자</span>
             <span className="sr-only">삭제</span>
@@ -153,7 +153,7 @@ export function SlackIdentityMappingForm({
                       onChange={(event) =>
                         updateRow(row.localId, 'userId', event.target.value)
                       }
-                      className="w-full rounded-pill border border-transparent bg-white px-4 py-3 text-sm font-body outline-none transition-all hover:border-primary/20 focus:border-primary focus:ring-4 focus:ring-primary/10"
+                      className="w-full rounded-pill border border-transparent bg-surface px-4 py-3 text-sm font-body outline-none transition-all hover:border-primary/20 focus:border-primary focus:ring-4 focus:ring-primary/10"
                     >
                       <option value="">사용자 선택</option>
                       {userOptions.map((option) => (
@@ -172,7 +172,7 @@ export function SlackIdentityMappingForm({
                       onChange={(event) =>
                         updateRow(row.localId, 'slackUserId', event.target.value)
                       }
-                      className="w-full rounded-pill border border-transparent bg-white px-4 py-3 text-sm font-body outline-none transition-all hover:border-primary/20 focus:border-primary focus:ring-4 focus:ring-primary/10"
+                      className="w-full rounded-pill border border-transparent bg-surface px-4 py-3 text-sm font-body outline-none transition-all hover:border-primary/20 focus:border-primary focus:ring-4 focus:ring-primary/10"
                       disabled={slackMembers.length === 0}
                     >
                       <option value="">
@@ -191,7 +191,7 @@ export function SlackIdentityMappingForm({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-10 w-10 rounded-full text-muted hover:text-destructive hover:bg-destructive/5"
+                  className="h-10 w-10 rounded-full text-text-muted hover:text-destructive hover:bg-destructive/5"
                   onClick={() => removeRow(row.localId)}
                 >
                   <Trash2 className="w-4 h-4" />
