@@ -32,10 +32,10 @@ const approvalStepStatusLabelMap = {
 } as const;
 
 const approvalStepStatusClassMap = {
-  WAITING: "bg-slate-200 text-slate-600",
-  PENDING: "bg-amber-100 text-amber-700",
-  APPROVED: "bg-emerald-100 text-emerald-700",
-  REJECTED: "bg-rose-100 text-rose-700",
+  WAITING: "bg-muted text-muted-foreground",
+  PENDING: "bg-warning-soft text-warning",
+  APPROVED: "bg-success-soft text-success",
+  REJECTED: "bg-destructive-soft text-destructive",
 } as const;
 
 type DocumentDetailDialogProps = {

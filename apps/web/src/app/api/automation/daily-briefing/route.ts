@@ -14,7 +14,10 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { buildBriefingPayload, sendSlackBriefing } from "@/lib/slack/briefing-formatter";
 import { getJiraIssuesDueToday } from "@/lib/jira/client";
+import { getJiraRuntimeConfig } from "@/features/settings/services/extensionAction";
 import { startOfDay, endOfDay } from "date-fns";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
@@ -46,12 +49,14 @@ export async function GET() {
     // 3. Slack Block Kit 페이로드 생성
     const payload = buildBriefingPayload(schedules ?? [], jiraIssues, isDummy);
 
-    // 4. Slack 전송 (SLACK_WEBHOOK_URL 없으면 콘솔 출력)
+    // 4. Slack 전송 (설정 없으면 폴백 로그 출력)
     const result = await sendSlackBriefing(payload);
+    const { isConfigured } = await getJiraRuntimeConfig();
 
     return NextResponse.json({
       success: true,
       mode: result.mode,
+      isJiraDummy: !isConfigured,
       previewPayload: payload,
     });
   } catch (err: any) {

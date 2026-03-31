@@ -110,12 +110,6 @@ export async function transcribeAudioWithOpenRouter(input: {
   const format =
     detectedFormat ?? inferAudioFormat(input.mimeType, input.fileName);
 
-  if (format === "webm") {
-    throw new Error(
-      "현재 STT 모델은 webm 오디오 입력을 지원하지 않습니다. 브라우저 녹음 포맷을 WAV로 다시 생성해 주세요.",
-    );
-  }
-
   const response = await fetch(`${runtimeConfig.baseURL}/chat/completions`, {
     method: "POST",
     headers: {

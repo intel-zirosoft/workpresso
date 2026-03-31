@@ -23,9 +23,9 @@ export const WaveformVisualizer: React.FC<WaveformVisualizerProps> = ({ audioUrl
 
     const ws = WaveSurfer.create({
       container: containerRef.current,
-      waveColor: '#7FA1C3',
-      progressColor: '#2C394B',
-      cursorColor: '#F2C18D',
+      waveColor: 'hsl(var(--primary))',
+      progressColor: 'hsl(var(--foreground))',
+      cursorColor: 'hsl(var(--secondary))',
       barWidth: 2,
       barGap: 3,
       barRadius: 3,
@@ -77,7 +77,7 @@ export const WaveformVisualizer: React.FC<WaveformVisualizerProps> = ({ audioUrl
   };
 
   return (
-    <div className="w-full flex flex-col gap-4 p-4 bg-white rounded-md shadow-soft">
+    <div className="w-full flex flex-col gap-4 rounded-md bg-surface p-4 shadow-soft">
       <div ref={containerRef} className="w-full" />
       <div className="flex justify-center">
         <Button

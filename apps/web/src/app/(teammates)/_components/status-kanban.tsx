@@ -17,19 +17,19 @@ interface Teammate {
 type KanbanColumnId = UserStatus | 'VACATION_HALF_DAY';
 
 const DEPARTMENT_COLORS: Record<string, string> = {
-  '디자인': 'text-rose-500 bg-rose-50',
-  '개발': 'text-blue-500 bg-blue-50',
-  '기획': 'text-amber-500 bg-amber-50',
-  '경영': 'text-emerald-500 bg-emerald-50',
+  '디자인': 'text-destructive bg-destructive-soft',
+  '개발': 'text-info bg-info-soft',
+  '기획': 'text-warning bg-warning-soft',
+  '경영': 'text-success bg-success-soft',
 };
 
 const STATUS_COLUMNS: { id: KanbanColumnId; label: string; color: string; dot: string }[] = [
   { id: 'ACTIVE', label: '업무 중', color: 'bg-primary/5', dot: 'bg-primary' },
-  { id: 'MEETING', label: '회의 중', color: 'bg-amber-50', dot: 'bg-amber-400' },
-  { id: 'REMOTE', label: '재택 근무', color: 'bg-blue-50', dot: 'bg-blue-400' },
-  { id: 'OUTSIDE', label: '외근 중', color: 'bg-emerald-50', dot: 'bg-emerald-400' },
-  { id: 'VACATION_HALF_DAY', label: '휴가/반차', color: 'bg-rose-50', dot: 'bg-rose-400' },
-  { id: 'OFFLINE', label: '부재 중', color: 'bg-slate-50', dot: 'bg-slate-300' },
+  { id: 'MEETING', label: '회의 중', color: 'bg-warning-soft', dot: 'bg-warning' },
+  { id: 'REMOTE', label: '재택 근무', color: 'bg-info-soft', dot: 'bg-info' },
+  { id: 'OUTSIDE', label: '외근 중', color: 'bg-success-soft', dot: 'bg-success' },
+  { id: 'VACATION_HALF_DAY', label: '휴가/반차', color: 'bg-destructive-soft', dot: 'bg-destructive' },
+  { id: 'OFFLINE', label: '부재 중', color: 'bg-muted', dot: 'bg-muted-foreground' },
 ];
 
 export function StatusKanban() {

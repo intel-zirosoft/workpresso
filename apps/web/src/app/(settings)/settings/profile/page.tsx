@@ -25,10 +25,10 @@ export default async function ProfileSettingsPage() {
       {/* Identity Header */}
       <div className="relative mb-12 flex flex-col items-center">
         <div className="relative group mb-4">
-          <div className="w-32 h-32 rounded-full bg-primary/5 border-4 border-white shadow-md flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:shadow-lg group-hover:scale-105">
+          <div className="w-32 h-32 rounded-full bg-primary/5 border-4 border-surface shadow-md flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:shadow-lg group-hover:scale-105">
             <User className="w-16 h-16 text-primary/40" />
           </div>
-          <button className="absolute bottom-1 right-1 bg-white p-2 rounded-full shadow-md border border-background/50 text-primary hover:bg-primary hover:text-white transition-all duration-200">
+          <button className="absolute bottom-1 right-1 bg-surface p-2 rounded-full shadow-md border border-background/50 text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-200">
             <Camera className="w-4 h-4" />
           </button>
         </div>
@@ -37,7 +37,7 @@ export default async function ProfileSettingsPage() {
           <h1 className="text-3xl font-headings font-bold text-text mb-2">{profile.name}</h1>
           <div className="flex items-center justify-center gap-2">
             <UserRoleBadge role={profile.role || 'USER'} />
-            <span className="text-sm text-muted font-medium">{profile.department || '부서 미지정'}</span>
+            <span className="text-sm text-text-muted font-medium">{profile.department || '부서 미지정'}</span>
           </div>
         </div>
       </div>
@@ -54,28 +54,28 @@ export default async function ProfileSettingsPage() {
           <form action={updateProfile} className="space-y-8 max-w-2xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2.5">
-                <Label htmlFor="name" className="text-sm font-bold text-muted px-4">이름 (표시명)</Label>
+                <Label htmlFor="name" className="text-sm font-bold text-text-muted px-4">이름 (표시명)</Label>
                 <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-primary transition-colors" />
-                  <Input 
-                    id="name" 
-                    name="name" 
-                    defaultValue={profile.name} 
-                    required 
-                    className="rounded-pill bg-background/50 border-transparent hover:border-primary/20 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 h-12 pl-12 transition-all font-body font-medium" 
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-primary transition-colors" />
+                  <Input
+                    id="name"
+                    name="name"
+                    defaultValue={profile.name}
+                    required
+                    className="rounded-pill bg-background/50 border-transparent hover:border-primary/20 focus:border-primary focus:bg-surface focus:ring-4 focus:ring-primary/10 h-12 pl-12 transition-all font-body font-medium"
                   />
                 </div>
               </div>
 
               <div className="space-y-2.5">
-                <Label htmlFor="department" className="text-sm font-bold text-muted px-4">소속 부서</Label>
+                <Label htmlFor="department" className="text-sm font-bold text-text-muted px-4">소속 부서</Label>
                 <div className="relative group">
-                  <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-primary transition-colors" />
-                  <Input 
-                    id="department" 
-                    name="department" 
-                    defaultValue={profile.department || ''} 
-                    className="rounded-pill bg-background/50 border-transparent hover:border-primary/20 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 h-12 pl-12 transition-all font-body font-medium" 
+                  <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-primary transition-colors" />
+                  <Input
+                    id="department"
+                    name="department"
+                    defaultValue={profile.department || ''}
+                    className="rounded-pill bg-background/50 border-transparent hover:border-primary/20 focus:border-primary focus:bg-surface focus:ring-4 focus:ring-primary/10 h-12 pl-12 transition-all font-body font-medium"
                     placeholder="부서명을 입력해주세요"
                   />
                 </div>
@@ -93,4 +93,3 @@ export default async function ProfileSettingsPage() {
     </div>
   );
 }
-

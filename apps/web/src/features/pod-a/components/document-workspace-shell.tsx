@@ -98,10 +98,10 @@ export function DocumentWorkspaceShell({
       {/* Status Metrics Dashboard */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-2 flex-shrink-0">
         {[
-          { label: "전체 문서", count: documents.length, color: "bg-blue-50/80 border-blue-200/50 text-blue-600", dot: "bg-blue-400" },
-          { label: "결재 대기", count: documents.filter(d => d.status === 'PENDING').length, color: "bg-amber-50/80 border-amber-200/50 text-amber-600", dot: "bg-amber-400" },
-          { label: "승인 완료", count: documents.filter(d => d.status === 'APPROVED').length, color: "bg-emerald-50/80 border-emerald-200/50 text-emerald-600", dot: "bg-emerald-400" },
-          { label: "반려/취소", count: documents.filter(d => d.status === 'REJECTED').length, color: "bg-rose-50/80 border-rose-200/50 text-rose-600", dot: "bg-rose-400" },
+          { label: "전체 문서", count: documents.length, color: "bg-info-soft/80 border-info/20 text-info", dot: "bg-info" },
+          { label: "결재 대기", count: documents.filter(d => d.status === 'PENDING').length, color: "bg-warning-soft/80 border-warning/20 text-warning", dot: "bg-warning" },
+          { label: "승인 완료", count: documents.filter(d => d.status === 'APPROVED').length, color: "bg-success-soft/80 border-success/20 text-success", dot: "bg-success" },
+          { label: "반려/취소", count: documents.filter(d => d.status === 'REJECTED').length, color: "bg-destructive-soft/80 border-destructive/20 text-destructive", dot: "bg-destructive" },
         ].map((stat, i) => (
           <div key={i} className={cn(
             "p-5 rounded-2xl border flex flex-col gap-1 transition-all hover:shadow-md hover:-translate-y-0.5",

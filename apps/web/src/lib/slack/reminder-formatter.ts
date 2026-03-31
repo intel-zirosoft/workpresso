@@ -14,6 +14,8 @@
  * @see https://api.slack.com/block-kit
  */
 
+import { getAppBaseUrl } from "@/lib/app-url";
+
 type ReminderContext = {
   meetingTitle: string;
   startTime: Date;
@@ -41,7 +43,7 @@ export function buildReminderPayload({
   meetingNoteUrl,
   isDummy = true,
 }: ReminderContext) {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+  const baseUrl = getAppBaseUrl();
 
   const blocks: any[] = [
     {

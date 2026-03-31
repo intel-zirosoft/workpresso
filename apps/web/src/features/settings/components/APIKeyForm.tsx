@@ -50,6 +50,7 @@ export function APIKeyForm({
     success: boolean;
     message: string;
     type: "test" | "save";
+    projects?: Array<{ name: string; key: string; issueTypes?: string[] }>;
   } | null>(null);
   const [visibleFields, setVisibleFields] = useState<Record<string, boolean>>({});
 
@@ -111,7 +112,7 @@ export function APIKeyForm({
   };
 
   return (
-    <div className="bg-white border border-background shadow-soft rounded-3xl p-8 transition-all hover:shadow-md h-full flex flex-col">
+    <div className="bg-surface border border-background shadow-soft rounded-3xl p-8 transition-all hover:shadow-md h-full flex flex-col">
       <form action={handleSubmit} className="space-y-6 flex-1 flex flex-col">
         <div className="flex justify-between items-start mb-8 pb-4 border-b border-background">
           <div className="flex items-center gap-4">
@@ -122,7 +123,7 @@ export function APIKeyForm({
               <h3 className="text-xl font-headings font-bold text-text tracking-tight">
                 {title}
               </h3>
-              <p className="text-sm text-muted mt-1 font-body">{description}</p>
+              <p className="text-sm text-text-muted mt-1 font-body">{description}</p>
             </div>
           </div>
 
@@ -132,7 +133,7 @@ export function APIKeyForm({
                 "flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all",
                 isActive
                   ? "bg-success/5 border-success/20 text-success"
-                  : "bg-muted/5 border-muted/20 text-muted",
+                  : "bg-background/70 border-background text-text-muted",
               )}
             >
               <span
@@ -151,14 +152,14 @@ export function APIKeyForm({
         <div className="grid grid-cols-1 gap-6 flex-1">
           {fields.map((field) => (
             <div key={field.name} className="space-y-2.5">
-              <Label
-                htmlFor={field.name}
-                className="text-sm font-bold text-muted px-4"
-              >
+                <Label
+                  htmlFor={field.name}
+                  className="text-sm font-bold text-text-muted px-4"
+                >
                 {field.label}
               </Label>
               <div className="relative group">
-                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-primary transition-colors" />
+                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-primary transition-colors" />
                 <Input
                   id={field.name}
                   name={field.name}
@@ -169,7 +170,7 @@ export function APIKeyForm({
                   }
                   defaultValue={field.defaultValue}
                   autoComplete={field.autoComplete}
-                  className="rounded-pill bg-background/50 border-transparent hover:border-primary/20 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 h-12 pl-12 pr-12 transition-all font-mono text-sm"
+                  className="rounded-pill bg-background/50 border-transparent hover:border-primary/20 focus:border-primary focus:bg-surface focus:ring-4 focus:ring-primary/10 h-12 pl-12 pr-12 transition-all font-mono text-sm"
                   placeholder={
                     field.placeholder ??
                     (field.type === "password"
@@ -181,7 +182,7 @@ export function APIKeyForm({
                   <button
                     type="button"
                     onClick={() => toggleVisibility(field.name)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition-colors p-1"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors p-1"
                   >
                     {visibleFields[field.name] ? (
                       <EyeOff className="w-4 h-4" />
@@ -192,7 +193,7 @@ export function APIKeyForm({
                 )}
               </div>
               {field.description && (
-                <p className="px-4 text-xs text-muted leading-relaxed">
+                <p className="px-4 text-xs text-text-muted leading-relaxed">
                   {field.description}
                 </p>
               )}
@@ -219,6 +220,37 @@ export function APIKeyForm({
                 {status.type === "test" ? "연결 테스트 결과" : "저장 및 활성화 상태"}
               </span>
               <p className="text-xs font-body leading-relaxed">{status.message}</p>
+              
+              {status.type === "test" && status.success && status.projects && status.projects.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-success/10">
+                  <span className="text-[10px] font-bold uppercase tracking-widest opacity-60 block mb-2">
+                    사용 가능한 프로젝트 (키를 복사하여 설정에 입력하세요)
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {status.projects.map((p) => (
+                      <div 
+                        key={p.key}
+                        className="bg-success/10 px-2 py-1 rounded-md border border-success/20 flex flex-col"
+                      >
+                        <span className="text-[10px] font-bold leading-none">{p.key}</span>
+                        <span className="text-[8px] opacity-70 truncate max-w-[80px] mb-1">{p.name}</span>
+                        {p.issueTypes && p.issueTypes.length > 0 && (
+                          <div className="flex flex-wrap gap-0.5 mt-1 border-t border-success/10 pt-1">
+                            {p.issueTypes.map((it) => (
+                              <span 
+                                key={it}
+                                className="text-[7px] px-1 bg-success/20 rounded-sm text-success font-medium"
+                              >
+                                {it}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
