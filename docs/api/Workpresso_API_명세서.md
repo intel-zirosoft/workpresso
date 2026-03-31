@@ -153,10 +153,11 @@ Auth: Supabase Auth 세션 기반 (`Bearer Token` 사용 권장)
   - 최종 승인 시 Pod C 지식 동기화는 `document_side_effect_jobs` outbox에 적재되고, 문서 API 요청 흐름에서 순차 처리될 수 있습니다.
   - 제출/승인/반려 시 Slack 연동이 설정되어 있으면 Pod A 문서 상태 알림이 비동기로 발송될 수 있습니다.
   - `SUBMITTED`, `APPROVED_STEP` 시점에는 현재 결재자의 Slack 매핑이 있으면 DM을 우선 시도하고, 실패하거나 매핑이 없으면 Webhook 알림으로 fallback 합니다.
+  - Slack 알림은 상태 안내와 WorkPresso 진입 링크만 제공하며, 실제 승인/반려 처리는 WorkPresso UI에서 수행합니다.
 
 ### [POST] /api/slack/interactions
 
-- 설명: Slack 메시지의 `승인` / `반려` 버튼 인터랙션을 받아 Pod A 결재 워크플로우를 실행합니다.
+- 설명: 현재 Pod A 기본 운영 흐름에서는 사용하지 않는 예비 인터랙션 엔드포인트입니다.
 - Body:
   - Slack Interactivity 기본 포맷(`application/x-www-form-urlencoded`, `payload=...`)을 사용합니다.
 - 응답:
@@ -168,13 +169,9 @@ Auth: Supabase Auth 세션 기반 (`Bearer Token` 사용 권장)
   }
   ```
 - 비고:
-  - 현재 구현은 Slack 버튼 payload에 포함된 `documentId`, `approverId`, `action`을 사용합니다.
-  - 실제 승인 권한 검증은 기존 Pod A 워크플로우 엔진에서 다시 수행합니다.
-  - Slack 인터랙션 라우트는 승인 상태 전이를 동기 처리하고, 무거운 후처리인 지식 동기화는 outbox 큐로 분리합니다.
-  - Slack App의 `Interactivity Request URL`은 실제로 외부에서 접근 가능한 현재 서버 주소를 가리켜야 합니다. 로컬 개발 환경에서 외부 기기/Slack 클라이언트를 함께 사용할 경우, 현재 활성 터널 또는 배포 URL로 수시 갱신해야 합니다.
-  - `localhost`, 종료된 터널 URL, 이전 포트를 바라보는 경우 Slack 버튼 클릭 시 승인 요청이 404 또는 미반영 상태로 보일 수 있습니다.
-  - 현재는 Signing Secret 검증 없이 동작하는 개발용 모드입니다.
-  - 운영 환경에서는 Slack Signing Secret 검증을 반드시 추가해야 합니다.
+  - Pod A는 Slack에서 직접 승인/반려하지 않고, 알림에서 WorkPresso 링크를 열어 처리하는 정책을 기본값으로 사용합니다.
+  - 따라서 Slack App `Interactivity Request URL`은 Pod A 결재 플로우 필수 조건이 아닙니다.
+  - 현재는 향후 실험용 확장 여지를 위해 엔드포인트만 유지합니다.
 
 ### [POST] /api/documents/[id]/jira
 

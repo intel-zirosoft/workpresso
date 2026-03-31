@@ -150,7 +150,7 @@
 - [x] **문서 워크플로우 API**: `submit`, `approval`, 상태 전이, 다단계 결재선이 이미 구현되어 있음
 - [x] **외부 연동 설정 저장소**: `workspace_extensions` 기반 Slack/Jira 설정 저장 및 활성화 구조가 있음
 - [x] **Jira 단건 생성 유틸**: `createJiraIssue` 서버 액션이 있어 단건 티켓 생성 베이스를 재사용할 수 있음
-- [x] **Slack 양방향 승인 인프라**: Slack App Interactivity, Bot Token, 결재자 DM fallback 구조까지 1차 구현 완료
+- [x] **Slack 알림 인프라**: Bot Token, 결재자 DM fallback, WorkPresso 진입 링크 기반 알림 구조까지 1차 구현 완료
 - [x] **문서-외부 이슈 매핑 저장소**: `document_jira_links` 기반 문서별 Jira 이슈 링크/상태 저장 구조 추가
 
 ### Phase 1. Slack 알림 파이프라인 구축
@@ -164,20 +164,15 @@
 - [x] **Fallback Policy**: Slack 발송 실패가 문서 제출/결재 자체를 막지 않도록 비동기 후처리 또는 soft-fail 정책 정의
 - [x] **Docs Sync**: Slack 알림 트리거 규칙을 `docs/Workpresso_API_명세서.md` 또는 운영 문서에 반영
 
-### Phase 2. Slack 리모트 승인 확장
+### Phase 2. Slack 알림 단순화
 
-**목표:** Slack 메시지 안에서 `승인` / `반려`를 눌러 Pod A 결재 액션을 완료
+**목표:** Slack은 상태 알림과 WorkPresso 진입 링크만 제공하고, 실제 승인/반려는 WorkPresso UI에서 처리
 
-- [x] **Settings Schema**: 1차는 기존 Webhook + Slack Interactivity 조합으로 진행하고, Bot Token / Signing Secret은 후속 확장으로 분리
-- [x] **Backend (API)**: Slack 인터랙션 콜백 엔드포인트 추가
-- [x] **Authorization**: Slack 액션 수행자가 현재 `PENDING` 단계 approver인지 기존 Pod A 권한 규칙으로 재검증
-- [x] **Workflow Bridge**: Slack 버튼 액션이 기존 `POST /api/documents/[id]/approval` 로직과 동일한 워크플로우 엔진을 재사용하도록 연결
-- [x] **Idempotency**: 이미 처리된 문서/단계에 대한 중복 승인 요청은 기존 Pod A 권한/상태 검증으로 거절
-- [ ] **Comment Flow**: 반려 사유 입력 UX는 1차에서는 고정 사유 또는 링크 이동으로 단순화하고, 자유 입력은 후속 확장으로 분리
-- [x] **Response Handling**: Slack 인터랙션 경로에서는 승인 상태 전이만 동기 처리하고, 무거운 후처리는 outbox로 분리
-- [x] **Slack Delivery**: 1차 결재 요청과 단계 승인 후 다음 결재자 알림은 DM 우선, 실패 시 Webhook fallback으로 전달
-- [ ] **QA**: Slack에서 승인, 반려, 권한 없음, 만료 액션 시나리오 수동 검증
-- [ ] **Ops Note**: 로컬 개발 서버를 외부에서 사용할 때는 Slack App `Interactivity Request URL`을 현재 노출 중인 터널/배포 주소로 반드시 갱신해야 함. 로컬 포트가 바뀌거나 예전 터널 주소를 바라보면 승인 버튼이 정상 동작하지 않을 수 있음
+- [x] **Delivery Policy**: `SUBMITTED`, `APPROVED_STEP` 시점에는 현재 결재자 DM 우선, 실패 시 Webhook fallback 유지
+- [x] **Interaction Removal**: Pod A 기본 플로우에서 Slack 승인/반려 버튼 제거
+- [x] **WorkPresso Bridge**: 알림에서 WorkPresso 문서 화면으로 이동해 승인/반려를 수행하도록 정책 전환
+- [ ] **QA**: Slack 알림 수신 후 WorkPresso 진입 링크를 통한 승인/반려 시나리오 수동 검증
+- [ ] **Ops Note**: 운영 환경 변수 `NEXT_PUBLIC_APP_URL`과 실제 배포 도메인이 일치하는지 지속 점검
 
 ### Phase 3. Jira 기획-실행 브릿지
 

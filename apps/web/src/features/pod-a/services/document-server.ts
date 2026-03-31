@@ -739,11 +739,11 @@ async function sendDocumentSlackNotification(params: {
   const eventTextMap = {
     SUBMITTED: {
       title: "Pod A 문서 결재 요청",
-      summary: "새 문서가 결재 대기 상태로 제출되었습니다.",
+      summary: "새 문서가 결재 대기 상태로 제출되었습니다. WorkPresso에서 내용을 확인해 주세요.",
     },
     APPROVED_STEP: {
       title: "Pod A 문서 단계 승인 완료",
-      summary: "문서가 승인되어 다음 결재 단계로 이동했습니다.",
+      summary: "문서가 승인되어 다음 결재 단계로 이동했습니다. 다음 결재자는 WorkPresso에서 처리해 주세요.",
     },
     APPROVED_FINAL: {
       title: "Pod A 문서 최종 승인 완료",
@@ -756,9 +756,6 @@ async function sendDocumentSlackNotification(params: {
   } as const;
 
   const copy = eventTextMap[event];
-  const canRenderSlackApprovalActions =
-    (event === "SUBMITTED" || event === "APPROVED_STEP") &&
-    document.currentApprover;
   const fields = [
     {
       type: "mrkdwn",
@@ -798,51 +795,13 @@ async function sendDocumentSlackNotification(params: {
       type: "button",
       text: {
         type: "plain_text",
-        text: "문서 보기",
+        text: "WorkPresso에서 확인",
         emoji: true,
       },
       url: documentUrl,
       style: event === "REJECTED" ? "danger" : "primary",
     },
   ];
-
-  if (canRenderSlackApprovalActions && document.currentApprover) {
-    const baseValue = {
-      documentId: document.id,
-      approverId: document.currentApprover.id,
-    };
-
-    actionElements.unshift(
-      {
-        type: "button",
-        text: {
-          type: "plain_text",
-          text: "승인",
-          emoji: true,
-        },
-        style: "primary",
-        action_id: "document_approve",
-        value: JSON.stringify({
-          ...baseValue,
-          action: "APPROVE",
-        }),
-      },
-      {
-        type: "button",
-        text: {
-          type: "plain_text",
-          text: "반려",
-          emoji: true,
-        },
-        style: "danger",
-        action_id: "document_reject",
-        value: JSON.stringify({
-          ...baseValue,
-          action: "REJECT",
-        }),
-      },
-    );
-  }
 
   const blocks = [
     {
@@ -890,35 +849,6 @@ async function sendDocumentSlackNotification(params: {
       });
     } catch (error) {
       console.error("document direct Slack notification failed:", error);
-    }
-  }
-
-  if (actor && event !== "SUBMITTED" && botToken) {
-    const confirmationText =
-      event === "REJECTED"
-        ? `문서 "${document.title}"를 반려하셨습니다.`
-        : event === "APPROVED_FINAL"
-          ? `문서 "${document.title}"를 최종 승인하셨습니다.`
-          : `문서 "${document.title}"를 승인하셨습니다. 다음 결재자에게 요청을 전달했습니다.`;
-
-    try {
-      await sendSlackDirectMessageToMappedUser({
-        adminSupabase,
-        botToken,
-        userId: actor.id,
-        text: `[Pod A] ${confirmationText}`,
-        blocks: [
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: confirmationText,
-            },
-          },
-        ],
-      });
-    } catch (error) {
-      console.error("document actor confirmation Slack notification failed:", error);
     }
   }
 
