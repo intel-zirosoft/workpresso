@@ -1,6 +1,8 @@
 import {
+  createDataStreamResponse,
   convertToCoreMessages,
-  streamText,
+  formatDataStreamPart,
+  generateText,
   tool,
   type Message,
 } from "ai";
@@ -31,22 +33,6 @@ const chatRequestSchema = z.object({
 
 type CreateScheduleArgs = z.infer<typeof createScheduleToolSchema>;
 type NormalizedChatMessage = Omit<Message, "id">;
-const isDebugChatError =
-  process.env.NODE_ENV !== "production" || process.env.VERCEL_ENV === "preview";
-
-function getChatStreamErrorMessage(error: unknown) {
-  const message =
-    error instanceof Error
-      ? error.message
-      : typeof error === "string"
-        ? error
-        : "An error occurred.";
-
-  console.error("Chat stream error:", error);
-
-  return isDebugChatError ? message : "An error occurred.";
-}
-
 function extractMessageText(content: unknown): string {
   if (typeof content === "string") {
     return content;
@@ -121,7 +107,7 @@ export async function POST(req: Request) {
     const chatModel = await getChatLanguageModel();
     const now = new Date();
     const currentTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const result = await streamText({
+    const result = await generateText({
       model: chatModel,
       system: `당신은 워크프레소의 업무 비서입니다. 한국어로 친절하게 답변하세요.
 현재 시각: ${now.toISOString()}
@@ -156,8 +142,36 @@ export async function POST(req: Request) {
       },
     });
 
-    return result.toDataStreamResponse({
-      getErrorMessage: getChatStreamErrorMessage,
+    return createDataStreamResponse({
+      execute: (dataStream) => {
+        if (result.text) {
+          dataStream.write(formatDataStreamPart("text", result.text));
+        }
+
+        dataStream.write(
+          formatDataStreamPart("finish_message", {
+            finishReason: result.finishReason,
+            usage: result.usage
+              ? {
+                  promptTokens: result.usage.promptTokens,
+                  completionTokens: result.usage.completionTokens,
+                }
+              : undefined,
+          }),
+        );
+      },
+      onError: (error) => {
+        const message =
+          error instanceof Error
+            ? error.message
+            : typeof error === "string"
+              ? error
+              : "An error occurred.";
+
+        console.error("Chat stream error:", error);
+
+        return message;
+      },
     });
   } catch (error: any) {
     console.error("Fatal Error:", error.message);

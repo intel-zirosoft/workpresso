@@ -7,8 +7,10 @@ const {
   mockCreateEmbedding,
   mockGetChatLanguageModel,
   mockCreateScheduleViaPodBApi,
-  mockStreamText,
+  mockGenerateText,
   mockConvertToCoreMessages,
+  mockCreateDataStreamResponse,
+  mockFormatDataStreamPart,
   mockTool,
   mockRpc,
 } = vi.hoisted(() => ({
@@ -18,8 +20,10 @@ const {
   mockCreateEmbedding: vi.fn(),
   mockGetChatLanguageModel: vi.fn(),
   mockCreateScheduleViaPodBApi: vi.fn(),
-  mockStreamText: vi.fn(),
+  mockGenerateText: vi.fn(),
   mockConvertToCoreMessages: vi.fn(),
+  mockCreateDataStreamResponse: vi.fn(),
+  mockFormatDataStreamPart: vi.fn(),
   mockTool: vi.fn(),
   mockRpc: vi.fn(),
 }));
@@ -52,8 +56,10 @@ vi.mock("@/features/pod-b/services/pod-b-schedule-api-adapter", async () => {
 });
 
 vi.mock("ai", () => ({
+  createDataStreamResponse: mockCreateDataStreamResponse,
   convertToCoreMessages: mockConvertToCoreMessages,
-  streamText: mockStreamText,
+  formatDataStreamPart: mockFormatDataStreamPart,
+  generateText: mockGenerateText,
   tool: mockTool,
 }));
 
@@ -67,8 +73,10 @@ describe("POST /api/chat", () => {
     mockCreateEmbedding.mockReset();
     mockGetChatLanguageModel.mockReset();
     mockCreateScheduleViaPodBApi.mockReset();
-    mockStreamText.mockReset();
+    mockGenerateText.mockReset();
     mockConvertToCoreMessages.mockReset();
+    mockCreateDataStreamResponse.mockReset();
+    mockFormatDataStreamPart.mockReset();
     mockTool.mockReset();
     mockRpc.mockReset();
 
@@ -89,12 +97,32 @@ describe("POST /api/chat", () => {
       error: null,
     });
     mockConvertToCoreMessages.mockImplementation((messages) => messages);
+    mockFormatDataStreamPart.mockImplementation((type, value) => `${type}:${JSON.stringify(value)}`);
+    mockCreateDataStreamResponse.mockImplementation(({ execute }) => {
+      const writes: string[] = [];
+      execute({
+        write: (data: string) => {
+          writes.push(data);
+        },
+        writeData: vi.fn(),
+        writeMessageAnnotation: vi.fn(),
+        writeSource: vi.fn(),
+        merge: vi.fn(),
+        onError: undefined,
+      });
+
+      return new Response(writes.join("\n"), {
+        status: 200,
+      });
+    });
     mockTool.mockImplementation((config) => config);
-    mockStreamText.mockResolvedValue({
-      toDataStreamResponse: () =>
-        new Response("ok", {
-          status: 200,
-        }),
+    mockGenerateText.mockResolvedValue({
+      text: "ok",
+      finishReason: "stop",
+      usage: {
+        promptTokens: 1,
+        completionTokens: 1,
+      },
     });
   });
 
@@ -124,9 +152,9 @@ describe("POST /api/chat", () => {
 
     expect(response.status).toBe(200);
     expect(mockCreateScheduleViaPodBApi).not.toHaveBeenCalled();
-    expect(mockStreamText).toHaveBeenCalledTimes(1);
+    expect(mockGenerateText).toHaveBeenCalledTimes(1);
 
-    const streamCall = mockStreamText.mock.calls[0]?.[0];
+    const streamCall = mockGenerateText.mock.calls[0]?.[0];
     expect(streamCall.system).toContain(
       "일정 생성 전에 title, start_time, end_time을 확정할 근거가 부족하면 tool을 호출하지 말고 먼저 짧게 재질문하세요.",
     );
@@ -158,8 +186,8 @@ describe("POST /api/chat", () => {
       attendee_ids: ["00000000-0000-4000-8000-000000000201"],
       link: "http://localhost:3000/schedules",
     });
-    mockStreamText.mockImplementation(async (options) => {
-      const toolResult = await options.tools.create_schedule.execute({
+    mockGenerateText.mockImplementation(async (options) => {
+      await options.tools.create_schedule.execute({
         title: "디자인 리뷰",
         start_time: "2026-03-31T05:00:00.000Z",
         end_time: "2026-03-31T06:00:00.000Z",
@@ -169,10 +197,12 @@ describe("POST /api/chat", () => {
       });
 
       return {
-        toDataStreamResponse: () =>
-          Response.json({
-            toolResult,
-          }),
+        text: "일정 등록을 완료했습니다.",
+        finishReason: "stop",
+        usage: {
+          promptTokens: 1,
+          completionTokens: 1,
+        },
       };
     });
 
@@ -192,7 +222,7 @@ describe("POST /api/chat", () => {
     });
 
     const response = await postChat(request);
-    const body = await response.json();
+    const body = await response.text();
 
     expect(response.status).toBe(200);
     expect(mockCreateScheduleViaPodBApi).toHaveBeenCalledTimes(1);
@@ -207,12 +237,6 @@ describe("POST /api/chat", () => {
       },
       request,
     });
-    expect(body.toolResult).toEqual({
-      message: "일정 '디자인 리뷰' 등록 완료",
-      schedule: expect.objectContaining({
-        id: "00000000-0000-4000-8000-000000000111",
-        link: "http://localhost:3000/schedules",
-      }),
-    });
+    expect(body).toContain("일정 등록을 완료했습니다.");
   });
 });
