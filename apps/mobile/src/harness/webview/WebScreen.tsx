@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
@@ -8,6 +9,7 @@ import {
   type WebViewContainerHandle,
   type WebViewControlState,
 } from './WebViewContainer';
+import { resolveAppDeepLink } from '../deeplink/deep-linking';
 
 type WebScreenProps = {
   path: string;
@@ -22,6 +24,7 @@ const INITIAL_CONTROL_STATE: WebViewControlState = {
 };
 
 export function WebScreen({ path, title }: WebScreenProps) {
+  const router = useRouter();
   const [authWarning, setAuthWarning] = useState<string | null>(null);
   const [isBridgePanelOpen, setIsBridgePanelOpen] = useState(false);
   const webViewRef = useRef<WebViewContainerHandle>(null);
@@ -59,6 +62,20 @@ export function WebScreen({ path, title }: WebScreenProps) {
       true;
     `);
   }, []);
+
+  const handleInternalRouteRequest = useCallback(
+    (url: string) => {
+      const href = resolveAppDeepLink(url);
+
+      if (!href || typeof href !== 'string' || !href.startsWith('/(tabs)')) {
+        return false;
+      }
+
+      router.navigate(href);
+      return true;
+    },
+    [router],
+  );
 
   return (
     <View style={styles.container}>
@@ -173,6 +190,7 @@ export function WebScreen({ path, title }: WebScreenProps) {
         ref={webViewRef}
         onAuthWarningChange={setAuthWarning}
         onBridgeLog={handleBridgeLog}
+        onInternalRouteRequest={handleInternalRouteRequest}
         path={path}
         onStateChange={handleStateChange}
       />
