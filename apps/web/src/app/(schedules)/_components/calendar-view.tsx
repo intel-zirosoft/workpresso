@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { format, isSameDay, parse, isBefore, startOfDay } from "date-fns";
 import { ko } from "date-fns/locale";
-import { Plus, Clock, Trash2, Loader2, Pencil, Users } from "lucide-react";
+import { Plus, Clock, Trash2, Loader2, Pencil, Users, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { ScheduleModal } from "./schedule-modal";
@@ -66,6 +66,9 @@ export function CalendarView({
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
+  const [currentTitle, setCurrentTitle] = useState("");
+  const [currentView, setCurrentView] = useState("dayGridMonth");
+
   const queryClient = useQueryClient();
   const calendarRef = useRef<FullCalendar>(null);
 
@@ -232,24 +235,73 @@ export function CalendarView({
 
   // [Full Variant] 대형 달력 렌더링
   if (variant === "full") {
+    const calendarApi = calendarRef.current?.getApi();
+
     return (
-      <div className="flex flex-col gap-6 h-[calc(100vh-14rem)] min-h-[600px]">
-        <div className="flex-1 bg-surface rounded-3xl p-6 shadow-soft border border-background/50 overflow-x-auto custom-scrollbar min-w-0">
+      <div className="flex flex-col h-[calc(100vh-8rem)]">
+        {/* Custom Header Toolbar */}
+        <div className="flex items-center justify-between mb-5">
+          {/* Left space for alignment (Header now handles Title & Description) */}
+          <div className="hidden md:block md:w-[190px]" />
+
+          {/* Center: Navigation Controls (< 2026년 3월 >) */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => calendarApi?.prev()}
+              className="p-2 hover:bg-background rounded-full transition-colors text-text-muted hover:text-primary group"
+            >
+              <ChevronLeft size={28} strokeWidth={2.5} className="group-active:scale-90 transition-transform" />
+            </button>
+            <h2 className="text-2xl font-headings font-bold text-text min-w-[180px] text-center tracking-tight">
+              {currentTitle}
+            </h2>
+            <button
+              onClick={() => calendarApi?.next()}
+              className="p-2 hover:bg-background rounded-full transition-colors text-text-muted hover:text-primary group"
+            >
+              <ChevronRight size={28} strokeWidth={2.5} className="group-active:scale-90 transition-transform" />
+            </button>
+          </div>
+
+          {/* Right: View Switchers */}
+          <div className="flex items-center gap-1 bg-background/50 p-1 rounded-pill border border-background/50">
+            <button
+              onClick={() => calendarApi?.changeView("dayGridMonth")}
+              className={cn(
+                "px-6 py-2 rounded-pill font-headings font-bold text-sm transition-all",
+                currentView === "dayGridMonth"
+                  ? "bg-surface text-primary shadow-sm"
+                  : "text-text-muted hover:text-text"
+              )}
+            >
+              월간
+            </button>
+            <button
+              onClick={() => calendarApi?.changeView("dayGridWeek")}
+              className={cn(
+                "px-6 py-2 rounded-pill font-headings font-bold text-sm transition-all",
+                currentView === "dayGridWeek"
+                  ? "bg-surface text-primary shadow-sm"
+                  : "text-text-muted hover:text-text"
+              )}
+            >
+              주간
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 bg-surface rounded-[32px] px-6 pt-4 pb-2 shadow-soft border border-background/50 overflow-x-auto custom-scrollbar min-w-0">
           <FullCalendar
             ref={calendarRef}
             plugins={[dayGridPlugin, interactionPlugin]}
             initialView="dayGridMonth"
             locale="ko"
-            headerToolbar={{
-              left: "prev,next today",
-              center: "title",
-              right: "dayGridMonth,dayGridWeek",
-            }}
+            headerToolbar={false}
             events={calendarEvents}
             dateClick={handleDateClick}
-            datesSet={() => {
-              // 렌더링이 완료된 시점에 스크롤을 시도합니다.
-              // 약간의 지연(v-sync)을 주어 DOM 렌더링 완료를 보장할 수 있습니다.
+            datesSet={(arg) => {
+              setCurrentTitle(arg.view.title);
+              setCurrentView(arg.view.type);
               requestAnimationFrame(scrollToToday);
             }}
             eventClick={(info) => {

@@ -1,4 +1,4 @@
-
+"use client";
 
 import Link from "next/link";
 import {
@@ -6,279 +6,216 @@ import {
   Bot,
   CalendarDays,
   CalendarPlus,
-  CheckCircle2,
   FileText,
   MessageSquare,
   Mic,
-  Plus,
-  Users,
+  MoreHorizontal,
+  Send,
+  BarChart2,
+  FileSignature
 } from "lucide-react";
-import { CalendarView } from "@/app/(schedules)/_components/calendar-view";
 import { Button } from "@/components/ui/button";
+import { useMessenger } from "@/features/pod-e/contexts/messenger-context";
+import { HomeCalendarWidget } from "./_components/home-calendar-widget";
+import { UserProgressCard } from "./_components/user-progress-card";
+import { EmbeddedAiWidget } from "./_components/embedded-ai-widget";
 
 const QUICK_ACTIONS = [
   {
     title: "문서 초안 만들기",
-    description: "결재 문서나 공유 문서를 바로 작성해보세요.",
+    description: "AI가 제안하는 템플릿으로 시작",
     href: "/documents",
     icon: FileText,
-    tone: "bg-primary/10 text-primary",
+    iconArea: "bg-primary/10 text-primary",
   },
   {
     title: "오늘 일정 정리",
-    description: "회의와 업무 시간을 빠르게 확인하고 수정하세요.",
+    description: "나의 하루 스케줄 한눈에 확인",
     href: "/schedules",
     icon: CalendarPlus,
-    tone: "bg-secondary/20 text-text",
+    iconArea: "bg-secondary/20 text-secondary-foreground",
   },
   {
     title: "AI에게 물어보기",
-    description: "해야 할 일을 정리하거나 문서를 요약받을 수 있어요.",
+    description: "궁금한 점을 바로 해결하세요",
     href: "/chat",
-    icon: Bot,
-    tone: "bg-success/10 text-text",
+    icon: MessageSquare,
+    iconArea: "bg-info/10 text-info",
   },
   {
     title: "팀 상태 확인",
-    description: "누가 회의 중인지, 재택인지 한눈에 파악하세요.",
+    description: "협업 중인 멤버들의 실시간 현황",
     href: "/teammates",
-    icon: Users,
-    tone: "bg-primary/10 text-primary",
-  },
-];
-
-const START_GUIDE = [
-  {
-    title: "가장 먼저 일정 확인",
-    description:
-      "오늘 일정이 비어 있으면 우선 해야 할 일부터 시간 블록을 잡아두세요.",
-  },
-  {
-    title: "문서와 대화 분리",
-    description:
-      "정리할 내용은 문서로, 빠른 소통은 채터로 나누면 찾기 쉬워집니다.",
-  },
-  {
-    title: "막히면 AI 활용",
-    description:
-      "초안 작성, 요약, 다음 액션 정리부터 AI에게 맡기면 시작 비용이 줄어듭니다.",
+    icon: UsersIconCustom, // Defined below just for custom look
+    iconArea: "bg-[#EAE4F5] text-[#7E57C2]", // subtle purple tone as requested by mockup
   },
 ];
 
 const COLLABORATION_LINKS = [
   {
-    title: "채터로 빠르게 공유",
-    description: "짧은 진행 상황이나 확인 요청을 즉시 전달하세요.",
-    href: "/chatter",
-    icon: MessageSquare,
+    title: "메신저로 빠르게 공유",
+    href: "/messenger",
+    icon: Send,
+    iconStyle: "bg-info/10 text-info",
   },
   {
     title: "음성 회의록 남기기",
-    description: "회의 직후 녹음과 요약을 남겨 후속 작업 누락을 줄이세요.",
     href: "/voice",
     icon: Mic,
+    iconStyle: "bg-destructive/10 text-destructive",
   },
   {
     title: "팀 상태 보드 보기",
-    description: "회의·재택·외근 상태를 보고 협업 타이밍을 조절하세요.",
     href: "/teammates",
-    icon: Users,
+    icon: BarChart2,
+    iconStyle: "bg-success/20 text-success-foreground",
   },
 ];
 
-export default function HomePage() {
+// SVG component to simulate the mockup's unique purple team icon
+function UsersIconCustom({ className }: { className?: string }) {
   return (
-    <div className="space-y-6 md:space-y-10">
-      <header className="overflow-hidden rounded-[28px] border border-background/60 bg-surface px-5 py-6 shadow-soft md:px-8 md:py-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-              <CalendarDays className="h-3.5 w-3.5" />
-              오늘의 워크스페이스
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-2xl font-headings font-bold tracking-tight text-text md:text-4xl">
-                해야 할 일을 바로 시작할 수 있게 준비했어요.
-              </h1>
-              <p className="max-w-xl text-sm leading-6 text-muted md:text-base">
-                일정 확인, 문서 작성, AI 질문, 팀 협업까지 자주 쓰는 흐름을
-                홈에서 바로 이어갈 수 있도록 정리했습니다.
-              </p>
-            </div>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none" className={className}>
+      <circle cx="12" cy="7" r="3" />
+      <circle cx="6" cy="15" r="3" />
+      <circle cx="18" cy="15" r="3" />
+    </svg>
+  );
+}
+
+export default function HomePage() {
+  const { openMessenger } = useMessenger();
+
+  return (
+    <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 lg:gap-8">
+      
+      {/* ========================================================= */}
+      {/* ⬅️ LEFT COLUMN (Main Content) - Spans 3 columns           */}
+      {/* ========================================================= */}
+      <div className="xl:col-span-3 space-y-6 lg:space-y-8 flex flex-col h-full">
+        
+        {/* 1. TOP BANNER */}
+        <section className="relative overflow-hidden rounded-[28px] border border-background/60 bg-surface-muted/60 px-6 py-8 md:px-10 md:py-10 shadow-sm flex flex-col gap-6">
+          {/* Subtle wavy graphic decoration approximation */}
+          <div className="absolute top-0 right-0 w-1/2 h-full opacity-30 pointer-events-none" style={{
+            background: 'radial-gradient(ellipse at top right, hsla(var(--primary), 0.15) 0%, transparent 70%)'
+          }} />
+
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 self-start rounded-full bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary shadow-sm border border-primary/10">
+            <CalendarDays className="h-4 w-4" />
+            오늘의 워크스페이스
           </div>
 
-          <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
-            <Button
-              asChild
-              className="h-12 rounded-pill px-6 text-sm font-bold shadow-soft"
-            >
-              <Link href="/documents">
-                <Plus className="h-4 w-4" />
-                문서 작성 시작
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              className="h-12 rounded-pill border-background/70 bg-surface px-6 text-sm font-bold text-text hover:bg-background"
-            >
-              <Link href="/chat">
-                <Bot className="h-4 w-4" />
-                AI에게 질문
-              </Link>
-            </Button>
+          {/* Titles & Buttons */}
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <h1 className="text-[26px] font-headings font-bold tracking-tight text-text sm:text-3xl md:text-[32px] lg:leading-tight whitespace-nowrap">
+              오늘의 일정을 한눈에 확인해보세요
+            </h1>
+            
+            <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+              <Button asChild className="h-12 rounded-pill px-6 text-sm font-bold shadow-soft">
+                <Link href="/documents">
+                  <FileSignature className="h-4 w-4 mr-2" />
+                  문서 작성 시작
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="h-12 rounded-pill border-background bg-surface px-6 text-sm font-bold text-text hover:bg-background/80 shadow-sm">
+                <Link href="/chat">
+                  <Bot className="h-4 w-4 mr-2 text-primary" />
+                  AI에게 질문
+                </Link>
+              </Button>
+            </div>
           </div>
-        </div>
+        </section>
 
-        <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {/* 2. QUICK ACTIONS GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
           {QUICK_ACTIONS.map((action) => (
             <Link
               key={action.title}
               href={action.href}
-              className="group rounded-[24px] border border-background/60 bg-background/40 p-4 transition-all hover:-translate-y-1 hover:bg-surface hover:shadow-soft"
+              className="group flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-[24px] border border-background/60 bg-surface p-5 transition-all hover:-translate-y-1 hover:shadow-soft"
             >
+              {/* Left Color Block */}
               <div
-                className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl ${action.tone}`}
+                className={`flex shrink-0 h-14 w-14 items-center justify-center rounded-2xl ${action.iconArea} shadow-inner`}
               >
-                <action.icon className="h-5 w-5" />
+                <action.icon className="h-6 w-6" />
               </div>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between gap-3">
-                  <h2 className="font-headings text-base font-bold text-text">
-                    {action.title}
-                  </h2>
-                  <ArrowRight className="h-4 w-4 text-text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
-                </div>
-                <p className="text-sm leading-5 text-text-muted">
+
+              {/* Text Block */}
+              <div className="flex-1 min-w-0">
+                <h2 className="font-headings text-lg font-bold text-text mb-1 truncate group-hover:text-primary transition-colors">
+                  {action.title}
+                </h2>
+                <p className="text-sm font-medium text-text-muted truncate">
                   {action.description}
                 </p>
               </div>
             </Link>
           ))}
         </div>
-      </header>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
-        <div className="space-y-6 lg:col-span-2 md:space-y-8">
-          <section className="rounded-[28px] border border-background/60 bg-surface p-5 shadow-soft md:p-6">
-            <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-              <div>
-                <p className="text-sm font-bold text-primary">오늘 추천 동선</p>
-                <h2 className="mt-1 font-headings text-2xl font-bold text-text">
-                  일정부터 확인하고 바로 실행해보세요.
-                </h2>
-              </div>
-              <Button
-                asChild
-                variant="ghost"
-                className="h-10 justify-start rounded-pill px-0 text-sm font-bold text-primary hover:bg-transparent hover:text-primary/80"
-              >
-                <Link href="/schedules">
-                  일정 전체 보기
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-
-            <div className="grid gap-3 md:grid-cols-3">
-              {START_GUIDE.map((item, index) => (
-                <div
-                  key={item.title}
-                  className="rounded-[24px] bg-background/50 p-4"
-                >
-                  <div className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-surface text-sm font-black text-primary shadow-sm">
-                    {index + 1}
-                  </div>
-                  <h3 className="font-headings text-base font-bold text-text">
-                    {item.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-5 text-text-muted">
-                    {item.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="rounded-[28px] border border-background/60 bg-surface p-5 shadow-soft md:p-6">
-            <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h2 className="font-headings text-2xl font-bold text-text">
-                  내 일정 한눈에 보기
-                </h2>
-                <p className="mt-1 text-sm text-muted">
-                  날짜를 눌러 일정을 확인하고, 필요한 경우 바로 추가할 수
-                  있어요.
-                </p>
-              </div>
-            </div>
-            <CalendarView variant="default" />
-          </section>
-        </div>
-
-        <div className="space-y-6 md:space-y-8">
-          <section className="rounded-[28px] border border-background/60 bg-surface p-5 shadow-soft md:p-6">
-            <div className="mb-4 flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-success" />
-              <h2 className="font-headings text-xl font-bold text-text">
-                지금 하면 좋은 작업
-              </h2>
-            </div>
-
-            <div className="space-y-3">
-              {COLLABORATION_LINKS.map((item) => (
-                <Link
-                  key={item.title}
-                  href={item.href}
-                  className="group block rounded-[22px] border border-background/60 bg-background/35 p-4 transition-all hover:bg-surface hover:shadow-soft"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                      <item.icon className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <h3 className="font-headings text-base font-bold text-text">
-                          {item.title}
-                        </h3>
-                        <ArrowRight className="h-4 w-4 text-text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
-                      </div>
-                      <p className="mt-1 text-sm leading-5 text-text-muted">
-                        {item.description}
-                      </p>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-
-          <section className="rounded-[28px] border border-success/20 bg-success/10 p-5 shadow-sm md:p-6">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-surface/80 px-3 py-1 text-xs font-bold text-text">
-              <Bot className="h-3.5 w-3.5 text-primary" />
-              빠른 시작 팁
-            </div>
-            <h2 className="font-headings text-xl font-bold text-text">
-              막히면 이렇게 물어보세요
-            </h2>
-            <ul className="mt-4 space-y-3 text-sm leading-6 text-text/80">
-              <li>• “오늘 일정 기준으로 우선순위를 정리해줘”</li>
-              <li>• “회의록 초안을 3줄로 요약해줘”</li>
-              <li>• “공유용 문서 목차를 먼저 만들어줘”</li>
-            </ul>
-            <Button
-              asChild
-              variant="ghost"
-              className="mt-4 h-10 rounded-pill bg-surface/80 px-4 text-sm font-bold text-primary hover:bg-surface"
-            >
-              <Link href="/chat">
-                AI 채팅 열기
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-          </section>
+        {/* 3. HOME CALENDAR WIDGET */}
+        <div className="flex-1 mt-2">
+          <HomeCalendarWidget />
         </div>
       </div>
+
+      
+      {/* ========================================================= */}
+      {/* ➡️ RIGHT COLUMN (Sidebar Actions) - Spans 1 column        */}
+      {/* ========================================================= */}
+      <aside className="xl:col-span-1 flex flex-col gap-6 lg:gap-8 min-h-full">
+
+        {/* 1. RECOMMENDED TASKS */}
+        <section className="flex flex-col">
+          <div className="flex items-center justify-between mb-4 px-1">
+            <h3 className="font-headings text-lg font-bold text-text">지금 하면 좋은 작업</h3>
+            <button className="text-text-muted hover:text-text p-1 transition-colors">
+              <MoreHorizontal size={20} />
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {COLLABORATION_LINKS.map((item) => {
+              const isMessenger = item.href === "/messenger";
+              
+              return (
+                <Link
+                  key={item.title}
+                  href={isMessenger ? "#" : item.href}
+                  onClick={(e) => {
+                    if (isMessenger) {
+                      e.preventDefault();
+                      openMessenger();
+                    }
+                  }}
+                  className="flex items-center gap-4 rounded-2xl bg-background/50 p-3 pl-4 transition-all hover:bg-surface hover:shadow-sm group border border-transparent hover:border-background/80"
+                >
+                  <div className={`flex shrink-0 h-8 w-8 items-center justify-center rounded-xl ${item.iconStyle}`}>
+                    <item.icon className="h-4 w-4" />
+                  </div>
+                  <span className="font-headings text-sm font-bold text-text/90 group-hover:text-text transition-colors">
+                    {item.title}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* 2. USER PROGRESS CARD */}
+        <UserProgressCard />
+
+        {/* 3. PROACTIVE AI WIDGET */}
+        <div className="flex-1">
+          <EmbeddedAiWidget />
+        </div>
+
+      </aside>
     </div>
   );
 }

@@ -29,7 +29,6 @@ const STATUS_COLUMNS: { id: KanbanColumnId; label: string; color: string; dot: s
   { id: 'REMOTE', label: '재택 근무', color: 'bg-primary/[0.12]', dot: 'bg-primary/80' },
   { id: 'OUTSIDE', label: '외근 중', color: 'bg-success/[0.18]', dot: 'bg-success' },
   { id: 'VACATION_HALF_DAY', label: '휴가/반차', color: 'bg-destructive/[0.12]', dot: 'bg-destructive/70' },
-  { id: 'OFFLINE', label: '부재 중', color: 'bg-background', dot: 'bg-text-muted/60' },
 ];
 
 export function StatusKanban() {
@@ -128,7 +127,7 @@ export function StatusKanban() {
   }
 
   return (
-    <div className="flex gap-4 h-full pb-2 overflow-x-auto custom-scrollbar">
+    <div className="flex gap-4 h-full pb-2 overflow-x-auto scrollbar-hide">
       {STATUS_COLUMNS.map((column) => {
         const columnTeammates = groupedTeammates[column.id] || [];
         const isEmpty = columnTeammates.length === 0;
@@ -145,21 +144,21 @@ export function StatusKanban() {
               isEmpty ? "flex-[0.6] min-w-[140px] opacity-90" : "flex-1 min-w-[220px]"
             )}
           >
-            <div className="p-5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className={cn("w-2.5 h-2.5 rounded-full shadow-sm", column.dot)} />
+            <div className="p-3 mb-1 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <div className={cn("w-2 h-2 rounded-full shadow-sm", column.dot)} />
                 <h3 className={cn(
                   "font-headings font-bold text-text transition-all",
-                  isEmpty ? "text-xs opacity-70" : "text-sm"
+                  isEmpty ? "text-[10px] opacity-70" : "text-xs"
                 )}>{column.label}</h3>
-                <span className="bg-surface/70 text-[10px] px-2 py-0.5 rounded-full text-text-muted font-bold ml-1 border border-background/20">
+                <span className="bg-surface/70 text-[9px] px-1.5 py-0.5 rounded-full text-text-muted font-bold ml-1 border border-background/20">
                   {columnTeammates.length}
                 </span>
               </div>
             </div>
 
             <div className={cn(
-              "flex-1 overflow-y-auto px-2 space-y-3 pb-4 transition-all",
+              "flex-1 overflow-y-auto scrollbar-hide px-2 space-y-2 pb-3 transition-all",
               isEmpty ? "opacity-40 grayscale-[0.5]" : "opacity-100"
             )}>
               {columnTeammates.map((teammate) => {
@@ -170,21 +169,21 @@ export function StatusKanban() {
                     draggable={isMe}
                     onDragStart={(e) => handleDragStart(e, teammate.id)}
                     className={cn(
-                      "bg-surface p-4 rounded-xl shadow-sm border transition-all duration-200 relative group",
+                      "bg-surface p-3 rounded-xl shadow-sm border transition-all duration-200 relative group",
                       isMe 
                         ? "border-primary/40 ring-4 ring-primary/5 cursor-grab active:cursor-grabbing hover:shadow-md hover:-translate-y-1 z-10" 
                         : "border-background/40 opacity-80 hover:opacity-100"
                     )}
                   >
                     {isMe && (
-                      <div className="absolute top-2 right-2 flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded-full">
-                        <Smile size={10} className="text-primary" />
-                        <span className="text-[9px] font-black text-primary tracking-wide">ME</span>
+                      <div className="absolute top-1.5 right-1.5 flex items-center gap-1 bg-primary/10 px-1.5 py-0.5 rounded-full">
+                        <Smile size={8} className="text-primary" />
+                        <span className="text-[8px] font-black text-primary tracking-wide">ME</span>
                       </div>
                     )}
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-2.5">
                       <div className={cn(
-                        "w-10 h-10 rounded-full bg-surface flex items-center justify-center text-text-muted transition-all duration-300 flex-shrink-0 overflow-hidden border border-background/50 shadow-sm",
+                        "w-8 h-8 rounded-full bg-surface flex items-center justify-center text-text-muted transition-all duration-300 flex-shrink-0 overflow-hidden border border-background/50 shadow-sm",
                         isMe && "ring-2 ring-primary/20 group-hover:ring-primary/40 group-hover:scale-105"
                       )}>
                         <img 
@@ -193,7 +192,7 @@ export function StatusKanban() {
                         />
                       </div>
                       <div className="flex-1 min-w-0 mt-0.5">
-                        <p className={cn("font-headings font-bold text-sm truncate", isMe ? "text-primary" : "text-text")}>
+                        <p className={cn("font-headings font-bold text-xs truncate", isMe ? "text-primary" : "text-text")}>
                           {teammate.name}
                         </p>
                         {teammate.department && (

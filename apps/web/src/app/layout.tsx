@@ -52,7 +52,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       suppressHydrationWarning
       className={`${fredoka.variable} ${nunito.variable}`}
     >
-      <body className="font-body bg-background text-text antialiased">
+      <body className="font-body bg-background text-text antialiased scrollbar-hide">
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <Providers>
           <AppShell>{children}</AppShell>

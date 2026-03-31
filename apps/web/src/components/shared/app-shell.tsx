@@ -7,6 +7,8 @@ import { Header } from "@/components/shared/header";
 import { Sidebar } from "@/components/shared/sidebar";
 import { isChromelessPath } from "@/components/shared/navigation";
 import { FloatingAIAssistant } from "@/features/pod-c/components/floating-ai-assistant";
+import { MessengerModal } from "@/features/pod-e/components/messenger-modal";
+import { SchedulePopupModal } from "@/features/pod-e/components/schedule-popup-modal";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -24,7 +26,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-h-screen w-full flex-1 flex-col bg-background">
         <Header />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto scrollbar-hide">
           <div className="container mx-auto max-w-[1600px] p-4 pb-24 md:p-8 md:pb-8">
             {children}
           </div>
@@ -32,6 +34,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       <FloatingAIAssistant />
+      <MessengerModal />
+      <SchedulePopupModal />
     </div>
   );
 }
