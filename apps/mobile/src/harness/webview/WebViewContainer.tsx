@@ -32,6 +32,7 @@ import type {
 import { handleBridgeMessage } from '../bridge/bridge-handler';
 import { buildInjectedBridgeScript } from '../bridge/injected-bridge';
 import type { BridgeMessage } from '../bridge/bridge-types';
+import { parseBridgeMessage } from '../bridge/bridge-handler';
 import {
   getWebBaseOrigin,
   getWebBaseUrlHint,
@@ -46,12 +47,21 @@ export type WebViewControlState = {
   isLoading: boolean;
 };
 
+export type BridgeLogEntry = {
+  direction: 'web->native' | 'native->web' | 'native';
+  id: number;
+  payloadPreview: string;
+  type: string;
+};
+
 export type WebViewContainerHandle = {
   goBack: () => void;
+  injectJavaScript: (script: string) => void;
   reload: () => void;
 };
 
 type WebViewContainerProps = {
+  onBridgeLog?: (entry: BridgeLogEntry) => void;
   path: string;
   onStateChange?: (state: WebViewControlState) => void;
 };
@@ -61,8 +71,9 @@ const LOAD_TIMEOUT_MS = 15000;
 export const WebViewContainer = forwardRef<
   WebViewContainerHandle,
   WebViewContainerProps
->(function WebViewContainer({ path, onStateChange }, ref) {
+>(function WebViewContainer({ path, onBridgeLog, onStateChange }, ref) {
   const webViewRef = useRef<WebView>(null);
+  const bridgeLogIdRef = useRef(0);
   const loadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -81,6 +92,26 @@ export const WebViewContainer = forwardRef<
   );
   const hasError = Boolean(errorMessage);
   const currentUrl = navigationState.currentUrl || uri;
+
+  const publishBridgeLog = useCallback(
+    (
+      direction: BridgeLogEntry['direction'],
+      type: string,
+      payload?: unknown,
+    ) => {
+      const rawPreview =
+        typeof payload === 'string' ? payload : JSON.stringify(payload ?? {});
+
+      onBridgeLog?.({
+        direction,
+        id: ++bridgeLogIdRef.current,
+        payloadPreview:
+          rawPreview.length > 120 ? `${rawPreview.slice(0, 117)}...` : rawPreview,
+        type,
+      });
+    },
+    [onBridgeLog],
+  );
 
   const publishState = useCallback(
     (next: Partial<WebViewControlState> = {}) => {
@@ -155,6 +186,9 @@ export const WebViewContainer = forwardRef<
     ref,
     () => ({
       goBack,
+      injectJavaScript: (script: string) => {
+        webViewRef.current?.injectJavaScript(script);
+      },
       reload,
     }),
     [goBack, reload],
@@ -183,6 +217,8 @@ export const WebViewContainer = forwardRef<
   );
 
   const sendToWeb = useCallback((message: BridgeMessage) => {
+    publishBridgeLog('native->web', message.type, message.payload);
+
     const serialized = JSON.stringify(message)
       .replace(/\\/g, '\\\\')
       .replace(/'/g, "\\'");
@@ -211,6 +247,7 @@ export const WebViewContainer = forwardRef<
         throw new Error('지원되지 않는 링크 형식입니다.');
       }
 
+      publishBridgeLog('native', 'OPEN_EXTERNAL_URL', { url });
       await Linking.openURL(url);
     } catch (error) {
       const message =
@@ -221,7 +258,7 @@ export const WebViewContainer = forwardRef<
       Alert.alert('링크를 열 수 없습니다.', message);
       throw error;
     }
-  }, []);
+  }, [publishBridgeLog]);
 
   const handleShouldStartLoad = useCallback(
     (request: ShouldStartLoadRequest) => {
@@ -337,6 +374,14 @@ export const WebViewContainer = forwardRef<
         onHttpError={handleHttpError}
         onNavigationStateChange={handleNavigationStateChange}
         onMessage={(event) => {
+          const parsedMessage = parseBridgeMessage(event.nativeEvent.data);
+
+          publishBridgeLog(
+            'web->native',
+            parsedMessage?.type ?? 'INVALID_MESSAGE',
+            parsedMessage?.payload ?? event.nativeEvent.data,
+          );
+
           void handleBridgeMessage(event.nativeEvent.data, {
             openExternalUrl,
             sendToWeb,

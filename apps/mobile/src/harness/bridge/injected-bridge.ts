@@ -101,6 +101,9 @@ export function buildInjectedBridgeScript(webBaseOrigin: string) {
         }
       };
 
+      postMessage('BRIDGE_READY', {
+        methods: ['getDeviceInfo', 'openExternalUrl']
+      });
       window.dispatchEvent(new CustomEvent('workpresso:bridge-ready'));
       return true;
     })();

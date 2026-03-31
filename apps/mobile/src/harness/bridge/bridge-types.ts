@@ -1,4 +1,5 @@
 export type BridgeEventType =
+  | 'BRIDGE_READY'
   | 'OPEN_NATIVE_RECORDER'
   | 'PICK_FILE'
   | 'OPEN_SHARE_SHEET'
@@ -11,6 +12,7 @@ export type BridgeEventType =
   | 'SHARE_COMPLETED'
   | 'PUSH_TOKEN_READY'
   | 'DEVICE_INFO_RESULT'
+  | 'EXTERNAL_URL_RESULT'
   | 'ERROR';
 
 export type BridgeMessage<TPayload = unknown> = {

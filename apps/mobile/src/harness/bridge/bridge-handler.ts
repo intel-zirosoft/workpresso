@@ -31,6 +31,10 @@ export async function handleBridgeMessage(
   }
 
   switch (message.type) {
+    case 'BRIDGE_READY': {
+      return;
+    }
+
     case 'OPEN_EXTERNAL_URL': {
       const url = typeof message.payload === 'object' && message.payload && 'url' in message.payload
         ? String((message.payload as { url?: string }).url ?? '')
@@ -46,6 +50,10 @@ export async function handleBridgeMessage(
 
       try {
         await openExternalUrl(url);
+        sendToWeb({
+          type: 'EXTERNAL_URL_RESULT',
+          payload: { url },
+        });
       } catch (error) {
         sendToWeb({
           type: 'ERROR',
