@@ -250,7 +250,7 @@ export default function VoicePage() {
             </div>
           )}
 
-          <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 scrollbar-hide">
             {loading ? (
               <p className="text-center py-12 text-text-muted animate-pulse font-body">
                 데이터를 불러오는 중...

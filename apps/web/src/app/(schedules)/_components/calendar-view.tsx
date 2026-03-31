@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { format, isSameDay, parse, isBefore, startOfDay } from "date-fns";
 import { ko } from "date-fns/locale";
-import { Plus, Clock, Trash2, Loader2, Pencil, Users } from "lucide-react";
+import { Plus, Clock, Trash2, Loader2, Pencil, Users, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { ScheduleModal } from "./schedule-modal";
@@ -76,6 +76,9 @@ export function CalendarView({
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
+  const [currentTitle, setCurrentTitle] = useState("");
+  const [currentView, setCurrentView] = useState("dayGridMonth");
+
   const queryClient = useQueryClient();
   const calendarRef = useRef<any>(null);
 
@@ -249,10 +252,12 @@ export function CalendarView({
             calendarRef={calendarRef}
             events={calendarEvents}
             onDateClick={handleDateClick}
-            onDatesSet={() => {
+            onDatesSet={(arg: any) => {
+              setCurrentTitle(arg.view.title);
+              setCurrentView(arg.view.type);
               requestAnimationFrame(scrollToToday);
             }}
-            onEventClick={(info) => {
+            onEventClick={(info: any) => {
               const schedule = schedules.find((s) => s.id === info.event.id);
               if (schedule) {
                 handleEdit(schedule, { stopPropagation: () => {} } as any);

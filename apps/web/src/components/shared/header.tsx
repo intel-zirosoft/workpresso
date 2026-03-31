@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { LogOut, Menu, Moon, Settings, Sun } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -20,8 +20,10 @@ import { useCurrentUser } from "@/features/settings/hooks/use-current-user";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/providers/theme-provider";
+import { getSectionTitle } from "@/components/shared/navigation";
 
 export function Header() {
+  const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const supabase = useMemo(() => createClient(), []);
   const queryClient = useQueryClient();
@@ -41,8 +43,10 @@ export function Header() {
     setThemePreference(isDarkMode ? "light" : "dark");
   };
 
+  const currentSectionTitle = getSectionTitle(pathname);
+
   return (
-    <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between bg-background/80 px-4 backdrop-blur-md md:h-[96px] md:px-10">
+    <header className="sticky top-3 z-30 flex h-[72px] items-center justify-between bg-background/80 px-4 backdrop-blur-md md:h-[65px] md:px-10">
       <div className="flex min-w-0 items-center gap-3 md:flex-1">
         <Dialog open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
           <DialogTrigger asChild>
@@ -70,6 +74,20 @@ export function Header() {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/70">
             Workspace
           </p>
+          {pathname === "/schedules" ? (
+            <div className="flex flex-col">
+              <h1 className="font-headings text-lg font-bold text-text md:text-2xl leading-tight">
+                업무 일정 관리
+              </h1>
+              <p className="text-text-muted text-[10px] md:text-xs font-medium mt-0.5">
+                나의 스케줄을 확인하고 관리하세요.
+              </p>
+            </div>
+          ) : (
+            <h1 className="truncate font-headings text-lg font-bold text-text md:text-2xl leading-tight">
+              {currentSectionTitle}
+            </h1>
+          )}
         </div>
       </div>
 

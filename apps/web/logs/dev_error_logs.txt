@@ -94,3 +94,11 @@ Details: {
   "hasAudioBlob": true
 }
 --------------------------------------------------
+[2026-03-31T09:21:42.769Z] [ERROR] Meeting processing failed
+Details: {
+  "error": "system_llm/openrouter_api_key 비밀값을 복호화할 수 없습니다. APP_SECRET_ENCRYPTION_KEY가 저장 시점과 동일한지 확인하거나, 설정 화면에서 API 키를 다시 저장해 주세요.",
+  "stack": "Error: system_llm/openrouter_api_key 비밀값을 복호화할 수 없습니다. APP_SECRET_ENCRYPTION_KEY가 저장 시점과 동일한지 확인하거나, 설정 화면에서 API 키를 다시 저장해 주세요.\n    at transcribeAudio (webpack-internal:///(app-pages-browser)/./src/features/pod-d/services/sttService.ts:21:15)\n    at async handleUpload (webpack-internal:///(app-pages-browser)/./src/features/pod-d/components/AudioRecorder.tsx:65:24)",
+  "status": "stopped",
+  "hasAudioBlob": true
+}
+--------------------------------------------------

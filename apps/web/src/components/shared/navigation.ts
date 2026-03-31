@@ -21,7 +21,7 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
   { name: "홈", href: "/", icon: Home },
   { name: "문서", href: "/documents", icon: FileText },
   { name: "업무 도우미", href: "/chat", icon: Bot },
-  { name: "채터", href: "/chatter", icon: MessageSquare },
+  { name: "메신저", href: "/messenger", icon: MessageSquare },
   { name: "팀원", href: "/teammates", icon: Users },
   { name: "일정", href: "/schedules", icon: Calendar },
   { name: "음성", href: "/voice", icon: Mic },
