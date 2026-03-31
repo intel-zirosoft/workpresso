@@ -510,11 +510,7 @@ ${log.stt_text || "기록된 텍스트가 없습니다."}
             <FileText className="w-5 h-5 text-text-muted/60" />
             STT 원본 텍스트
           </h3>
-<<<<<<< HEAD
           <div className="p-8 bg-background/50 border border-background rounded-2xl text-sm font-body leading-relaxed text-text-muted whitespace-pre-wrap max-h-[350px] overflow-y-auto custom-scrollbar shadow-inner mt-2">
-=======
-          <div className="p-8 bg-background/50 border border-background rounded-2xl text-sm font-body leading-relaxed text-muted-foreground whitespace-pre-wrap max-h-[350px] overflow-y-auto scrollbar-hide shadow-inner mt-2">
->>>>>>> ui/UX-All-improvement-job
             {log.stt_text || "기록된 텍스트가 없습니다."}
           </div>
         </div>

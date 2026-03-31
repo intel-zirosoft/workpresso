@@ -20,7 +20,7 @@ import { useCurrentUser } from "@/features/settings/hooks/use-current-user";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/providers/theme-provider";
-import { getSectionTitle } from "@/components/shared/navigation";
+import { getCurrentSectionTitle } from "@/components/shared/navigation";
 
 export function Header() {
   const pathname = usePathname();
@@ -43,7 +43,7 @@ export function Header() {
     setThemePreference(isDarkMode ? "light" : "dark");
   };
 
-  const currentSectionTitle = getSectionTitle(pathname);
+  const currentSectionTitle = getCurrentSectionTitle(pathname);
 
   return (
     <header className="sticky top-3 z-30 flex h-[72px] items-center justify-between bg-background/80 px-4 backdrop-blur-md md:h-[65px] md:px-10">
