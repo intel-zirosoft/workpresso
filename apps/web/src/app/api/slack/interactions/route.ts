@@ -94,13 +94,11 @@ export async function POST(request: Request) {
     const resultText =
       actionValue.action === "APPROVE"
         ? document.status === "APPROVED"
-          ? `문서 "${document.title}"를 최종 승인했습니다.`
-          : `문서 "${document.title}"를 승인했고 다음 결재 단계로 넘겼습니다.`
-        : `문서 "${document.title}"를 반려했습니다.`;
+          ? `문서 "${document.title}"를 최종 승인하셨습니다.`
+          : `문서 "${document.title}"를 승인하셨고 다음 결재 단계로 넘겼습니다.`
+        : `문서 "${document.title}"를 반려하셨습니다.`;
 
-    return slackMessage(
-      `${resultText}\n보안 참고: 현재는 Signing Secret 검증 없이 동작하는 개발용 모드입니다.`,
-    );
+    return slackMessage(resultText);
   } catch (error) {
     return slackMessage(
       error instanceof Error

@@ -689,6 +689,35 @@ async function postSlackBotMessage(params: {
   }
 }
 
+async function sendSlackDirectMessageToMappedUser(params: {
+  adminSupabase: SupabaseClient;
+  botToken: string;
+  userId: string;
+  text: string;
+  blocks: Array<Record<string, unknown>>;
+}) {
+  const { adminSupabase, botToken, userId, text, blocks } = params;
+  const slackUserId = await fetchSlackUserIdByUserId(adminSupabase, userId);
+
+  if (!slackUserId) {
+    return false;
+  }
+
+  const channelId = await openSlackDirectMessageChannel({
+    botToken,
+    slackUserId,
+  });
+
+  await postSlackBotMessage({
+    botToken,
+    channel: channelId,
+    text,
+    blocks,
+  });
+
+  return true;
+}
+
 async function sendDocumentSlackNotification(params: {
   adminSupabase: SupabaseClient;
   document: DocumentDetail;
@@ -848,32 +877,53 @@ async function sendDocumentSlackNotification(params: {
   const shouldTryDirectMessage =
     (event === "SUBMITTED" || event === "APPROVED_STEP") &&
     Boolean(document.currentApprover);
+  let deliveredByDirectMessage = false;
 
   if (shouldTryDirectMessage && document.currentApprover && botToken) {
     try {
-      const slackUserId = await fetchSlackUserIdByUserId(
+      deliveredByDirectMessage = await sendSlackDirectMessageToMappedUser({
         adminSupabase,
-        document.currentApprover.id,
-      );
-
-      if (slackUserId) {
-        const channelId = await openSlackDirectMessageChannel({
-          botToken,
-          slackUserId,
-        });
-
-        await postSlackBotMessage({
-          botToken,
-          channel: channelId,
-          text: messagePayload.text,
-          blocks: messagePayload.blocks,
-        });
-
-        return;
-      }
+        botToken,
+        userId: document.currentApprover.id,
+        text: messagePayload.text,
+        blocks: messagePayload.blocks,
+      });
     } catch (error) {
       console.error("document direct Slack notification failed:", error);
     }
+  }
+
+  if (actor && event !== "SUBMITTED" && botToken) {
+    const confirmationText =
+      event === "REJECTED"
+        ? `문서 "${document.title}"를 반려하셨습니다.`
+        : event === "APPROVED_FINAL"
+          ? `문서 "${document.title}"를 최종 승인하셨습니다.`
+          : `문서 "${document.title}"를 승인하셨습니다. 다음 결재자에게 요청을 전달했습니다.`;
+
+    try {
+      await sendSlackDirectMessageToMappedUser({
+        adminSupabase,
+        botToken,
+        userId: actor.id,
+        text: `[Pod A] ${confirmationText}`,
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: confirmationText,
+            },
+          },
+        ],
+      });
+    } catch (error) {
+      console.error("document actor confirmation Slack notification failed:", error);
+    }
+  }
+
+  if (deliveredByDirectMessage) {
+    return;
   }
 
   if (!webhookUrl) {
@@ -1694,11 +1744,6 @@ export async function submitWorkflowDocument(params: {
     console.error("document submit Slack notification failed:", notificationError);
   }
 
-  await syncDocumentKnowledgeForLifecycle({
-    previousDocument: detail,
-    nextDocument: nextDetail,
-  });
-
   return nextDetail;
 }
 
@@ -2031,11 +2076,6 @@ export async function actOnWorkflowDocument(params: {
       }
     }
   }
-
-  await syncDocumentKnowledgeForLifecycle({
-    previousDocument: detail,
-    nextDocument: nextDetail,
-  });
 
   return nextDetail;
 }
