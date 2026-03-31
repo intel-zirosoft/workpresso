@@ -15,10 +15,10 @@ export default async function SettingsLayout({
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-8rem)] flex-col gap-4 bg-[#FDFBF7] md:flex-row md:gap-0">
+    <div className="flex min-h-[calc(100vh-8rem)] flex-col gap-4 bg-background md:flex-row md:gap-0">
       <SettingsSidebar userRole={profile?.role || 'USER'} />
       <main className="flex-1 overflow-y-auto md:p-8">
-        <div className="mx-auto min-h-full max-w-4xl rounded-[24px] border border-border/50 bg-white p-5 shadow-sm md:p-8">
+        <div className="mx-auto min-h-full max-w-4xl rounded-[24px] border border-border/50 bg-surface p-5 shadow-sm md:p-8">
           {children}
         </div>
       </main>

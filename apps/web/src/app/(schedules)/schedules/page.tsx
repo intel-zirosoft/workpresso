@@ -9,7 +9,7 @@ export default function SchedulesPage() {
         <h1 className="text-3xl font-headings font-bold text-text tracking-tight">
           업무 일정 관리
         </h1>
-        <p className="text-muted font-headings font-medium mt-1">
+        <p className="text-text-muted font-headings font-medium mt-1">
           나의 스케줄을 확인하고 관리하세요.
         </p>
       </header>

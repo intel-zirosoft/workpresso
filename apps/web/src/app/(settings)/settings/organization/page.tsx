@@ -53,21 +53,21 @@ export default async function OrganizationSettingsPage() {
     <div className="animate-in fade-in duration-700 space-y-8 pb-12">
       {/* Sync Warning Banner (If legacy data found) */}
       {legacyUsers.length > 0 && (
-        <div className="p-6 bg-amber-50 rounded-[32px] border border-amber-200 flex flex-col md:flex-row md:items-center justify-between gap-6 animate-in slide-in-from-top-4 duration-500 shadow-soft">
+        <div className="p-6 bg-warning-soft rounded-[32px] border border-warning/20 flex flex-col md:flex-row md:items-center justify-between gap-6 animate-in slide-in-from-top-4 duration-500 shadow-soft">
           <div className="flex gap-4">
-            <div className="bg-amber-100 p-3 rounded-2xl h-fit">
-              <AlertCircle className="w-6 h-6 text-amber-600" />
+            <div className="bg-warning/15 p-3 rounded-2xl h-fit">
+              <AlertCircle className="w-6 h-6 text-warning" />
             </div>
             <div>
-              <h3 className="font-headings font-bold text-amber-900">레거시 데이터 동기화 필요</h3>
-              <p className="text-sm text-amber-700/80 mt-1 font-body">
+              <h3 className="font-headings font-bold text-warning">레거시 데이터 동기화 필요</h3>
+              <p className="text-sm text-warning/80 mt-1 font-body">
                 부서 정보가 텍스트(`department`)로만 남아있는 멤버 <span className="font-bold underline">{legacyUsers.length}명</span>이 감지되었습니다. 
                 이들을 위해 정식 팀 <span className="font-bold underline">{legacyDeptCount}개</span>를 자동으로 구성하고 연동할 수 있습니다.
               </p>
             </div>
           </div>
           <form action={handleSyncAction}>
-            <Button className="rounded-pill px-8 bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-soft whitespace-nowrap gap-2">
+            <Button className="rounded-pill px-8 bg-warning hover:bg-warning/90 text-warning-foreground font-bold shadow-soft whitespace-nowrap gap-2">
               <RefreshCw className="w-4 h-4" /> 지금 동기화하기
             </Button>
           </form>
@@ -80,7 +80,7 @@ export default async function OrganizationSettingsPage() {
           <h1 className="text-3xl font-headings font-bold text-text flex items-center gap-3">
             <Building2 className="w-9 h-9 text-primary" /> 조직 및 부서 관리
           </h1>
-          <p className="text-sm text-muted mt-2 font-body max-w-2xl">
+          <p className="text-sm text-text-muted mt-2 font-body max-w-2xl">
             워크프레소의 모든 팀(부서)을 정의하고 관리합니다. 각 부서는 팀원 관리의 기준이 되며, 
             <span className="text-primary font-bold"> 전사적인 조직도 체계</span>를 형성하는 핵심 단위입니다.
           </p>
@@ -96,28 +96,28 @@ export default async function OrganizationSettingsPage() {
             <form action={handleCreateTeam}>
               <DialogHeader>
                 <DialogTitle className="text-2xl font-headings font-bold text-text">새로운 팀 생성</DialogTitle>
-                <DialogDescription className="font-body text-muted py-2">
+                <DialogDescription className="font-body text-text-muted py-2">
                   조직의 새로운 부서나 프로젝트 팀을 정의합니다.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-6 py-6 font-body">
                 <div className="space-y-2.5 px-1">
-                  <Label htmlFor="name" className="text-sm font-bold text-muted px-2">팀(부서) 이름</Label>
+                  <Label htmlFor="name" className="text-sm font-bold text-text-muted px-2">팀(부서) 이름</Label>
                   <Input 
                     id="name" 
                     name="name" 
                     placeholder="예: 전략기획실, AI 연구소" 
-                    className="rounded-2xl h-12 bg-background/50 border-transparent focus:border-primary/20 focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all font-bold px-5"
+                    className="rounded-2xl h-12 bg-background/50 border-transparent focus:border-primary/20 focus:bg-surface focus:ring-4 focus:ring-primary/10 transition-all font-bold px-5"
                     required 
                   />
                 </div>
                 <div className="space-y-2.5 px-1">
-                  <Label htmlFor="description" className="text-sm font-bold text-muted px-2">팀 설명</Label>
+                  <Label htmlFor="description" className="text-sm font-bold text-text-muted px-2">팀 설명</Label>
                   <Textarea 
                     id="description" 
                     name="description" 
                     placeholder="팀의 역할과 목적을 간단히 설명해 주세요." 
-                    className="rounded-2xl min-h-[120px] bg-background/50 border-transparent focus:border-primary/20 focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all px-5 py-4 resize-none text-sm"
+                    className="rounded-2xl min-h-[120px] bg-background/50 border-transparent focus:border-primary/20 focus:bg-surface focus:ring-4 focus:ring-primary/10 transition-all px-5 py-4 resize-none text-sm"
                   />
                 </div>
               </div>
@@ -139,7 +139,7 @@ export default async function OrganizationSettingsPage() {
               <Building2 className="w-12 h-12 text-primary/30" />
             </div>
             <div>
-              <h3 className="text-xl font-headings font-bold text-muted">등록된 팀이 없습니다</h3>
+              <h3 className="text-xl font-headings font-bold text-text-muted">등록된 팀이 없습니다</h3>
               <p className="text-sm text-muted-foreground mt-2 font-body max-w-xs mx-auto">
                 새 팀 생성 버튼을 눌러 조직의 공식 부서를 정의해 보세요.
               </p>
@@ -147,12 +147,12 @@ export default async function OrganizationSettingsPage() {
           </div>
         ) : (
           teams.map((team) => (
-            <div key={team.id} className="group bg-white border border-background rounded-[32px] p-8 shadow-soft hover:shadow-md transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
+            <div key={team.id} className="group bg-surface border border-background rounded-[32px] p-8 shadow-soft hover:shadow-md transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
               <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full hover:bg-primary/5 text-muted hover:text-primary">
+                <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full hover:bg-primary/5 text-text-muted hover:text-primary">
                   <Settings2 className="w-4 h-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full hover:bg-destructive/5 text-muted hover:text-destructive">
+                <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full hover:bg-destructive/5 text-text-muted hover:text-destructive">
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -174,7 +174,7 @@ export default async function OrganizationSettingsPage() {
                   {team.description || '이 부서에 대한 설명이 등록되지 않았습니다.'}
                 </p>
 
-                <div className="pt-4 border-t border-background flex items-center justify-between text-[11px] font-bold text-muted uppercase tracking-widest">
+                <div className="pt-4 border-t border-background flex items-center justify-between text-[11px] font-bold text-text-muted uppercase tracking-widest">
                   <div className="flex items-center gap-1.5">
                     <Info className="w-3 h-3" />
                     <span>Active Team</span>
@@ -197,4 +197,3 @@ export default async function OrganizationSettingsPage() {
     </div>
   );
 }
-

@@ -62,13 +62,13 @@ export default function SignupPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md border-none shadow-float bg-white/80 backdrop-blur-sm">
+      <Card className="w-full max-w-md border-none shadow-float bg-surface/80 backdrop-blur-sm">
         <CardHeader className="space-y-2 text-center pb-8">
           <div className="mx-auto w-12 h-12 bg-secondary/10 rounded-pill flex items-center justify-center mb-2">
             <UserPlus className="text-secondary w-6 h-6" />
           </div>
           <CardTitle className="text-3xl font-headings font-bold text-text">시작하기</CardTitle>
-          <CardDescription className="font-body text-muted">
+          <CardDescription className="font-body text-text-muted">
             WorkPresso와 함께 더 부드러운 협업을 경험하세요.
           </CardDescription>
         </CardHeader>
@@ -76,7 +76,7 @@ export default function SignupPage() {
           <form onSubmit={handleSignup} className="space-y-4">
             <div className="space-y-2">
               <div className="relative">
-                <User className="absolute left-3 top-3 w-5 h-5 text-muted/50" />
+                <User className="absolute left-3 top-3 w-5 h-5 text-text-muted/50" />
                 <Input
                   placeholder="이름"
                   value={name}
@@ -88,7 +88,7 @@ export default function SignupPage() {
             </div>
             <div className="space-y-2">
               <div className="relative">
-                <Building2 className="absolute left-3 top-3 w-5 h-5 text-muted/50" />
+                <Building2 className="absolute left-3 top-3 w-5 h-5 text-text-muted/50" />
                 <Input
                   placeholder="소속 부서 (예: 개발팀, 플랫폼실)"
                   value={department}
@@ -100,7 +100,7 @@ export default function SignupPage() {
             </div>
             <div className="space-y-2">
               <div className="relative">
-                <Mail className="absolute left-3 top-3 w-5 h-5 text-muted/50" />
+                <Mail className="absolute left-3 top-3 w-5 h-5 text-text-muted/50" />
                 <Input
                   type="email"
                   placeholder="이메일 주소"
@@ -113,7 +113,7 @@ export default function SignupPage() {
             </div>
             <div className="space-y-2">
               <div className="relative">
-                <Lock className="absolute left-3 top-3 w-5 h-5 text-muted/50" />
+                <Lock className="absolute left-3 top-3 w-5 h-5 text-text-muted/50" />
                 <Input
                   type="password"
                   placeholder="비밀번호"
@@ -135,7 +135,7 @@ export default function SignupPage() {
           </form>
         </CardContent>
         <CardFooter className="flex justify-center border-t border-background/50 pt-6">
-          <p className="text-sm text-muted font-body">
+          <p className="text-sm text-text-muted font-body">
             이미 계정이 있으신가요?{" "}
             <Link href="/login" className="text-secondary font-bold hover:underline">
               로그인하기

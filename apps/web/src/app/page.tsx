@@ -120,7 +120,7 @@ export default function HomePage() {
             <Button
               asChild
               variant="outline"
-              className="h-12 rounded-pill border-background/70 bg-white px-6 text-sm font-bold text-text hover:bg-background"
+              className="h-12 rounded-pill border-background/70 bg-surface px-6 text-sm font-bold text-text hover:bg-background"
             >
               <Link href="/chat">
                 <Bot className="h-4 w-4" />
@@ -135,7 +135,7 @@ export default function HomePage() {
             <Link
               key={action.title}
               href={action.href}
-              className="group rounded-[24px] border border-background/60 bg-background/40 p-4 transition-all hover:-translate-y-1 hover:bg-white hover:shadow-soft"
+              className="group rounded-[24px] border border-background/60 bg-background/40 p-4 transition-all hover:-translate-y-1 hover:bg-surface hover:shadow-soft"
             >
               <div
                 className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl ${action.tone}`}
@@ -147,9 +147,9 @@ export default function HomePage() {
                   <h2 className="font-headings text-base font-bold text-text">
                     {action.title}
                   </h2>
-                  <ArrowRight className="h-4 w-4 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+                  <ArrowRight className="h-4 w-4 text-text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
                 </div>
-                <p className="text-sm leading-5 text-muted">
+                <p className="text-sm leading-5 text-text-muted">
                   {action.description}
                 </p>
               </div>
@@ -186,13 +186,13 @@ export default function HomePage() {
                   key={item.title}
                   className="rounded-[24px] bg-background/50 p-4"
                 >
-                  <div className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-sm font-black text-primary shadow-sm">
+                  <div className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-surface text-sm font-black text-primary shadow-sm">
                     {index + 1}
                   </div>
                   <h3 className="font-headings text-base font-bold text-text">
                     {item.title}
                   </h3>
-                  <p className="mt-2 text-sm leading-5 text-muted">
+                  <p className="mt-2 text-sm leading-5 text-text-muted">
                     {item.description}
                   </p>
                 </div>
@@ -230,7 +230,7 @@ export default function HomePage() {
                 <Link
                   key={item.title}
                   href={item.href}
-                  className="group block rounded-[22px] border border-background/60 bg-background/35 p-4 transition-all hover:bg-white hover:shadow-soft"
+                  className="group block rounded-[22px] border border-background/60 bg-background/35 p-4 transition-all hover:bg-surface hover:shadow-soft"
                 >
                   <div className="flex items-start gap-3">
                     <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -241,9 +241,9 @@ export default function HomePage() {
                         <h3 className="font-headings text-base font-bold text-text">
                           {item.title}
                         </h3>
-                        <ArrowRight className="h-4 w-4 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+                        <ArrowRight className="h-4 w-4 text-text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
                       </div>
-                      <p className="mt-1 text-sm leading-5 text-muted">
+                      <p className="mt-1 text-sm leading-5 text-text-muted">
                         {item.description}
                       </p>
                     </div>
@@ -254,7 +254,7 @@ export default function HomePage() {
           </section>
 
           <section className="rounded-[28px] border border-success/20 bg-success/10 p-5 shadow-sm md:p-6">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-xs font-bold text-text">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-surface/80 px-3 py-1 text-xs font-bold text-text">
               <Bot className="h-3.5 w-3.5 text-primary" />
               빠른 시작 팁
             </div>
@@ -269,7 +269,7 @@ export default function HomePage() {
             <Button
               asChild
               variant="ghost"
-              className="mt-4 h-10 rounded-pill bg-white/80 px-4 text-sm font-bold text-primary hover:bg-white"
+              className="mt-4 h-10 rounded-pill bg-surface/80 px-4 text-sm font-bold text-primary hover:bg-surface"
             >
               <Link href="/chat">
                 AI 채팅 열기

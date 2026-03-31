@@ -133,7 +133,7 @@ export default function VoicePage() {
           <h1 className="text-3xl font-headings font-bold tracking-tight text-text">
             음성기반 회의록 작성
           </h1>
-          <p className="text-muted font-headings font-medium mt-1">
+          <p className="text-text-muted font-headings font-medium mt-1">
             음성을 녹음하고 AI를 통해 회의록으로 자동 변환하세요.
           </p>
         </div>
@@ -152,8 +152,8 @@ export default function VoicePage() {
           </div>
           <AudioRecorderDynamic onComplete={fetchLogs} />
 
-          <div className="mt-8 p-8 bg-white/50 border border-background/50 rounded-3xl shadow-soft text-center animate-in fade-in slide-in-from-top-4 duration-700">
-            <p className="text-sm text-muted font-medium leading-relaxed">
+          <div className="mt-8 rounded-3xl border border-background/50 bg-surface/70 p-8 text-center shadow-soft animate-in fade-in slide-in-from-top-4 duration-700">
+            <p className="text-sm text-text-muted font-medium leading-relaxed">
               회의를 시작하려면 위{" "}
               <span className="text-primary font-bold">마이크 버튼</span>을
               눌러주세요.
@@ -179,7 +179,7 @@ export default function VoicePage() {
                 <Button
                   type="button"
                   variant="ghost"
-                  className="rounded-pill bg-white/50 hover:bg-white h-8 px-3 shadow-sm border border-background/50 text-muted font-bold text-xs"
+                  className="rounded-pill bg-surface/70 hover:bg-surface h-8 px-3 shadow-sm border border-background/50 text-text-muted font-bold text-xs"
                   onClick={fetchLogs}
                   disabled={loading}
                 >
@@ -192,12 +192,12 @@ export default function VoicePage() {
                   variant="outline"
                   size="sm"
                   onClick={() => window.open("/api/logs", "_blank")}
-                  className="rounded-pill h-8 px-4 text-muted hover:text-text gap-1.5 shadow-soft hover:shadow-md transition-all text-xs font-bold"
+                  className="rounded-pill h-8 px-4 text-text-muted hover:text-text gap-1.5 shadow-soft hover:shadow-md transition-all text-xs font-bold"
                 >
                   로그 확인
                 </Button>
                 <div className="w-px h-4 bg-background mx-1" />
-                <span className="text-sm text-muted">
+                <span className="text-sm text-text-muted">
                   {logs.length}개의 기록
                 </span>
                 {logs.length > 0 && (
@@ -252,7 +252,7 @@ export default function VoicePage() {
 
           <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
             {loading ? (
-              <p className="text-center py-12 text-muted animate-pulse font-body">
+              <p className="text-center py-12 text-text-muted animate-pulse font-body">
                 데이터를 불러오는 중...
               </p>
             ) : logs.length > 0 ? (
@@ -265,10 +265,10 @@ export default function VoicePage() {
                       : () => setSelectedLog(log)
                   }
                   className={cn(
-                    "p-5 bg-white hover:bg-surface transition-all cursor-pointer border border-background shadow-soft flex items-center gap-4 group relative rounded-2xl hover:-translate-y-1 hover:shadow-md",
+                    "p-5 bg-surface hover:bg-surface transition-all cursor-pointer border border-background shadow-soft flex items-center gap-4 group relative rounded-2xl hover:-translate-y-1 hover:shadow-md",
                     isDeleteMode &&
                       selectedIds.has(log.id) &&
-                      "ring-2 ring-primary/30 border-primary/20 shadow-md bg-white",
+                      "ring-2 ring-primary/30 border-primary/20 shadow-md bg-surface",
                   )}
                 >
                   {isDeleteMode && (
@@ -276,7 +276,7 @@ export default function VoicePage() {
                       {selectedIds.has(log.id) ? (
                         <CheckSquare className="w-5 h-5 text-primary animate-in zoom-in-50 duration-200" />
                       ) : (
-                        <Square className="w-5 h-5 text-muted/30" />
+                        <Square className="w-5 h-5 text-text-muted/30" />
                       )}
                     </div>
                   )}
@@ -298,13 +298,13 @@ export default function VoicePage() {
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-muted truncate font-body">
+                    <p className="text-sm text-text-muted truncate font-body">
                       {log.summary ||
                         log.stt_text ||
                         "변환된 텍스트가 없습니다."}
                     </p>
                   </div>
-                  <div className="text-xs text-muted font-body">
+                  <div className="text-xs text-text-muted font-body">
                     {new Date(log.created_at).toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
@@ -313,14 +313,14 @@ export default function VoicePage() {
                 </Card>
               ))
             ) : (
-              <Card className="p-12 text-center bg-white/50 border border-background/50 rounded-3xl shadow-soft animate-in zoom-in-95 duration-500">
-                <div className="mb-4 text-muted/30">
+              <Card className="p-12 text-center bg-surface/70 border border-background/50 rounded-3xl shadow-soft animate-in zoom-in-95 duration-500">
+                <div className="mb-4 text-text-muted/30">
                   <History className="w-12 h-12 mx-auto opacity-20" />
                 </div>
-                <p className="text-muted font-medium mb-1">
+                <p className="text-text-muted font-medium mb-1">
                   아직 저장된 회의록이 없습니다.
                 </p>
-                <p className="text-xs text-muted/60 leading-relaxed px-8">
+                <p className="text-xs text-text-muted/60 leading-relaxed px-8">
                   회의를 시작하여 팀의 의견을 한곳에 모으세요.
                 </p>
               </Card>
@@ -331,4 +331,3 @@ export default function VoicePage() {
     </div>
   );
 }
-
