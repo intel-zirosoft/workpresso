@@ -83,7 +83,7 @@ export default function HomePage() {
           <div className="rounded-[20px] border border-background/60 bg-background/40 p-3 md:p-4">
             <Link
               href="/chat"
-              className="flex min-h-12 items-center justify-between rounded-[18px] border border-background/70 bg-white px-4 py-3 transition-all hover:-translate-y-0.5 hover:shadow-soft"
+              className="flex min-h-12 items-center justify-between rounded-[18px] border border-background/70 bg-background px-4 py-3 transition-all hover:-translate-y-0.5 hover:shadow-soft"
             >
               <p className="text-sm font-bold text-text">AI에게 물어보기</p>
               <ArrowRight className="h-4 w-4 text-primary" />
@@ -94,7 +94,7 @@ export default function HomePage() {
                   key={prompt.label}
                   asChild
                   variant="outline"
-                  className="h-8 rounded-pill border-background/70 bg-white px-3 text-[11px] font-bold text-text hover:bg-background"
+                  className="h-8 rounded-pill border-background/70 bg-background px-3 text-[11px] font-bold text-text hover:bg-background"
                 >
                   <Link href={prompt.href}>{prompt.label}</Link>
                 </Button>
@@ -108,7 +108,7 @@ export default function HomePage() {
             <Link
               key={card.title}
               href={card.href}
-              className="group rounded-[18px] border border-background/60 bg-background/40 p-3 transition-all hover:-translate-y-1 hover:bg-white hover:shadow-soft"
+              className="group rounded-[18px] border border-background/60 bg-background/40 p-3 transition-all hover:-translate-y-1 hover:bg-background hover:shadow-soft"
             >
               <div className="flex items-center gap-3">
                 <div
@@ -122,7 +122,7 @@ export default function HomePage() {
                   </p>
                   <p className="text-xs font-bold text-text/70">{card.value}</p>
                 </div>
-                <ArrowRight className="h-4 w-4 shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+                <ArrowRight className="h-4 w-4 shrink-0 text-text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
               </div>
             </Link>
           ))}
@@ -140,12 +140,17 @@ export default function HomePage() {
 
           <div className="grid gap-2 md:grid-cols-3">
             {PRIORITY_ITEMS.map((title, index) => (
-              <div key={title} className="rounded-[18px] bg-background/50 px-3 py-3">
+              <div
+                key={title}
+                className="rounded-[18px] bg-background/50 px-3 py-3"
+              >
                 <div className="flex items-center gap-3">
-                  <div className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs font-black text-primary shadow-sm">
+                  <div className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-background text-xs font-black text-primary shadow-sm">
                     {index + 1}
                   </div>
-                  <h3 className="font-headings text-sm font-bold text-text">{title}</h3>
+                  <h3 className="font-headings text-sm font-bold text-text">
+                    {title}
+                  </h3>
                 </div>
               </div>
             ))}
@@ -155,14 +160,16 @@ export default function HomePage() {
         <div className="space-y-4">
           <section className="rounded-[24px] border border-background/60 bg-surface p-4 shadow-soft">
             <div className="mb-3">
-              <h2 className="font-headings text-lg font-bold text-text">빠른 실행</h2>
+              <h2 className="font-headings text-lg font-bold text-text">
+                빠른 실행
+              </h2>
             </div>
             <div className="space-y-2">
               {QUICK_ACTIONS.map((action) => (
                 <Link
                   key={action.title}
                   href={action.href}
-                  className="group block rounded-[16px] border border-background/60 bg-background/35 px-3 py-3 transition-all hover:bg-white hover:shadow-soft"
+                  className="group block rounded-[16px] border border-background/60 bg-background/35 px-3 py-3 transition-all hover:bg-background hover:shadow-soft"
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -173,7 +180,7 @@ export default function HomePage() {
                         {action.title}
                       </h3>
                     </div>
-                    <ArrowRight className="h-4 w-4 shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+                    <ArrowRight className="h-4 w-4 shrink-0 text-text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
                   </div>
                 </Link>
               ))}
@@ -181,18 +188,23 @@ export default function HomePage() {
           </section>
 
           <section className="rounded-[24px] border border-success/20 bg-success/10 p-4 shadow-sm">
-            <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-[11px] font-bold text-text">
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-background/70 px-3 py-1 text-[11px] font-bold text-text">
               <CheckCircle2 className="h-3.5 w-3.5 text-success" />
               AI
             </div>
-            <h2 className="font-headings text-base font-bold text-text">바로 시작</h2>
+            <h2 className="font-headings text-base font-bold text-text">
+              바로 시작
+            </h2>
             <ul className="mt-2 space-y-1.5 text-sm leading-5 text-text/80">
               <li>• 오늘 일정 기준으로 우선순위를 정리해줘</li>
               <li>• 회의록 초안을 3줄로 요약해줘</li>
               <li>• 공유용 문서 목차를 먼저 만들어줘</li>
             </ul>
             <div className="mt-4 flex flex-wrap gap-2">
-              <Button asChild className="h-9 rounded-pill px-4 text-sm font-bold shadow-soft">
+              <Button
+                asChild
+                className="h-9 rounded-pill px-4 text-sm font-bold shadow-soft"
+              >
                 <Link href="/chat">
                   <Bot className="h-4 w-4" />
                   AI 채팅 열기

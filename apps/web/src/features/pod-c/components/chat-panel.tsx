@@ -242,12 +242,12 @@ export function ChatPanel({
                   )}
                 >
                   <ReactMarkdown
-                    className={cn(
-                      "prose prose-sm max-w-none",
-                      message.role === "user"
-                        ? "prose-invert"
-                        : "prose-neutral font-medium",
-                    )}
+                  // className={cn(
+                  //   "prose prose-sm max-w-none",
+                  //   // message.role === "user"
+                  //   //   ? "prose-invert"
+                  //   //   : "prose-neutral font-medium",
+                  // )}
                   >
                     {message.content}
                   </ReactMarkdown>
