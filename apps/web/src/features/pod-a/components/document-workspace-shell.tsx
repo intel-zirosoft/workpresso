@@ -88,40 +88,94 @@ export function DocumentWorkspaceShell({
   ).length;
 
   return (
-    <div className="flex h-[calc(100vh-170px)] flex-col space-y-4 overflow-hidden">
-      <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between px-1 flex-shrink-0">
-        <div>
-          <h1 className="text-3xl font-headings font-bold tracking-tight text-text">
-            {isMobileAppView ? "문서 결재함" : "문서 워크스페이스"}
-          </h1>
-          <p className="mt-1 text-sm font-medium text-text-muted">
-            {isMobileAppView
-              ? "승인 대기 문서를 빠르게 검토하고 승인 또는 반려하세요."
-              : "업무의 흐름을 한눈에 파악하고 결재를 진행하세요."}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            className="rounded-pill bg-background/50 hover:bg-background h-8 px-3 text-xs"
-            onClick={onRefresh}
-            disabled={!currentUserId || isRefreshing}
+    <div
+      className={cn(
+        "flex flex-col space-y-4",
+        isMobileAppView
+          ? "min-h-full overflow-visible"
+          : "h-[calc(100vh-170px)] overflow-hidden",
+      )}
+    >
+      <header
+        className={cn(
+          "flex-shrink-0",
+          isMobileAppView
+            ? "rounded-[28px] border border-background/60 bg-surface px-5 py-5 shadow-soft"
+            : "flex flex-col gap-3 px-1 lg:flex-row lg:items-center lg:justify-between",
+        )}
+      >
+        <div
+          className={cn(
+            isMobileAppView
+              ? "flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+              : "flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between",
+          )}
+        >
+          <div className="min-w-0">
+            {isMobileAppView ? (
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-primary/70">
+                Document briefing
+              </p>
+            ) : null}
+            <h1
+              className={cn(
+                "font-headings font-bold tracking-tight text-text",
+                isMobileAppView ? "mt-2 text-[24px] leading-tight" : "text-3xl",
+              )}
+            >
+              {isMobileAppView ? "문서 결재함" : "문서 워크스페이스"}
+            </h1>
+            <p
+              className={cn(
+                "mt-1 text-text-muted",
+                isMobileAppView ? "text-sm leading-6" : "text-sm font-medium",
+              )}
+            >
+              {isMobileAppView
+                ? "승인 대기 문서를 빠르게 확인하고 필요한 결재만 바로 처리할 수 있습니다."
+                : "업무의 흐름을 한눈에 파악하고 결재를 진행하세요."}
+            </p>
+          </div>
+          <div
+            className={cn(
+              "flex gap-2",
+              isMobileAppView
+                ? "flex-wrap items-center"
+                : "items-center",
+            )}
           >
-            <RefreshCw className={cn("h-3 w-3 mr-2", isRefreshing && "animate-spin")} />
-            동기화
-          </Button>
-          {!isMobileAppView ? (
+            {isMobileAppView ? (
+              <div className="shrink-0 rounded-full bg-primary/8 px-3 py-1.5 text-xs font-bold text-primary">
+                내 결재 중심
+              </div>
+            ) : null}
             <Button
               type="button"
-              className="rounded-pill px-6 h-10 shadow-lg shadow-primary/20 transition-all hover:shadow-xl"
-              onClick={onNewDocument}
-              disabled={!currentUserId || isMutating}
+              variant="ghost"
+              className={cn(
+                "rounded-pill h-8 px-3 text-xs",
+                isMobileAppView
+                  ? "bg-background/60 hover:bg-background"
+                  : "bg-background/50 hover:bg-background",
+              )}
+              onClick={onRefresh}
+              disabled={!currentUserId || isRefreshing}
             >
-              <Plus className="mr-2 h-4 w-4" />
-              새 문서 작성
+              <RefreshCw className={cn("mr-2 h-3 w-3", isRefreshing && "animate-spin")} />
+              동기화
             </Button>
-          ) : null}
+            {!isMobileAppView ? (
+              <Button
+                type="button"
+                className="rounded-pill px-6 h-10 shadow-lg shadow-primary/20 transition-all hover:shadow-xl"
+                onClick={onNewDocument}
+                disabled={!currentUserId || isMutating}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                새 문서 작성
+              </Button>
+            ) : null}
+          </div>
         </div>
       </header>
 
@@ -166,7 +220,12 @@ export function DocumentWorkspaceShell({
         ))}
       </div>
 
-      <div className="flex-1 flex flex-col gap-6 min-h-0">
+      <div
+        className={cn(
+          "flex flex-col gap-6",
+          isMobileAppView ? "flex-none min-h-0" : "flex-1 min-h-0",
+        )}
+      >
         <div className="bg-surface/50 backdrop-blur-md rounded-3xl p-6 shadow-soft border border-background/50 mx-2 flex-shrink-0">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div className="flex items-center gap-1 bg-background/40 p-1.5 rounded-2xl w-fit">
@@ -227,7 +286,12 @@ export function DocumentWorkspaceShell({
           </div>
         </div>
 
-        <div className="flex-1 overflow-hidden px-1 pb-4">
+        <div
+          className={cn(
+            "px-1 pb-4",
+            isMobileAppView ? "overflow-visible" : "flex-1 overflow-hidden",
+          )}
+        >
           {(isAuthLoading || isDocumentsLoading) ? (
             <div className="flex flex-col items-center justify-center h-64 gap-3 bg-surface/30 rounded-[20px] border border-dashed border-background/60">
               <Loader2 className="h-6 w-6 animate-spin text-primary opacity-50" />
@@ -238,8 +302,13 @@ export function DocumentWorkspaceShell({
               <p className="text-xs font-headings font-bold text-text/40">{authMessage || errorMessage || "현재 조건에 해당하는 문서가 없습니다."}</p>
             </div>
           ) : (
-            <div className="h-full overflow-y-auto pr-2 scrollbar-hide">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-1 pb-16">
+            <div
+              className={cn(
+                "pr-2 scrollbar-hide",
+                isMobileAppView ? "overflow-visible" : "h-full overflow-y-auto",
+              )}
+            >
+              <div className="grid grid-cols-1 gap-4 p-1 pb-16 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {documents.map((document) => {
                   const isSelected = selectedDocumentId === document.id;
                   const badgeLabel =
