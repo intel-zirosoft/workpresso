@@ -20,6 +20,7 @@ import {
   indentSelectedLines,
   outdentSelectedLines,
   replaceSelection,
+  resolveMarkdownShortcutAction,
   type TextChange,
 } from "@/features/pod-a/components/document-editor";
 import {
@@ -60,6 +61,12 @@ type EditorHistoryEntry = {
 const NORMAL_EDITOR_MIN_HEIGHT = 420;
 const EXPANDED_EDITOR_MIN_HEIGHT = 640;
 
+type ScrollSnapshot = {
+  element: HTMLElement | Window;
+  top: number;
+  left: number;
+};
+
 const DocumentDetailDialog = dynamic(
   () =>
     import("@/features/pod-a/components/document-detail-dialog").then(
@@ -90,6 +97,54 @@ function getErrorMessage(error: unknown) {
   }
 
   return null;
+}
+
+function captureScrollSnapshots(element: HTMLElement): ScrollSnapshot[] {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  const snapshots: ScrollSnapshot[] = [
+    {
+      element,
+      top: element.scrollTop,
+      left: element.scrollLeft,
+    },
+    {
+      element: window,
+      top: window.scrollY,
+      left: window.scrollX,
+    },
+  ];
+  let currentParent = element.parentElement;
+
+  while (currentParent) {
+    const { overflowX, overflowY } = window.getComputedStyle(currentParent);
+
+    if (/(auto|scroll|overlay)/.test(`${overflowX} ${overflowY}`)) {
+      snapshots.push({
+        element: currentParent,
+        top: currentParent.scrollTop,
+        left: currentParent.scrollLeft,
+      });
+    }
+
+    currentParent = currentParent.parentElement;
+  }
+
+  return snapshots;
+}
+
+function restoreScrollSnapshots(snapshots: ScrollSnapshot[]) {
+  for (const snapshot of snapshots) {
+    if (snapshot.element instanceof Window) {
+      window.scrollTo(snapshot.left, snapshot.top);
+      continue;
+    }
+
+    snapshot.element.scrollTop = snapshot.top;
+    snapshot.element.scrollLeft = snapshot.left;
+  }
 }
 
 export function DocumentWorkspace() {
@@ -456,10 +511,16 @@ export function DocumentWorkspace() {
         return;
       }
 
-      textarea.focus();
+      const scrollSnapshots = captureScrollSnapshots(textarea);
+
+      if (document.activeElement !== textarea) {
+        textarea.focus({ preventScroll: true });
+      }
+
       textarea.setSelectionRange(pendingSelection.start, pendingSelection.end);
-      pendingSelectionRef.current = null;
       resizeEditorTextarea();
+      restoreScrollSnapshots(scrollSnapshots);
+      pendingSelectionRef.current = null;
     });
   }
 
@@ -681,22 +742,30 @@ export function DocumentWorkspace() {
       return;
     }
 
-    const normalizedKey = event.key.toLowerCase();
+    const shortcutAction = resolveMarkdownShortcutAction({
+      key: event.key,
+      code: event.code,
+      isMeta,
+      shiftKey: event.shiftKey,
+    });
 
-    if (normalizedKey === "z") {
-      event.preventDefault();
-      restoreHistorySnapshot(event.shiftKey ? "redo" : "undo");
+    if (!shortcutAction) {
       return;
     }
 
-    if (normalizedKey === "y") {
-      event.preventDefault();
+    event.preventDefault();
+
+    if (shortcutAction === "undo") {
+      restoreHistorySnapshot("undo");
+      return;
+    }
+
+    if (shortcutAction === "redo") {
       restoreHistorySnapshot("redo");
       return;
     }
 
-    if (normalizedKey === "b") {
-      event.preventDefault();
+    if (shortcutAction === "bold") {
       applyTextTransform((selectedText) => {
         const text = selectedText || "굵은 텍스트";
 
@@ -709,8 +778,7 @@ export function DocumentWorkspace() {
       return;
     }
 
-    if (normalizedKey === "i") {
-      event.preventDefault();
+    if (shortcutAction === "italic") {
       applyTextTransform((selectedText) => {
         const text = selectedText || "기울임 텍스트";
 
@@ -723,8 +791,7 @@ export function DocumentWorkspace() {
       return;
     }
 
-    if (normalizedKey === "k") {
-      event.preventDefault();
+    if (shortcutAction === "link") {
       applyTextTransform((selectedText) => {
         const text = selectedText || "링크 텍스트";
 
@@ -737,14 +804,12 @@ export function DocumentWorkspace() {
       return;
     }
 
-    if (event.key === "]") {
-      event.preventDefault();
+    if (shortcutAction === "heading-increase") {
       adjustHeadingLevel("increase");
       return;
     }
 
-    if (event.key === "[") {
-      event.preventDefault();
+    if (shortcutAction === "heading-decrease") {
       adjustHeadingLevel("decrease");
     }
   }
