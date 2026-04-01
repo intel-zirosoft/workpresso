@@ -1,16 +1,7 @@
 "use client";
 
-<<<<<<< HEAD
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-=======
-import { useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { LogOut, Menu, Moon, Settings, Sun } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
-
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
->>>>>>> develop
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { usePathname, useRouter } from "next/navigation";
@@ -30,18 +21,12 @@ import { SidebarContent } from "@/components/shared/sidebar";
 import { getCurrentSectionTitle } from "@/components/shared/navigation";
 import { isEmbeddedMobileApp } from "@/lib/mobile-app";
 import { useTheme } from "@/providers/theme-provider";
-<<<<<<< HEAD
 import { cn } from "@/lib/utils";
 
 export function Header() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-=======
-import { getCurrentSectionTitle } from "@/components/shared/navigation";
 
-export function Header() {
-  const pathname = usePathname();
->>>>>>> develop
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [isMobileAppShell, setIsMobileAppShell] = useState(false);
   const supabase = createClient();
@@ -94,8 +79,6 @@ export function Header() {
   const handleThemeToggle = () => {
     setThemePreference(isDarkMode ? "light" : "dark");
   };
-
-  const currentSectionTitle = getCurrentSectionTitle(pathname);
 
   return (
     <header className="sticky top-3 z-30 flex h-[72px] items-center justify-between bg-background/80 px-4 backdrop-blur-md md:h-[65px] md:px-10">
