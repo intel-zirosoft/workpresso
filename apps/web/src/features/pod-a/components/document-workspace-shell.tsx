@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getDocumentScopeOptions } from "@/features/pod-a/services/document-mobile-view";
 import { cn } from "@/lib/utils";
 import {
   type DocumentScope,
@@ -40,6 +41,7 @@ type DocumentWorkspaceShellProps = {
   isDocumentsError: boolean;
   isRefreshing: boolean;
   selectedDocumentId: string | null;
+  isMobileAppView: boolean;
   onNewDocument: () => void;
   onRefresh: () => void;
   onScopeChange: (scope: DocumentScope) => void;
@@ -60,18 +62,27 @@ export function DocumentWorkspaceShell({
   isDocumentsError,
   isRefreshing,
   selectedDocumentId,
+  isMobileAppView,
   onNewDocument,
   onRefresh,
   onScopeChange,
   onStatusFilterChange,
   onSelectDocument,
 }: DocumentWorkspaceShellProps) {
+  const visibleScopeValues = getDocumentScopeOptions(isMobileAppView);
+
   return (
     <div className="space-y-6 flex flex-col h-screen max-h-[calc(100vh-8rem)]">
       <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between px-2 flex-shrink-0">
         <div>
-          <h1 className="text-3xl font-headings font-bold tracking-tight text-text">문서 워크스페이스</h1>
-          <p className="text-sm text-text-muted font-medium mt-1">업무의 흐름을 한눈에 파악하고 결재를 진행하세요.</p>
+          <h1 className="text-3xl font-headings font-bold tracking-tight text-text">
+            {isMobileAppView ? "문서 결재함" : "문서 워크스페이스"}
+          </h1>
+          <p className="mt-1 text-sm font-medium text-text-muted">
+            {isMobileAppView
+              ? "승인 대기 문서를 빠르게 검토하고 승인 또는 반려하세요."
+              : "업무의 흐름을 한눈에 파악하고 결재를 진행하세요."}
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <Button
@@ -84,14 +95,17 @@ export function DocumentWorkspaceShell({
             <RefreshCw className={cn("h-4 w-4 mr-2", isRefreshing && "animate-spin")} />
             동기화
           </Button>
-          <Button
-            type="button"
-            className="rounded-pill px-6 h-10 shadow-lg shadow-primary/20 hover:shadow-xl transition-all"
-            onClick={onNewDocument}
-            disabled={!currentUserId || isMutating}
-          >
-            <Plus className="h-4 w-4 mr-2" />새 문서 작성
-          </Button>
+          {!isMobileAppView ? (
+            <Button
+              type="button"
+              className="rounded-pill px-6 h-10 shadow-lg shadow-primary/20 transition-all hover:shadow-xl"
+              onClick={onNewDocument}
+              disabled={!currentUserId || isMutating}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              새 문서 작성
+            </Button>
+          ) : null}
         </div>
       </header>
 
@@ -120,23 +134,31 @@ export function DocumentWorkspaceShell({
         <div className="bg-surface/50 backdrop-blur-md rounded-3xl p-6 shadow-soft border border-background/50 mx-2 flex-shrink-0">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div className="flex items-center gap-1 bg-background/40 p-1.5 rounded-2xl w-fit">
-              {scopeConfig.map((item) => {
-                const isActive = scope === item.value;
-                return (
-                  <button
-                    key={item.value}
-                    onClick={() => onScopeChange(item.value)}
-                    className={cn(
-                      "px-5 py-2 text-[13px] font-bold rounded-xl transition-all whitespace-nowrap",
-                      isActive
-                        ? "bg-surface text-primary shadow-sm"
-                        : "text-text/50 hover:text-text hover:bg-surface/40"
-                    )}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
+              {scopeConfig
+                .filter((item) => visibleScopeValues.includes(item.value))
+                .sort(
+                  (a, b) =>
+                    visibleScopeValues.indexOf(a.value) -
+                    visibleScopeValues.indexOf(b.value),
+                )
+                .map((item) => {
+                  const isActive = scope === item.value;
+
+                  return (
+                    <button
+                      key={item.value}
+                      onClick={() => onScopeChange(item.value)}
+                      className={cn(
+                        "whitespace-nowrap rounded-xl px-5 py-2 text-[13px] font-bold transition-all",
+                        isActive
+                          ? "bg-surface text-primary shadow-sm"
+                          : "text-text/50 hover:bg-surface/40 hover:text-text",
+                      )}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
             </div>
             
             <div className="flex items-center gap-1.5 bg-background/30 px-3 py-1.5 rounded-xl border border-background/40">

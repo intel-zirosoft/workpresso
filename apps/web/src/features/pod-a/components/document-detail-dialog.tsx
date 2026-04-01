@@ -49,6 +49,7 @@ type DocumentDetailDialogProps = {
   onApprove: () => void;
   onReject: () => void;
   onDelete: () => void;
+  isMobileAppView?: boolean;
   submitPending: boolean;
   approvalPending: boolean;
   deletePending: boolean;
@@ -65,6 +66,7 @@ export function DocumentDetailDialog({
   onApprove,
   onReject,
   onDelete,
+  isMobileAppView = false,
   submitPending,
   approvalPending,
   deletePending,
@@ -227,7 +229,9 @@ export function DocumentDetailDialog({
                     {document.title}
                   </h1>
                   <p className="max-w-2xl text-[15px] font-medium leading-relaxed text-text-muted">
-                    작성 화면과 동일한 정보 흐름으로 내용을 먼저 읽고, 필요한 경우에만 편집 또는 결재 액션으로 이어집니다.
+                    {isMobileAppView
+                      ? "앱에서는 작성 기능 없이 승인 대기 문서를 검토하고 승인 또는 반려하는 흐름에 집중합니다."
+                      : "작성 화면과 동일한 정보 흐름으로 내용을 먼저 읽고, 필요한 경우에만 편집 또는 결재 액션으로 이어집니다."}
                   </p>
                   <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold text-text-muted">
                     <span className="rounded-full bg-background px-3 py-1.5">
@@ -284,7 +288,7 @@ export function DocumentDetailDialog({
               </div>
 
               <div className="flex flex-wrap items-center justify-end gap-2">
-                {document.permissions.canEdit ? (
+                {!isMobileAppView && document.permissions.canEdit ? (
                   <Button
                     type="button"
                     variant="outline"
@@ -297,7 +301,7 @@ export function DocumentDetailDialog({
                   </Button>
                 ) : null}
 
-                {document.permissions.canDelete ? (
+                {!isMobileAppView && document.permissions.canDelete ? (
                   <Button
                     type="button"
                     variant="outline"
@@ -314,7 +318,7 @@ export function DocumentDetailDialog({
                   </Button>
                 ) : null}
 
-                {document.permissions.canSubmit ? (
+                {!isMobileAppView && document.permissions.canSubmit ? (
                   <Button
                     type="button"
                     className="rounded-pill"
