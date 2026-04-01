@@ -52,7 +52,6 @@ function createApprovedDocumentDetail() {
       },
     ],
     ccRecipients: [],
-    viewerApprovalStatus: null,
     jiraLinks: [],
     permissions: {
       canEdit: false,

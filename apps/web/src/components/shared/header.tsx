@@ -74,13 +74,58 @@ export function Header() {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/70">
             Workspace
           </p>
-          {pathname === "/schedules" ? (
+          {pathname === "/" ? (
+            <div className="flex flex-col">
+              <h1 className="font-headings text-lg font-bold text-text md:text-2xl leading-tight">
+                오늘의 일정을 한눈에 확인해보세요
+              </h1>
+              <p className="text-text-muted text-[10px] md:text-xs font-medium mt-0.5">
+                워크프레소와 함께 더욱 효율적인 하루를 시작하세요.
+              </p>
+            </div>
+          ) : pathname === "/schedules" ? (
             <div className="flex flex-col">
               <h1 className="font-headings text-lg font-bold text-text md:text-2xl leading-tight">
                 업무 일정 관리
               </h1>
               <p className="text-text-muted text-[10px] md:text-xs font-medium mt-0.5">
                 나의 스케줄을 확인하고 관리하세요.
+              </p>
+            </div>
+          ) : pathname?.startsWith("/documents") ? (
+            <div className="flex flex-col">
+              <h1 className="font-headings text-lg font-bold text-text md:text-2xl leading-tight">
+                문서 워크스페이스
+              </h1>
+              <p className="text-text-muted text-[10px] md:text-xs font-medium mt-0.5">
+                업무의 흐름을 한눈에 파악하고 결재를 진행하세요.
+              </p>
+            </div>
+          ) : pathname?.startsWith("/chat") ? (
+            <div className="flex flex-col">
+              <h1 className="font-headings text-lg font-bold text-text md:text-2xl leading-tight">
+                업무 비서
+              </h1>
+              <p className="text-text-muted text-[10px] md:text-xs font-medium mt-0.5">
+                일정과 문서, 회의록까지 한 번에 찾는 AI 비서입니다.
+              </p>
+            </div>
+          ) : pathname?.startsWith("/teammates") ? (
+            <div className="flex flex-col">
+              <h1 className="font-headings text-lg font-bold text-text md:text-2xl leading-tight">
+                팀 멤버 현황
+              </h1>
+              <p className="text-text-muted text-[10px] md:text-xs font-medium mt-0.5">
+                동료들의 현재 상태를 확인하고 소통하세요.
+              </p>
+            </div>
+          ) : pathname?.startsWith("/voice") ? (
+            <div className="flex flex-col">
+              <h1 className="font-headings text-lg font-bold text-text md:text-2xl leading-tight">
+                음성기반 회의록 작성
+              </h1>
+              <p className="text-text-muted text-[10px] md:text-xs font-medium mt-0.5">
+                음성을 녹음하고 AI를 통해 회의록으로 자동 변환하세요.
               </p>
             </div>
           ) : (

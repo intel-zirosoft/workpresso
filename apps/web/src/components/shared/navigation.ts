@@ -43,10 +43,13 @@ export const isActivePath = (pathname: string, href: string) => {
   return pathname === href || pathname.startsWith(`${href}/`);
 };
 
-export const isChromelessPath = (pathname: string) =>
-  CHROMELESS_PATH_PREFIXES.some((path) => pathname.startsWith(path));
+export const isChromelessPath = (pathname: string | null) =>
+  pathname
+    ? CHROMELESS_PATH_PREFIXES.some((path) => pathname.startsWith(path))
+    : false;
 
-export const getCurrentSectionTitle = (pathname: string) => {
+export const getCurrentSectionTitle = (pathname: string | null) => {
+  if (!pathname) return "WorkPresso";
   if (pathname.startsWith("/settings")) return "설정";
   const allItems = [...APP_NAV_ITEMS, ...ADMIN_NAV_ITEMS];
   return (

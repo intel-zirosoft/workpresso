@@ -127,18 +127,7 @@ export default function VoicePage() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <header className="space-y-4">
-        <div>
-          <h1 className="text-3xl font-headings font-bold tracking-tight text-text">
-            음성기반 회의록 작성
-          </h1>
-          <p className="text-text-muted font-headings font-medium mt-1">
-            음성을 녹음하고 AI를 통해 회의록으로 자동 변환하세요.
-          </p>
-        </div>
-      </header>
-
+    <div className="space-y-8 animate-in fade-in duration-500 mt-2">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
         {/* Recorder Section */}
         <section className="space-y-6 lg:sticky lg:top-24">
