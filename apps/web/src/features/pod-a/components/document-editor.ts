@@ -10,6 +10,15 @@ export type TextChange = {
   selectionEnd: number;
 };
 
+export type MarkdownShortcutAction =
+  | "undo"
+  | "redo"
+  | "bold"
+  | "italic"
+  | "link"
+  | "heading-increase"
+  | "heading-decrease";
+
 type HeadingDirection = "increase" | "decrease";
 
 type LineSelection = {
@@ -135,6 +144,57 @@ export function replaceSelection(
       ? selectionStart + result.selectionEnd
       : selectionStart + result.text.length,
   );
+}
+
+export function resolveMarkdownShortcutAction(params: {
+  key: string;
+  code?: string;
+  isMeta: boolean;
+  shiftKey: boolean;
+}): MarkdownShortcutAction | null {
+  if (!params.isMeta) {
+    return null;
+  }
+
+  switch (params.code) {
+    case "KeyZ":
+      return params.shiftKey ? "redo" : "undo";
+    case "KeyY":
+      return "redo";
+    case "KeyB":
+      return "bold";
+    case "KeyI":
+      return "italic";
+    case "KeyK":
+      return "link";
+    case "BracketRight":
+      return "heading-increase";
+    case "BracketLeft":
+      return "heading-decrease";
+    default:
+      break;
+  }
+
+  const normalizedKey = params.key.toLowerCase();
+
+  switch (normalizedKey) {
+    case "z":
+      return params.shiftKey ? "redo" : "undo";
+    case "y":
+      return "redo";
+    case "b":
+      return "bold";
+    case "i":
+      return "italic";
+    case "k":
+      return "link";
+    case "]":
+      return "heading-increase";
+    case "[":
+      return "heading-decrease";
+    default:
+      return null;
+  }
 }
 
 export function indentSelectedLines(

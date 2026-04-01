@@ -6,6 +6,7 @@ import {
   indentSelectedLines,
   outdentSelectedLines,
   replaceSelection,
+  resolveMarkdownShortcutAction,
 } from "@/features/pod-a/components/document-editor";
 
 describe("document-editor", () => {
@@ -120,5 +121,35 @@ describe("document-editor", () => {
       selectionStart: 2,
       selectionEnd: 8,
     });
+  });
+
+  it("uses physical key codes for shortcuts even on Korean keyboard layout", () => {
+    expect(
+      resolveMarkdownShortcutAction({
+        key: "ㅠ",
+        code: "KeyB",
+        isMeta: true,
+        shiftKey: false,
+      }),
+    ).toBe("bold");
+
+    expect(
+      resolveMarkdownShortcutAction({
+        key: "ㅑ",
+        code: "KeyI",
+        isMeta: true,
+        shiftKey: false,
+      }),
+    ).toBe("italic");
+  });
+
+  it("falls back to key values when physical key code is unavailable", () => {
+    expect(
+      resolveMarkdownShortcutAction({
+        key: "[",
+        isMeta: true,
+        shiftKey: false,
+      }),
+    ).toBe("heading-decrease");
   });
 });
