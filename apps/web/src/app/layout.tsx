@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fredoka, Nunito } from "next/font/google";
+import { Fredoka, Noto_Sans_KR, Nunito } from "next/font/google";
 import { ReactNode } from "react";
 import "@/styles/globals.css";
 import { Providers } from "@/providers";
@@ -16,6 +16,12 @@ const nunito = Nunito({
   subsets: ["latin"],
   variable: "--font-nunito",
   weight: ["400", "700"],
+});
+
+const notoSansKr = Noto_Sans_KR({
+  preload: false,
+  variable: "--font-noto-sans-kr",
+  weight: ["400", "500", "700"],
 });
 
 export const metadata: Metadata = {
@@ -50,7 +56,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html
       lang="ko"
       suppressHydrationWarning
-      className={`${fredoka.variable} ${nunito.variable}`}
+      className={`${fredoka.variable} ${nunito.variable} ${notoSansKr.variable}`}
     >
       <body className="font-body bg-background text-text antialiased scrollbar-hide">
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />

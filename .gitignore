@@ -42,3 +42,4 @@ dev-logs/
 workthrough/
 .playwright-cli/
 .vercel
+output/playwright/

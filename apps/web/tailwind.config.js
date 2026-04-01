@@ -80,8 +80,8 @@ module.exports = {
         },
       },
       fontFamily: {
-        headings: ["var(--font-fredoka)", "sans-serif"],
-        body: ["var(--font-nunito)", "sans-serif"],
+        headings: ["var(--font-fredoka)", "var(--font-noto-sans-kr)", "sans-serif"],
+        body: ["var(--font-nunito)", "var(--font-noto-sans-kr)", "sans-serif"],
       },
       borderRadius: {
         sm: "12px",
