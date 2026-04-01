@@ -44,7 +44,7 @@ const QUICK_ACTIONS = [
     description: "나의 하루 스케줄 한눈에 확인",
     href: "/schedules",
     icon: CalendarPlus,
-    iconArea: "bg-secondary/20 text-secondary-foreground",
+    iconArea: "bg-secondary/70 text-text-muted",
   },
   {
     title: "AI에게 물어보기",
@@ -58,7 +58,7 @@ const QUICK_ACTIONS = [
     description: "협업 중인 멤버들의 실시간 현황",
     href: "/teammates",
     icon: UsersIconCustom, // Defined below just for custom look
-    iconArea: "bg-[#EAE4F5] text-[#7E57C2]", // subtle purple tone as requested by mockup
+    iconArea: "bg-pastel-purple text-purple/70", // subtle purple tone as requested by mockup
   },
 ];
 
@@ -79,7 +79,7 @@ const COLLABORATION_LINKS = [
     title: "팀 상태 보드 보기",
     href: "/teammates",
     icon: BarChart2,
-    iconStyle: "bg-success/20 text-success-foreground",
+    iconStyle: "bg-success/20 text-success",
   },
 ];
 

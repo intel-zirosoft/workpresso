@@ -238,3 +238,20 @@
     background: transparent;
   }
 }
+/* 글자색을 연보라색으로 지정 */
+.text-lavender {
+  color: #E6E6FA;
+}
+
+.text-purple {
+  color: #7E57C2;
+}
+
+/* 배경색을 파스텔 연보라로 지정 */
+.bg-pastel-purple {
+  background-color: rgba(212, 191, 255, 0.7);
+}
+
+.bg-purple {
+  background-color: #7E57C2;
+}
