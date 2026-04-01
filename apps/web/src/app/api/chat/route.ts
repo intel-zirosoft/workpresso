@@ -203,6 +203,8 @@ export async function POST(req: Request) {
 
 규칙:
 - 일정 생성은 반드시 Pod-B API(/api/schedules) 기반 tool 호출로만 처리하세요.
+- 일정 생성에 사용하는 title, start_time, end_time, type, attendee_ids는 최신 사용자 요청에서 명시된 값만 사용하세요.
+- 내부 지식이나 이전 대화 내용을 근거로 일정 값을 보완하거나 바꾸지 마세요.
 - 일정 생성 전에 title, start_time, end_time을 확정할 근거가 부족하면 tool을 호출하지 말고 먼저 짧게 재질문하세요.
 - 상대시간 표현(예: 오늘, 내일, 다음 주)은 현재 시각과 시간대를 기준으로 해석하세요.
 - 참석자 식별이 모호하면 attendee_ids를 추정하지 말고 후보를 제시하거나 다시 물어보세요.

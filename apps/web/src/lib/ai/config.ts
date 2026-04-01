@@ -28,13 +28,34 @@ export type ResolvedAiConfig = {
   isActive: boolean;
 };
 
+function isSecretDecryptFallbackAllowed() {
+  return process.env.ALLOW_SECRET_DECRYPT_FALLBACK?.trim() === "true";
+}
+
 export async function getOpenRouterRuntimeConfig(options?: {
   apiKeyOverride?: string | null;
 }) {
   const overrideKey = options?.apiKeyOverride?.trim();
-  const storedApiKey = overrideKey
-    ? overrideKey
-    : await getDecryptedExtensionSecret("system_llm", SYSTEM_LLM_SECRET_NAME);
+  let storedApiKey = overrideKey ?? null;
+
+  if (!storedApiKey) {
+    try {
+      storedApiKey = await getDecryptedExtensionSecret(
+        "system_llm",
+        SYSTEM_LLM_SECRET_NAME,
+      );
+    } catch (error) {
+      if (!isSecretDecryptFallbackAllowed()) {
+        throw error;
+      }
+
+      console.warn(
+        "system_llm secret decrypt failed; falling back to env key because ALLOW_SECRET_DECRYPT_FALLBACK=true",
+        error,
+      );
+    }
+  }
+
   const apiKey =
     storedApiKey ?? process.env.OPENROUTER_API_KEY ?? process.env.OPENAI_API_KEY;
 
