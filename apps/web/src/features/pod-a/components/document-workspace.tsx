@@ -11,6 +11,7 @@ import {
   useState,
 } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -51,6 +52,7 @@ import {
   type ApprovalStepInput,
   type DocumentScope,
 } from "@/features/pod-a/services/document-schema";
+import { getDocumentWorkspaceViewConfig } from "@/features/pod-a/services/document-mobile-view";
 
 type EditorHistoryEntry = {
   content: string;
@@ -149,6 +151,14 @@ function restoreScrollSnapshots(snapshots: ScrollSnapshot[]) {
 
 export function DocumentWorkspace() {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const viewConfig = useMemo(
+    () =>
+      getDocumentWorkspaceViewConfig(
+        new URLSearchParams(searchParams.toString()),
+      ),
+    [searchParams],
+  );
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const pendingSelectionRef = useRef<{ start: number; end: number } | null>(
     null,
@@ -159,8 +169,10 @@ export function DocumentWorkspace() {
   const [currentUserId, setCurrentUserId] = useState("");
   const [authMessage, setAuthMessage] = useState("");
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [scope, setScope] = useState<DocumentScope>("authored");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [scope, setScope] = useState<DocumentScope>(viewConfig.initialScope);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(
+    viewConfig.initialStatusFilter,
+  );
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
     null,
   );
@@ -175,6 +187,11 @@ export function DocumentWorkspace() {
   const [editorState, setEditorState] = useState<EditorState>(
     createEmptyEditorState(),
   );
+
+  useEffect(() => {
+    setScope(viewConfig.initialScope);
+    setStatusFilter(viewConfig.initialStatusFilter);
+  }, [viewConfig.initialScope, viewConfig.initialStatusFilter]);
 
   useEffect(() => {
     let isMounted = true;
@@ -241,6 +258,61 @@ export function DocumentWorkspace() {
     }
   }, [isDetailOpen, selectedDocumentId]);
 
+  const documents = useMemo(() => {
+    const currentDocuments = documentsQuery.data ?? [];
+
+    if (!viewConfig.isMobileAppView) {
+      return currentDocuments;
+    }
+
+    return [...currentDocuments].sort((left, right) => {
+      const leftNeedsApproval = left.viewerApprovalStatus === "PENDING" ? 1 : 0;
+      const rightNeedsApproval =
+        right.viewerApprovalStatus === "PENDING" ? 1 : 0;
+
+      if (leftNeedsApproval !== rightNeedsApproval) {
+        return rightNeedsApproval - leftNeedsApproval;
+      }
+
+      const leftPending = left.status === "PENDING" ? 1 : 0;
+      const rightPending = right.status === "PENDING" ? 1 : 0;
+
+      if (leftPending !== rightPending) {
+        return rightPending - leftPending;
+      }
+
+      return (
+        new Date(right.updatedAt).getTime() -
+        new Date(left.updatedAt).getTime()
+      );
+    });
+  }, [documentsQuery.data, viewConfig.isMobileAppView]);
+
+  useEffect(() => {
+    if (!viewConfig.isMobileAppView || documentsQuery.isLoading) {
+      return;
+    }
+
+    if (documents.length === 0) {
+      setSelectedDocumentId(null);
+      setIsDetailOpen(false);
+      return;
+    }
+
+    const hasSelectedDocument = documents.some(
+      (document) => document.id === selectedDocumentId,
+    );
+
+    if (!selectedDocumentId || !hasSelectedDocument) {
+      setSelectedDocumentId(documents[0].id);
+    }
+  }, [
+    documents,
+    documentsQuery.isLoading,
+    selectedDocumentId,
+    viewConfig.isMobileAppView,
+  ]);
+
   const queryErrorMessage = useMemo(
     () =>
       getErrorMessage(documentsQuery.error) ??
@@ -282,6 +354,9 @@ export function DocumentWorkspace() {
   }
 
   function openEditorForCreate() {
+    if (viewConfig.isMobileAppView) {
+      return;
+    }
     setScope("authored");
     setStatusFilter("ALL");
     setIsDetailOpen(false);
@@ -296,6 +371,9 @@ export function DocumentWorkspace() {
   }
 
   function openEditorForDocument(documentId: string) {
+    if (viewConfig.isMobileAppView) {
+      return;
+    }
     const document = selectedDocumentQuery.data;
 
     if (
@@ -1011,11 +1089,12 @@ export function DocumentWorkspace() {
         errorMessage={queryErrorMessage}
         scope={scope}
         statusFilter={statusFilter}
-        documents={documentsQuery.data ?? []}
+        documents={documents}
         isDocumentsLoading={documentsQuery.isLoading}
         isDocumentsError={documentsQuery.isError}
         isRefreshing={documentsQuery.isFetching}
         selectedDocumentId={selectedDocumentId}
+        isMobileAppView={viewConfig.isMobileAppView}
         onNewDocument={openEditorForCreate}
         onRefresh={() => {
           void documentsQuery.refetch();
@@ -1049,6 +1128,7 @@ export function DocumentWorkspace() {
         onApprove={() => handleApprovalAction("APPROVE")}
         onReject={() => handleApprovalAction("REJECT")}
         onDelete={handleDeleteDocument}
+        isMobileAppView={viewConfig.isMobileAppView}
         onSyncToJira={handleSyncDocumentToJira}
         submitPending={submitMutation.isPending}
         approvalPending={approvalMutation.isPending}
