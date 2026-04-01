@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type ElementType } from "react";
+import type { ReactNode } from "react";
 import { type Message } from "ai";
 import { useChat } from "ai/react";
 import {
@@ -67,10 +68,24 @@ export function ChatPanel({
   variant = "page",
   queuedPrompt,
   onQueuedPromptHandled,
+  quickCommands = QUICK_COMMANDS,
+  title = "업무 비서",
+  description = "일정과 문서, 회의록까지 한 번에 찾는 AI 비서입니다.",
+  emptyTitle = "무엇을 도와드릴까요?",
+  emptyDescription = "아래 명령어를 클릭하거나 질문을 입력해 보세요.",
+  inputPlaceholder = "명령어를 입력하거나 질문을 작성하세요...",
+  preContent,
 }: {
   variant?: "page" | "widget";
   queuedPrompt?: QueuedPrompt | null;
   onQueuedPromptHandled?: () => void;
+  quickCommands?: QuickCommand[];
+  title?: string;
+  description?: string;
+  emptyTitle?: string;
+  emptyDescription?: string;
+  inputPlaceholder?: string;
+  preContent?: ReactNode;
 }) {
   const isWidget = variant === "widget";
   const {
@@ -140,6 +155,7 @@ export function ChatPanel({
           : "mx-auto h-[calc(100vh-10rem)] max-w-4xl space-y-4 md:h-[calc(100vh-12rem)] md:space-y-6",
       )}
     >
+<<<<<<< HEAD
       {isWidget && (
         <div className="mb-3 flex items-center justify-between border-b border-background/60 px-1 pb-3">
           <div>
@@ -153,8 +169,30 @@ export function ChatPanel({
           <div className="rounded-md bg-secondary/10 p-3 shadow-soft">
             <Sparkles className="h-5 w-5 text-secondary" />
           </div>
+=======
+      <div
+        className={cn(
+          "flex items-center justify-between px-2",
+          isWidget && "mb-3 border-b border-background/60 px-1 pb-3",
+        )}
+      >
+        <div>
+          <h1
+            className={cn(
+              "font-headings font-bold tracking-tight text-primary",
+              isWidget ? "text-xl" : "text-2xl md:text-4xl",
+            )}
+          >
+            {title}
+          </h1>
+          <p className="mt-1 font-body text-xs text-text-muted md:text-base">
+            {description}
+          </p>
+>>>>>>> fix/header-merge-resolutions
         </div>
       )}
+
+      {preContent ? <div>{preContent}</div> : null}
 
       <Card
         className={cn(
@@ -174,15 +212,15 @@ export function ChatPanel({
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-xl font-headings font-semibold text-text md:text-2xl">
-                    무엇을 도와드릴까요?
+                    {emptyTitle}
                   </h3>
                   <p className="mx-auto max-w-[280px] font-body text-xs text-text-muted md:max-w-xs md:text-sm">
-                    아래 명령어를 클릭하거나 질문을 입력해 보세요.
+                    {emptyDescription}
                   </p>
                 </div>
 
                 <div className="flex max-w-md flex-wrap justify-center gap-2 px-4">
-                  {QUICK_COMMANDS.map((cmd) => {
+                  {quickCommands.map((cmd) => {
                     const CommandIcon = cmd.icon;
 
                     return (
@@ -265,7 +303,7 @@ export function ChatPanel({
       <div className={cn("space-y-3", isWidget && "pt-3")}>
         {messages.length > 0 && !isLoading && (
           <div className="scrollbar-hide flex gap-2 overflow-x-auto px-2 pb-1">
-            {QUICK_COMMANDS.map((cmd) => (
+            {quickCommands.map((cmd) => (
               <button
                 key={cmd.value}
                 onClick={() => handleQuickCommand(cmd.value)}
@@ -288,7 +326,7 @@ export function ChatPanel({
             <Input
               value={input}
               onChange={handleInputChange}
-              placeholder="명령어를 입력하거나 질문을 작성하세요..."
+              placeholder={inputPlaceholder}
               className="h-12 flex-1 border-none bg-transparent pl-5 pr-14 font-body text-sm text-text shadow-none placeholder:text-text-muted focus-visible:ring-0 md:h-14 md:pl-8 md:pr-16 md:text-base"
             />
             <Button

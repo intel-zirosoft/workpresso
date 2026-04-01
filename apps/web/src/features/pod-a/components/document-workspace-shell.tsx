@@ -10,6 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  getDocumentScopeOptions,
+  getDocumentStatusFilterOptions,
+} from "@/features/pod-a/services/document-mobile-view";
 import { cn } from "@/lib/utils";
 import {
   type DocumentScope,
@@ -40,6 +44,7 @@ type DocumentWorkspaceShellProps = {
   isDocumentsError: boolean;
   isRefreshing: boolean;
   selectedDocumentId: string | null;
+  isMobileAppView: boolean;
   onNewDocument: () => void;
   onRefresh: () => void;
   onScopeChange: (scope: DocumentScope) => void;
@@ -60,15 +65,45 @@ export function DocumentWorkspaceShell({
   isDocumentsError,
   isRefreshing,
   selectedDocumentId,
+  isMobileAppView,
   onNewDocument,
   onRefresh,
   onScopeChange,
   onStatusFilterChange,
   onSelectDocument,
 }: DocumentWorkspaceShellProps) {
+  const visibleScopeValues = getDocumentScopeOptions(isMobileAppView);
+  const visibleStatusFilters = getDocumentStatusFilterOptions(isMobileAppView);
+  const actionableCount = documents.filter(
+    (document) => document.viewerApprovalStatus === "PENDING",
+  ).length;
+  const pendingCount = documents.filter(
+    (document) => document.status === "PENDING",
+  ).length;
+  const completedCount = documents.filter(
+    (document) => document.status === "APPROVED",
+  ).length;
+  const rejectedCount = documents.filter(
+    (document) => document.status === "REJECTED",
+  ).length;
+
   return (
     <div className="flex h-[calc(100vh-170px)] flex-col space-y-4 overflow-hidden">
+<<<<<<< HEAD
       <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-end px-1 flex-shrink-0">
+=======
+      <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between px-1 flex-shrink-0">
+        <div>
+          <h1 className="text-3xl font-headings font-bold tracking-tight text-text">
+            {isMobileAppView ? "문서 결재함" : "문서 워크스페이스"}
+          </h1>
+          <p className="mt-1 text-sm font-medium text-text-muted">
+            {isMobileAppView
+              ? "승인 대기 문서를 빠르게 검토하고 승인 또는 반려하세요."
+              : "업무의 흐름을 한눈에 파악하고 결재를 진행하세요."}
+          </p>
+        </div>
+>>>>>>> fix/header-merge-resolutions
         <div className="flex items-center gap-2">
           <Button
             type="button"
@@ -80,24 +115,47 @@ export function DocumentWorkspaceShell({
             <RefreshCw className={cn("h-3 w-3 mr-2", isRefreshing && "animate-spin")} />
             동기화
           </Button>
-          <Button
-            type="button"
-            className="rounded-pill px-5 h-8 text-xs shadow-soft hover:shadow-float transition-all"
-            onClick={onNewDocument}
-            disabled={!currentUserId || isMutating}
-          >
-            <Plus className="h-3 w-3 mr-2" />새 문서 작성
-          </Button>
+          {!isMobileAppView ? (
+            <Button
+              type="button"
+              className="rounded-pill px-6 h-10 shadow-lg shadow-primary/20 transition-all hover:shadow-xl"
+              onClick={onNewDocument}
+              disabled={!currentUserId || isMutating}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              새 문서 작성
+            </Button>
+          ) : null}
         </div>
       </header>
 
       {/* Status Metrics Dashboard - Compact */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 px-1 flex-shrink-0">
         {[
-          { label: "전체 문서", count: documents.length, color: "bg-info-soft border-info/20 text-info", dot: "bg-info" },
-          { label: "결재 대기", count: documents.filter(d => d.status === 'PENDING').length, color: "bg-warning-soft border-warning/20 text-warning", dot: "bg-warning" },
-          { label: "승인 완료", count: documents.filter(d => d.status === 'APPROVED').length, color: "bg-success-soft border-success/20 text-success", dot: "bg-success" },
-          { label: "반려/취소", count: documents.filter(d => d.status === 'REJECTED').length, color: "bg-destructive-soft border-destructive/20 text-destructive", dot: "bg-destructive" },
+          {
+            label: isMobileAppView ? "내 차례" : "전체 문서",
+            count: isMobileAppView ? actionableCount : documents.length,
+            color: "bg-info-soft border-info/20 text-info",
+            dot: "bg-info",
+          },
+          {
+            label: "결재 대기",
+            count: pendingCount,
+            color: "bg-warning-soft border-warning/20 text-warning",
+            dot: "bg-warning",
+          },
+          {
+            label: "승인 완료",
+            count: completedCount,
+            color: "bg-success-soft border-success/20 text-success",
+            dot: "bg-success",
+          },
+          {
+            label: "반려/취소",
+            count: rejectedCount,
+            color: "bg-destructive-soft border-destructive/20 text-destructive",
+            dot: "bg-destructive",
+          },
         ].map((stat, i) => (
           <div key={i} className={cn(
             "p-3 rounded-xl border flex flex-col gap-0.5 transition-all hover:shadow-soft",
@@ -112,32 +170,46 @@ export function DocumentWorkspaceShell({
         ))}
       </div>
 
-      <div className="flex-1 flex flex-col gap-4 min-h-0">
-        <div className="bg-surface/50 backdrop-blur-md rounded-[20px] p-3 shadow-soft border border-background/50 mx-1 flex-shrink-0">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-            <div className="flex items-center gap-1 bg-background/40 p-1 rounded-xl w-fit">
-              {scopeConfig.map((item) => {
-                const isActive = scope === item.value;
-                return (
-                  <button
-                    key={item.value}
-                    onClick={() => onScopeChange(item.value)}
-                    className={cn(
-                      "px-4 py-1 text-[12px] font-bold rounded-lg transition-all whitespace-nowrap",
-                      isActive
-                        ? "bg-surface text-primary shadow-sm"
-                        : "text-text/50 hover:text-text hover:bg-surface/40"
-                    )}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
+      <div className="flex-1 flex flex-col gap-6 min-h-0">
+        <div className="bg-surface/50 backdrop-blur-md rounded-3xl p-6 shadow-soft border border-background/50 mx-2 flex-shrink-0">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex items-center gap-1 bg-background/40 p-1.5 rounded-2xl w-fit">
+              {scopeConfig
+                .filter((item) => visibleScopeValues.includes(item.value))
+                .sort(
+                  (a, b) =>
+                    visibleScopeValues.indexOf(a.value) -
+                    visibleScopeValues.indexOf(b.value),
+                )
+                .map((item) => {
+                  const isActive = scope === item.value;
+
+                  return (
+                    <button
+                      key={item.value}
+                      onClick={() => onScopeChange(item.value)}
+                      className={cn(
+                        "whitespace-nowrap rounded-xl px-5 py-2 text-[13px] font-bold transition-all",
+                        isActive
+                          ? "bg-surface text-primary shadow-sm"
+                          : "text-text/50 hover:bg-surface/40 hover:text-text",
+                      )}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
             </div>
             
             <div className="flex items-center gap-1 bg-background/30 px-2 py-0.5 rounded-lg border border-background/40">
               <span className="text-[10px] font-black text-text/40 uppercase tracking-widest mr-1 ml-0.5">Status</span>
-              {statusFilters.map((filter) => {
+              {statusFilters
+                .filter((filter) =>
+                  (visibleStatusFilters as readonly StatusFilter[]).includes(
+                    filter.value,
+                  ),
+                )
+                .map((filter) => {
                 const isActive = statusFilter === filter.value;
                 return (
                   <button
@@ -155,6 +227,7 @@ export function DocumentWorkspaceShell({
                 );
               })}
             </div>
+
           </div>
         </div>
 
@@ -204,14 +277,29 @@ export function DocumentWorkspaceShell({
                         )}>
                           <FileText size={18} strokeWidth={2.5} />
                         </div>
-                        <span className={cn(
-                          "px-2 py-1 rounded-pill text-[9px] font-black uppercase tracking-wider shadow-sm border",
-                          isSelected
-                            ? "bg-primary-foreground/20 text-primary-foreground border-primary-foreground/20"
-                            : badgeClassName
-                        )}>
-                          {badgeLabel}
-                        </span>
+                        <div className="flex flex-col items-end gap-1.5">
+                          <span className={cn(
+                            "px-2 py-1 rounded-pill text-[9px] font-black uppercase tracking-wider shadow-sm border",
+                            isSelected
+                              ? "bg-primary-foreground/20 text-primary-foreground border-primary-foreground/20"
+                              : badgeClassName
+                          )}>
+                            {badgeLabel}
+                          </span>
+                          {isMobileAppView &&
+                          document.viewerApprovalStatus === "PENDING" ? (
+                            <span
+                              className={cn(
+                                "rounded-pill px-2 py-1 text-[9px] font-black uppercase tracking-wider",
+                                isSelected
+                                  ? "bg-warning/20 text-primary-foreground"
+                                  : "bg-warning-soft text-warning",
+                              )}
+                            >
+                              지금 결재
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
 
                       <div className="flex-1 min-w-0 mb-4">
@@ -241,11 +329,19 @@ export function DocumentWorkspaceShell({
                         )}>
                           {document.currentStepLabel || "초안 단계"}
                         </div>
-                        {isSelected && (
-                          <div className="w-5 h-5 rounded-full bg-primary-foreground/20 flex items-center justify-center">
-                            <Plus size={12} className="text-primary-foreground rotate-45" />
+                        {isSelected ? (
+                          <div className="flex items-center gap-2">
+                            {isMobileAppView &&
+                            document.viewerApprovalStatus === "PENDING" ? (
+                              <span className="text-[10px] font-black uppercase tracking-wider text-primary-foreground/80">
+                                탭하여 승인/반려
+                              </span>
+                            ) : null}
+                            <div className="w-5 h-5 rounded-full bg-primary-foreground/20 flex items-center justify-center">
+                              <Plus size={12} className="text-primary-foreground rotate-45" />
+                            </div>
                           </div>
-                        )}
+                        ) : null}
                       </div>
                     </button>
                   );

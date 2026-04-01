@@ -1,5 +1,5 @@
-import { ChatPanel } from "@/features/pod-c/components/chat-panel";
+import { ChatWorkspace } from "@/features/pod-c/components/chat-workspace";
 
 export default function ChatPage() {
-  return <ChatPanel />;
+  return <ChatWorkspace />;
 }

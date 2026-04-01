@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "WorkPresso",
+    "slug": "workpresso-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "workpresso",
+    "userInterfaceStyle": "automatic",
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
