@@ -1008,11 +1008,8 @@ export function DocumentWorkspace() {
         onApprove={() => handleApprovalAction("APPROVE")}
         onReject={() => handleApprovalAction("REJECT")}
         onDelete={handleDeleteDocument}
-<<<<<<< HEAD
         isMobileAppView={viewConfig.isMobileAppView}
-=======
         onSyncToJira={handleSyncDocumentToJira}
->>>>>>> develop
         submitPending={submitMutation.isPending}
         approvalPending={approvalMutation.isPending}
         deletePending={deleteMutation.isPending}

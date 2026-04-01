@@ -51,11 +51,8 @@ type DocumentDetailDialogProps = {
   onApprove: () => void;
   onReject: () => void;
   onDelete: () => void;
-<<<<<<< HEAD
   isMobileAppView?: boolean;
-=======
   onSyncToJira: () => void;
->>>>>>> develop
   submitPending: boolean;
   approvalPending: boolean;
   deletePending: boolean;
@@ -73,11 +70,8 @@ export function DocumentDetailDialog({
   onApprove,
   onReject,
   onDelete,
-<<<<<<< HEAD
   isMobileAppView = false,
-=======
   onSyncToJira,
->>>>>>> develop
   submitPending,
   approvalPending,
   deletePending,
@@ -402,10 +396,7 @@ export function DocumentDetailDialog({
                   </Button>
                 ) : null}
 
-<<<<<<< HEAD
-                {!isMobileAppView && document.permissions.canSubmit ? (
-=======
-                {document.permissions.canSyncJira &&
+                {!isMobileAppView && document.permissions.canSyncJira &&
                 document.jiraLinks.length === 0 ? (
                   <Button
                     type="button"
@@ -423,8 +414,7 @@ export function DocumentDetailDialog({
                   </Button>
                 ) : null}
 
-                {document.permissions.canSubmit ? (
->>>>>>> develop
+                {!isMobileAppView && document.permissions.canSubmit ? (
                   <Button
                     type="button"
                     className="rounded-pill"

@@ -75,7 +75,6 @@ export function DocumentWorkspaceShell({
     <div className="flex h-[calc(100vh-170px)] flex-col space-y-4 overflow-hidden">
       <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between px-1 flex-shrink-0">
         <div>
-<<<<<<< HEAD
           <h1 className="text-3xl font-headings font-bold tracking-tight text-text">
             {isMobileAppView ? "문서 결재함" : "문서 워크스페이스"}
           </h1>
@@ -84,10 +83,6 @@ export function DocumentWorkspaceShell({
               ? "승인 대기 문서를 빠르게 검토하고 승인 또는 반려하세요."
               : "업무의 흐름을 한눈에 파악하고 결재를 진행하세요."}
           </p>
-=======
-          <h1 className="text-2xl font-headings font-bold tracking-tight text-text">문서 워크스페이스</h1>
-          <p className="text-xs text-text-muted font-medium mt-0.5">업무의 흐름을 한눈에 파악하고 결재를 진행하세요.</p>
->>>>>>> develop
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -100,7 +95,6 @@ export function DocumentWorkspaceShell({
             <RefreshCw className={cn("h-3 w-3 mr-2", isRefreshing && "animate-spin")} />
             동기화
           </Button>
-<<<<<<< HEAD
           {!isMobileAppView ? (
             <Button
               type="button"
@@ -112,16 +106,6 @@ export function DocumentWorkspaceShell({
               새 문서 작성
             </Button>
           ) : null}
-=======
-          <Button
-            type="button"
-            className="rounded-pill px-5 h-8 text-xs shadow-soft hover:shadow-float transition-all"
-            onClick={onNewDocument}
-            disabled={!currentUserId || isMutating}
-          >
-            <Plus className="h-3 w-3 mr-2" />새 문서 작성
-          </Button>
->>>>>>> develop
         </div>
       </header>
 
@@ -146,7 +130,6 @@ export function DocumentWorkspaceShell({
         ))}
       </div>
 
-<<<<<<< HEAD
       <div className="flex-1 flex flex-col gap-6 min-h-0">
         <div className="bg-surface/50 backdrop-blur-md rounded-3xl p-6 shadow-soft border border-background/50 mx-2 flex-shrink-0">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -176,29 +159,6 @@ export function DocumentWorkspaceShell({
                     </button>
                   );
                 })}
-=======
-      <div className="flex-1 flex flex-col gap-4 min-h-0">
-        <div className="bg-surface/50 backdrop-blur-md rounded-[20px] p-3 shadow-soft border border-background/50 mx-1 flex-shrink-0">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-            <div className="flex items-center gap-1 bg-background/40 p-1 rounded-xl w-fit">
-              {scopeConfig.map((item) => {
-                const isActive = scope === item.value;
-                return (
-                  <button
-                    key={item.value}
-                    onClick={() => onScopeChange(item.value)}
-                    className={cn(
-                      "px-4 py-1 text-[12px] font-bold rounded-lg transition-all whitespace-nowrap",
-                      isActive
-                        ? "bg-surface text-primary shadow-sm"
-                        : "text-text/50 hover:text-text hover:bg-surface/40"
-                    )}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
->>>>>>> develop
             </div>
             
             <div className="flex items-center gap-1 bg-background/30 px-2 py-0.5 rounded-lg border border-background/40">
@@ -221,6 +181,7 @@ export function DocumentWorkspaceShell({
                 );
               })}
             </div>
+
           </div>
         </div>
 
