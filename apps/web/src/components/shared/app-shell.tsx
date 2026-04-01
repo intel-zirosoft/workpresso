@@ -18,6 +18,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const hideChrome = isChromelessPath(pathname);
   const isEmbeddedApp = useEmbeddedMobileApp();
   const showWebChrome = !isEmbeddedApp;
+  const isMessengerRoute =
+    pathname === "/messenger" || pathname?.startsWith("/messenger/");
 
   useEffect(() => {
     if (hideChrome) {
@@ -71,7 +73,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-h-screen w-full flex-1 flex-col bg-background">
         {showWebChrome ? (
-          <div data-mobile-app-chrome>
+          <div data-mobile-app-chrome className="pt-3 md:pt-4">
             <Header />
           </div>
         ) : null}
@@ -81,7 +83,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             className={cn(
               "mx-auto w-full",
               showWebChrome
-                ? "container max-w-[1600px] p-4 pb-24 md:p-8 md:pb-8"
+                ? isMessengerRoute
+                  ? "container max-w-[1600px] p-4 pb-24 md:p-8 md:pb-8"
+                  : "container max-w-[1600px] px-4 pb-24 pt-6 md:px-8 md:pb-8 md:pt-10"
                 : "max-w-[1600px] p-3 pb-6 pt-3 sm:p-4 sm:pb-8",
             )}
           >

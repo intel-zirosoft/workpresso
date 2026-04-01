@@ -1,7 +1,6 @@
 import {
   createDataStreamResponse,
   formatDataStreamPart,
-  tool,
   type Message,
 } from "ai";
 import { z } from "zod";
@@ -10,6 +9,11 @@ import {
   createScheduleToolSchema,
   createScheduleViaPodBApi,
 } from "@/features/pod-b/services/pod-b-schedule-api-adapter";
+import {
+  documentScopeSchema,
+  documentStatusSchema,
+} from "@/features/pod-a/services/document-schema";
+import { listDocumentsForViewer } from "@/features/pod-a/services/document-server";
 import { getResolvedAiConfig } from "@/lib/ai/config";
 import { createEmbedding } from "@/lib/ai/embeddings";
 import { createOpenRouterClient } from "@/lib/ai/openrouter";
@@ -31,10 +35,18 @@ const chatRequestSchema = z.object({
 });
 
 type CreateScheduleArgs = z.infer<typeof createScheduleToolSchema>;
+const listDocumentsToolSchema = z.object({
+  scope: documentScopeSchema.optional(),
+  status: documentStatusSchema.optional(),
+  limit: z.number().int().min(1).max(20).optional(),
+});
+type ListDocumentsArgs = z.infer<typeof listDocumentsToolSchema>;
 type NormalizedChatMessage = Omit<Message, "id">;
 
 const createScheduleToolDescription =
   "Pod-B 일정 생성 API 호출. start_time/end_time이 확정된 ISO 8601일 때만 호출하세요. 불충분하면 먼저 재질문하세요.";
+const listDocumentsToolDescription =
+  "Pod-A 문서 목록 조회. 결재/승인 대기 문서, 내가 작성한 문서, 공람 문서 목록이 필요할 때 호출하세요.";
 
 const createScheduleToolParameters = {
   type: "object",
@@ -74,6 +86,38 @@ const createScheduleToolParameters = {
   },
   required: ["title", "start_time", "end_time"],
 } as const;
+
+const listDocumentsToolParameters = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    scope: {
+      type: "string",
+      enum: ["authored", "approvals", "cc"],
+      description:
+        "조회 범위. 결재 대기/승인 대기 문서는 보통 approvals를 사용하세요.",
+    },
+    status: {
+      type: "string",
+      enum: ["DRAFT", "PENDING", "APPROVED", "REJECTED"],
+      description: "문서 상태 필터",
+    },
+    limit: {
+      type: "integer",
+      minimum: 1,
+      maximum: 20,
+      description: "가져올 최대 개수",
+    },
+  },
+} as const;
+
+function normalizeDomainSpecificTerms(input: string) {
+  return input.replace(
+    /결제(?=\s*(대기|중|중인|문서|요청|선|단계|승인))/g,
+    "결재",
+  );
+}
+
 function extractMessageText(content: unknown): string {
   if (typeof content === "string") {
     return content;
@@ -164,7 +208,10 @@ export async function POST(req: Request) {
     const normalizedMessages: NormalizedChatMessage[] = messages.map(
       (message) => ({
         role: message.role as Message["role"],
-        content: extractMessageText(message.content),
+        content:
+          message.role === "user"
+            ? normalizeDomainSpecificTerms(extractMessageText(message.content))
+            : extractMessageText(message.content),
       }),
     );
     const lastMessage =
@@ -203,9 +250,13 @@ export async function POST(req: Request) {
 
 규칙:
 - 일정 생성은 반드시 Pod-B API(/api/schedules) 기반 tool 호출로만 처리하세요.
+- 문서 목록 조회는 반드시 Pod-A 문서 조회 tool 호출로 처리하세요.
 - 내부 지식이나 이전 대화의 모호한 맥락을 근거로 일정 값을 임의로 추측하거나 보완하지 마세요. 
 - 단, 사용자가 명시적으로 이전 대화 내용을 참조하여 수정을 요청한 경우는 예외로 합니다.
 - 일정 생성 전에 title, start_time, end_time을 확정할 근거가 부족하면 tool을 호출하지 말고 먼저 짧게 재질문하세요.
+- 사용자가 문서/승인 맥락에서 '결제'라고 말하면 '결재' 오타로 해석할 수 있습니다.
+- "현재 결재 대기 문서", "승인 대기 문서", "내가 승인할 문서" 요청은 기본적으로 scope="approvals", status="PENDING"으로 조회하세요.
+- 문서 목록 조회 후에는 제목, 작성자, 현재 결재 단계 또는 현재 결재자, 상태를 간단히 정리하세요.
 - 상대시간 표현(예: 오늘, 내일, 다음 주)은 현재 시각과 시간대를 기준으로 해석하세요.
 - 참석자 식별이 모호하면 attendee_ids를 추정하지 말고 후보를 제시하거나 다시 물어보세요.
 - 일정 생성 후에는 생성 결과와 링크를 함께 안내하세요.`;
@@ -215,21 +266,58 @@ export async function POST(req: Request) {
       messages: normalizedMessages,
     });
 
-    const toolDefinition = tool({
-      description: createScheduleToolDescription,
-      parameters: createScheduleToolSchema,
-      execute: async (payload: CreateScheduleArgs) => {
-        const createdSchedule = await createScheduleViaPodBApi({
-          payload,
-          request: req,
-        });
+    const toolHandlers = {
+      create_schedule: {
+        schema: createScheduleToolSchema,
+        execute: async (payload: CreateScheduleArgs) => {
+          const createdSchedule = await createScheduleViaPodBApi({
+            payload,
+            request: req,
+          });
 
-        return {
-          message: `일정 '${createdSchedule.title}' 등록 완료`,
-          schedule: createdSchedule,
-        };
+          return {
+            message: `일정 '${createdSchedule.title}' 등록 완료`,
+            schedule: createdSchedule,
+          };
+        },
       },
-    });
+      list_documents: {
+        schema: listDocumentsToolSchema,
+        execute: async (payload: ListDocumentsArgs) => {
+          const scope = payload.scope ?? "approvals";
+          const limit = payload.limit ?? 10;
+          const documents = await listDocumentsForViewer({
+            adminSupabase,
+            viewerId: authUser.id,
+            scope,
+            status: payload.status,
+          });
+
+          const slicedDocuments = documents.slice(0, limit);
+
+          return {
+            scope,
+            status: payload.status ?? null,
+            totalCount: documents.length,
+            documents: slicedDocuments.map((document) => ({
+              id: document.id,
+              title: document.title,
+              authorName: document.author.name,
+              status: document.status,
+              currentStepLabel: document.currentStepLabel,
+              currentApproverName: document.currentApprover?.name ?? null,
+              viewerApprovalStatus: document.viewerApprovalStatus,
+              submittedAt: document.submittedAt,
+              updatedAt: document.updatedAt,
+            })),
+          };
+        },
+      },
+    } as const;
+
+    type ToolName = keyof typeof toolHandlers;
+    const isKnownToolName = (name: string): name is ToolName =>
+      name in toolHandlers;
 
     const initialResponse = await client.chat.completions.create({
       model: aiConfig.chatModel,
@@ -241,6 +329,14 @@ export async function POST(req: Request) {
             name: "create_schedule",
             description: createScheduleToolDescription,
             parameters: createScheduleToolParameters,
+          },
+        },
+        {
+          type: "function",
+          function: {
+            name: "list_documents",
+            description: listDocumentsToolDescription,
+            parameters: listDocumentsToolParameters,
           },
         },
       ],
@@ -265,20 +361,28 @@ export async function POST(req: Request) {
       });
 
       for (const toolCall of initialMessage.tool_calls) {
-        if (
-          toolCall.type !== "function" ||
-          toolCall.function.name !== "create_schedule"
-        ) {
+        if (toolCall.type !== "function" || !isKnownToolName(toolCall.function.name)) {
           continue;
         }
 
-        const payload = createScheduleToolSchema.parse(
-          JSON.parse(toolCall.function.arguments || "{}"),
-        );
-        const toolResult = await toolDefinition.execute(payload, {
-          toolCallId: toolCall.id,
-          messages: [],
-        });
+        let toolResult: unknown;
+
+        switch (toolCall.function.name) {
+          case "create_schedule": {
+            const payload = toolHandlers.create_schedule.schema.parse(
+              JSON.parse(toolCall.function.arguments || "{}"),
+            );
+            toolResult = await toolHandlers.create_schedule.execute(payload);
+            break;
+          }
+          case "list_documents": {
+            const payload = toolHandlers.list_documents.schema.parse(
+              JSON.parse(toolCall.function.arguments || "{}"),
+            );
+            toolResult = await toolHandlers.list_documents.execute(payload);
+            break;
+          }
+        }
 
         conversationMessages.push({
           role: "tool",
