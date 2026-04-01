@@ -89,9 +89,6 @@ export function DocumentWorkspaceShell({
 
   return (
     <div className="flex h-[calc(100vh-170px)] flex-col space-y-4 overflow-hidden">
-<<<<<<< HEAD
-      <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-end px-1 flex-shrink-0">
-=======
       <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between px-1 flex-shrink-0">
         <div>
           <h1 className="text-3xl font-headings font-bold tracking-tight text-text">
@@ -103,7 +100,6 @@ export function DocumentWorkspaceShell({
               : "업무의 흐름을 한눈에 파악하고 결재를 진행하세요."}
           </p>
         </div>
->>>>>>> fix/header-merge-resolutions
         <div className="flex items-center gap-2">
           <Button
             type="button"
