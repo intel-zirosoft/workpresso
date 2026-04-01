@@ -21,6 +21,7 @@ interface ScheduleModalProps {
     startTime: string;
     endTime: string;
     type: string;
+    description?: string;
   }) => void;
   isPending?: boolean;
   submitError?: string | null;
@@ -30,6 +31,8 @@ interface ScheduleModalProps {
     start_time: string;
     end_time: string;
     type?: string;
+    has_voice?: boolean;
+    metadata?: any[];
   } | null;
 }
 
@@ -46,6 +49,7 @@ export function ScheduleModal({
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
   const [type, setType] = useState<string>("TASK");
+  const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -65,11 +69,13 @@ export function ScheduleModal({
           }),
         );
         setType(initialData.type || "TASK");
+        setDescription(initialData.metadata?.[0]?.content || "");
       } else {
         setTitle("");
         setStartTime("09:00");
         setEndTime("10:00");
         setType("TASK");
+        setDescription("");
       }
       setError(null);
     }
@@ -85,7 +91,7 @@ export function ScheduleModal({
     }
 
     setError(null);
-    onSave?.({ title, startTime, endTime, type });
+    onSave?.({ title, startTime, endTime, type, description });
   };
 
   return (
@@ -171,6 +177,19 @@ export function ScheduleModal({
               <option value="WFH">재택근무</option>
               <option value="OUTSIDE">외근</option>
             </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-headings font-semibold text-text">
+              상세 내용
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="상세 안건이나 메모를 입력하세요..."
+              className="flex min-h-[100px] w-full rounded-xl border border-background bg-transparent px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-body transition-all"
+              disabled={isPending}
+            />
           </div>
 
           {error && (

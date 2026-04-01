@@ -51,7 +51,9 @@ export async function POST(request: Request) {
         title: body.title,
         start_time: body.start_time,
         end_time: body.end_time,
-        type: body.type, // 추가된 타입 정보 저장
+        type: body.type,
+        has_voice: body.has_voice,
+        metadata: body.metadata,
         user_id: user.id,
       })
       .select()

@@ -82,6 +82,11 @@ export function ChatPanel({
     isLoading,
   } = useChat({
     api: "/api/chat",
+    onFinish: (message) => {
+      // [v1.0] AI가 도구를 사용하여 정보를 생성/수정했을 가능성이 높으므로 일정을 새로 고침합니다.
+      // (메시지 내용에 따라 필터링할 수도 있으나, 업무 맥락상 모든 AI 응답 완료 후 동기화하는 것이 직관적임)
+      window.dispatchEvent(new CustomEvent("workpresso:refresh-schedules"));
+    },
   });
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastQueuedPromptIdRef = useRef<number | null>(null);

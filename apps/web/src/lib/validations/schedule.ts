@@ -5,6 +5,8 @@ export const baseScheduleSchema = z.object({
   start_time: z.string().datetime({ message: "유효한 시작 시간을 입력해주세요 (ISO 8601)." }),
   end_time: z.string().datetime({ message: "유효한 종료 시간을 입력해주세요 (ISO 8601)." }),
   type: z.enum(["TASK", "MEETING", "VACATION", "WFH", "OUTSIDE", "HALF_DAY"]).default("TASK"),
+  has_voice: z.boolean().optional().default(false),
+  metadata: z.array(z.any()).optional().default([]),
 });
 
 export const createScheduleSchema = baseScheduleSchema.refine((data) => new Date(data.start_time) < new Date(data.end_time), {

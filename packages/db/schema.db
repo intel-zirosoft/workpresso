@@ -117,6 +117,9 @@ CREATE TABLE IF NOT EXISTS schedules (
     title VARCHAR NOT NULL,
     start_time TIMESTAMP WITH TIME ZONE NOT NULL,
     end_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    type VARCHAR(20) DEFAULT 'TASK',
+    has_voice BOOLEAN DEFAULT false,
+    metadata JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     deleted_at TIMESTAMP WITH TIME ZONE

@@ -8,7 +8,6 @@ import { createClient } from "@/lib/supabase/client";
 import { APP_NAV_ITEMS, ADMIN_NAV_ITEMS, isActivePath, type AppNavItem } from "@/components/shared/navigation";
 import { useCurrentUser } from "@/features/settings/hooks/use-current-user";
 import { useMessenger } from "@/features/pod-e/contexts/messenger-context";
-import { useSchedule } from "@/features/pod-e/contexts/schedule-context";
 
 interface SidebarContentProps {
   onNavigate?: () => void;
@@ -21,7 +20,6 @@ export function SidebarContent({ onNavigate, mobile = false }: SidebarContentPro
   const supabase = createClient();
   const { data: currentUser } = useCurrentUser();
   const { openMessenger, isOpen: isMessengerOpen } = useMessenger();
-  const { openSchedule, isOpen: isScheduleOpen } = useSchedule();
 
   const isAdmin =
     currentUser?.role === "SUPER_ADMIN" || currentUser?.role === "ORG_ADMIN";
@@ -48,13 +46,10 @@ export function SidebarContent({ onNavigate, mobile = false }: SidebarContentPro
       <nav className={cn("flex-1", mobile ? "space-y-1 px-3 py-4" : "space-y-2 px-4")}>
         {APP_NAV_ITEMS.map((item: AppNavItem) => {
           const isMessenger = item.name === "메신저";
-          const isSchedule = item.name === "일정";
           
           let isActive = false;
           if (isMessenger) {
             isActive = isMessengerOpen;
-          } else if (isSchedule) {
-            isActive = isScheduleOpen;
           } else {
             isActive = isActivePath(pathname, item.href);
           }
@@ -62,15 +57,11 @@ export function SidebarContent({ onNavigate, mobile = false }: SidebarContentPro
           return (
             <Link
               key={item.name}
-              href={(isMessenger || isSchedule) ? "#" : item.href}
+              href={isMessenger ? "#" : item.href}
               onClick={(e) => {
                 if (isMessenger) {
                   e.preventDefault();
                   openMessenger();
-                  onNavigate?.();
-                } else if (isSchedule) {
-                  e.preventDefault();
-                  openSchedule();
                   onNavigate?.();
                 } else {
                   onNavigate?.();

@@ -41,6 +41,10 @@ export async function createScheduleViaPodBApi(input: {
       start_time: payload.start_time,
       end_time: payload.end_time,
       type: payload.type,
+      has_voice: false,
+      metadata: payload.description 
+        ? [{ sub_id: `ai_${Date.now()}`, content: payload.description, tags: ["AI 생성"] }]
+        : [],
     }),
     cache: "no-store",
   });

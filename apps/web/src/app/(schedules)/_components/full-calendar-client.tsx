@@ -42,6 +42,8 @@ export function FullCalendarClient({
       height="100%"
       dayMaxEvents={3}
       selectable
+      editable={false}
+      droppable={false}
     />
   );
 }

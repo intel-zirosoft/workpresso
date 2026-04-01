@@ -6,6 +6,8 @@ export interface Schedule {
   start_time: string;
   end_time: string;
   type?: string;
+  has_voice?: boolean;
+  metadata?: any[];
 }
 
 export type ScheduleInput = Omit<Schedule, "id">;
@@ -61,6 +63,13 @@ async function parseResponse<T>(response: Response, fallbackMessage: string) {
 }
 
 export async function fetchSchedules() {
+  // 캘린더 일정을 불러오기 전, 음성 회의록(meeting_logs) 변경분을 자동 동기화합니다.
+  try {
+    await fetch("/api/automation/voice-sync", { method: "POST" });
+  } catch (syncError) {
+    console.warn("voice_sync failed during fetchSchedules:", syncError);
+  }
+
   const response = await fetch("/api/schedules", {
     method: "GET",
     cache: "no-store",

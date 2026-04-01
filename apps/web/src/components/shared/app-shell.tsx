@@ -9,7 +9,6 @@ import { isChromelessPath } from "@/components/shared/navigation";
 import { FloatingAIAssistant } from "@/features/pod-c/components/floating-ai-assistant";
 import { preloadDocumentWorkspace } from "@/features/pod-a/components/document-workspace-entry";
 import { MessengerModal } from "@/features/pod-e/components/messenger-modal";
-import { SchedulePopupModal } from "@/features/pod-e/components/schedule-popup-modal";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -68,7 +67,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <FloatingAIAssistant />
       <MessengerModal />
-      <SchedulePopupModal />
     </div>
   );
 }
