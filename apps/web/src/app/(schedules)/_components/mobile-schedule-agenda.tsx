@@ -6,7 +6,6 @@ import {
   CalendarDays,
   Clock3,
   Loader2,
-  Sparkles,
   Users,
 } from "lucide-react";
 import {
@@ -127,40 +126,47 @@ export function MobileScheduleAgenda({
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-      <section className="rounded-[28px] bg-slate-950 px-5 py-6 text-white shadow-xl">
-        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-sky-300">
-          Mobile Agenda
-        </p>
-        <h1 className="mt-2 font-headings text-[26px] font-bold leading-tight">
-          오늘과 이번 주 일정부터 빠르게 확인하세요.
-        </h1>
-        <p className="mt-2 text-sm leading-6 text-slate-300">
-          앱에서는 월간 캘린더 조작보다 오늘 일정, 이번 주 일정, 곧 시작할
-          회의를 우선 보여줍니다.
-        </p>
+      <section className="rounded-[28px] border border-background/60 bg-surface px-5 py-5 shadow-soft">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-primary/70">
+              Schedule briefing
+            </p>
+            <h1 className="mt-2 font-headings text-[24px] font-bold leading-tight text-text">
+              오늘과 이번 주 일정부터 빠르게 확인하세요.
+            </h1>
+            <p className="mt-2 text-sm leading-6 text-text-muted">
+              앱에서는 월간 캘린더 조작보다 오늘 일정, 이번 주 일정, 곧 시작할
+              회의를 우선 보여줍니다.
+            </p>
+          </div>
+          <div className="shrink-0 rounded-full bg-primary/8 px-3 py-1.5 text-xs font-bold text-primary">
+            {focus === "today" ? "오늘 중심" : "주간 보기"}
+          </div>
+        </div>
 
-        <div className="mt-5 grid grid-cols-3 gap-3">
-          <div className="rounded-[22px] bg-white/10 px-4 py-3">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-300">
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="rounded-[22px] bg-background/45 px-4 py-3">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-text-muted">
               오늘 일정
             </p>
-            <p className="mt-2 text-2xl font-headings font-bold">
+            <p className="mt-2 text-2xl font-headings font-bold text-text">
               {todaySchedules.length}
             </p>
           </div>
-          <div className="rounded-[22px] bg-white/10 px-4 py-3">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-300">
+          <div className="rounded-[22px] bg-background/45 px-4 py-3">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-text-muted">
               이번 주
             </p>
-            <p className="mt-2 text-2xl font-headings font-bold">
+            <p className="mt-2 text-2xl font-headings font-bold text-text">
               {weekSchedules.length}
             </p>
           </div>
-          <div className="rounded-[22px] bg-white/10 px-4 py-3">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-300">
+          <div className="hidden rounded-[22px] bg-primary/5 px-4 py-3 sm:block">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary/70">
               곧 시작할 회의
             </p>
-            <p className="mt-2 text-2xl font-headings font-bold">
+            <p className="mt-2 text-2xl font-headings font-bold text-text">
               {upcomingMeetings.length}
             </p>
           </div>
@@ -319,23 +325,6 @@ export function MobileScheduleAgenda({
               </p>
             </div>
           )}
-        </div>
-
-        <div className="mt-4 rounded-[22px] bg-primary/5 px-4 py-4">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-              <Sparkles className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="font-headings text-base font-bold text-text">
-                FullCalendar 조작은 뒤로
-              </p>
-              <p className="mt-1 text-sm leading-6 text-text-muted">
-                앱에서는 월간 이동, 드래그 편집, 세부 조작보다 오늘 일정과 가까운
-                회의를 빨리 확인할 수 있게 단순화했습니다.
-              </p>
-            </div>
-          </div>
         </div>
       </section>
     </div>

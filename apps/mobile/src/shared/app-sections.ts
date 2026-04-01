@@ -10,13 +10,13 @@ export const MOBILE_APP_SECTIONS = {
     description: '업무 질문과 빠른 답변',
     href: '/(tabs)/chat',
     path: '/chat?mobile=1&context=work',
-    title: '업무 도우미',
+    title: 'AI',
   },
   chatter: {
     description: '읽지 않은 채널과 브리핑 확인',
     href: '/(tabs)/chatter',
     path: '/chatter?mobile=1&view=inbox',
-    title: '채터',
+    title: '메신저',
   },
   documents: {
     description: '승인 대기 문서와 결재 처리',

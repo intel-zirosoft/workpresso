@@ -4,8 +4,8 @@ import dynamic from "next/dynamic";
 
 const ChatterWorkspace = dynamic(
   () =>
-    import("@/features/pod-e/components/messenger-workspace").then(
-      (module) => module.MessengerWorkspace,
+    import("@/features/pod-e/components/chatter-workspace").then(
+      (module) => module.ChatterWorkspace,
     ),
   {
     ssr: false,

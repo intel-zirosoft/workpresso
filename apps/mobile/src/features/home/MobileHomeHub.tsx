@@ -11,97 +11,53 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { MOBILE_APP_SECTIONS } from '../../shared/app-sections';
 
-type HomeAction = {
+type BriefingCard = {
   description: string;
   eyebrow: string;
   href: Href;
   label: string;
+  meta: string;
+  tone: 'amber' | 'blue' | 'mint';
 };
 
-const QUICK_BRIEFING_ITEMS: HomeAction[] = [
+const TODAY_BRIEFINGS: BriefingCard[] = [
   {
-    description: '승인 대기 문서와 결재 처리',
+    description: '승인하거나 반려할 문서를 가장 먼저 확인합니다.',
     eyebrow: '문서',
     href: MOBILE_APP_SECTIONS.documents.href,
-    label: '승인 대기 확인',
+    label: '승인 대기 문서',
+    meta: '지금 처리',
+    tone: 'amber',
   },
   {
-    description: '읽지 않은 채널과 브리핑 확인',
+    description: '읽지 않은 메시지와 브리핑을 빠르게 확인합니다.',
     eyebrow: '채터',
     href: MOBILE_APP_SECTIONS.chatter.href,
-    label: '읽지 않은 대화 보기',
+    label: '읽지 않은 채터',
+    meta: '먼저 확인',
+    tone: 'blue',
   },
   {
-    description: '오늘 일정과 회의 확인',
+    description: '오늘 예정된 일정과 회의를 한 번에 확인합니다.',
     eyebrow: '일정',
     href: MOBILE_APP_SECTIONS.schedules.href,
-    label: '오늘 일정 보기',
-  },
-];
-
-const PRIMARY_ACTIONS: HomeAction[] = [
-  {
-    description: '승인/반려가 필요한 문서를 바로 확인합니다.',
-    eyebrow: '즉시 처리',
-    href: MOBILE_APP_SECTIONS.documents.href,
-    label: '문서 처리',
-  },
-  {
-    description: '읽지 않은 채널과 최근 브리핑을 먼저 살펴봅니다.',
-    eyebrow: '즉시 확인',
-    href: MOBILE_APP_SECTIONS.chatter.href,
-    label: '채터 확인',
-  },
-  {
-    description: '업무 요약이나 빠른 질의를 바로 시작합니다.',
-    eyebrow: '빠른 질의',
-    href: MOBILE_APP_SECTIONS.chat.href,
-    label: '도우미 열기',
-  },
-];
-
-const QUICK_LINKS: HomeAction[] = [
-  {
-    description: '읽지 않은 채널과 팀 브리핑 확인',
-    eyebrow: '채터',
-    href: MOBILE_APP_SECTIONS.chatter.href,
-    label: '채터',
-  },
-  {
-    description: '오늘 일정과 다가오는 회의 확인',
-    eyebrow: '일정',
-    href: MOBILE_APP_SECTIONS.schedules.href,
-    label: '일정',
-  },
-  {
-    description: '승인 대기 문서와 결재 처리',
-    eyebrow: '문서',
-    href: MOBILE_APP_SECTIONS.documents.href,
-    label: '문서',
-  },
-  {
-    description: 'AI에게 지금 필요한 업무 질문하기',
-    eyebrow: '도우미',
-    href: MOBILE_APP_SECTIONS.chat.href,
-    label: '도우미',
-  },
-  {
-    description: '회의/음성 기록 화면으로 바로 이동',
-    eyebrow: '음성',
-    href: MOBILE_APP_SECTIONS.voice.href,
-    label: '음성',
+    label: '오늘 일정',
+    meta: '오늘 기준',
+    tone: 'mint',
   },
 ];
 
 export function MobileHomeHub() {
   const router = useRouter();
-  const todayLabel = useMemo(() => {
-    return new Intl.DateTimeFormat('ko-KR', {
-      day: 'numeric',
-      month: 'long',
-      weekday: 'long',
-    }).format(new Date());
-  }, []);
+  const todayLabel = useMemo(
+    () =>
+      new Intl.DateTimeFormat('ko-KR', {
+        day: 'numeric',
+        month: 'long',
+        weekday: 'short',
+      }).format(new Date()),
+    [],
+  );
 
   const navigateTo = (href: Href) => {
     router.navigate(href);
@@ -115,83 +71,56 @@ export function MobileHomeHub() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.heroCard}>
-          <Text style={styles.heroEyebrow}>오늘의 앱 홈</Text>
-          <Text style={styles.heroTitle}>오늘 확인할 것부터 빠르게 시작하세요.</Text>
+          <Text style={styles.heroEyebrow}>오늘의 브리핑</Text>
+          <Text style={styles.heroTitle}>가장 중요한 일부터 빠르게 확인하세요.</Text>
           <Text style={styles.heroDescription}>
-            {todayLabel} · 승인 대기, 읽지 않은 채터, 오늘 일정을 먼저 확인하는
-            모바일 브리핑 허브입니다.
+            {todayLabel} · 문서 승인, 읽지 않은 채터, 오늘 일정만 우선 보여주는
+            모바일 업무 홈입니다.
           </Text>
-          <View style={styles.heroBadgeRow}>
-            <View style={styles.heroBadge}>
-              <Text style={styles.heroBadgeText}>승인 대기</Text>
+          <View style={styles.heroSummaryRow}>
+            <View style={styles.summaryChip}>
+              <Text style={styles.summaryChipText}>승인 우선</Text>
             </View>
-            <View style={styles.heroBadge}>
-              <Text style={styles.heroBadgeText}>읽지 않은 채터</Text>
+            <View style={styles.summaryChip}>
+              <Text style={styles.summaryChipText}>채터 확인</Text>
             </View>
-            <View style={styles.heroBadge}>
-              <Text style={styles.heroBadgeText}>오늘 일정</Text>
+            <View style={styles.summaryChip}>
+              <Text style={styles.summaryChipText}>일정 체크</Text>
             </View>
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>오늘 확인할 것</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>오늘 바로 볼 것</Text>
           <Text style={styles.sectionDescription}>
-            먼저 살펴볼 핵심 업무를 한 화면에 모았습니다.
+            한 화면에서 세 가지 핵심 업무만 우선 확인합니다.
           </Text>
-          <View style={styles.briefingList}>
-            {QUICK_BRIEFING_ITEMS.map((item) => (
-              <Pressable
-                key={item.label}
-                onPress={() => navigateTo(item.href)}
-                style={styles.briefingCard}
-              >
-                <Text style={styles.cardEyebrow}>{item.eyebrow}</Text>
-                <Text style={styles.briefingTitle}>{item.label}</Text>
-                <Text style={styles.cardDescription}>{item.description}</Text>
-              </Pressable>
-            ))}
-          </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>바로 처리할 것</Text>
-          <Text style={styles.sectionDescription}>
-            지금 한 번 탭해서 바로 이어갈 수 있는 핵심 액션입니다.
-          </Text>
-          <View style={styles.primaryActionList}>
-            {PRIMARY_ACTIONS.map((item) => (
-              <Pressable
-                key={item.label}
-                onPress={() => navigateTo(item.href)}
-                style={styles.primaryActionCard}
-              >
+        <View style={styles.briefingList}>
+          {TODAY_BRIEFINGS.map((item) => (
+            <Pressable
+              key={item.label}
+              onPress={() => navigateTo(item.href)}
+              style={({ pressed }) => [
+                styles.briefingCard,
+                styles[`briefingCard_${item.tone}`],
+                pressed && styles.briefingCardPressed,
+              ]}
+            >
+              <View style={styles.briefingTopRow}>
                 <Text style={styles.cardEyebrow}>{item.eyebrow}</Text>
-                <Text style={styles.primaryActionTitle}>{item.label}</Text>
-                <Text style={styles.cardDescription}>{item.description}</Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>빠른 이동</Text>
-          <Text style={styles.sectionDescription}>
-            문서, 채터, 일정, 도우미, 음성 탭으로 바로 이동할 수 있습니다.
-          </Text>
-          <View style={styles.quickLinkGrid}>
-            {QUICK_LINKS.map((item) => (
-              <Pressable
-                key={item.label}
-                onPress={() => navigateTo(item.href)}
-                style={styles.quickLinkCard}
-              >
-                <Text style={styles.cardEyebrow}>{item.eyebrow}</Text>
-                <Text style={styles.quickLinkTitle}>{item.label}</Text>
-                <Text style={styles.quickLinkDescription}>{item.description}</Text>
-              </Pressable>
-            ))}
-          </View>
+                <View style={styles.metaBadge}>
+                  <Text style={styles.metaBadgeText}>{item.meta}</Text>
+                </View>
+              </View>
+              <Text style={styles.briefingTitle}>{item.label}</Text>
+              <Text style={styles.briefingDescription}>{item.description}</Text>
+              <View style={styles.cardCtaRow}>
+                <Text style={styles.cardCtaText}>바로 보기</Text>
+              </View>
+            </Pressable>
+          ))}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -201,62 +130,72 @@ export function MobileHomeHub() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#f4f7fb',
   },
   content: {
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 28,
+    paddingHorizontal: 18,
+    paddingTop: 12,
+    paddingBottom: 32,
     gap: 18,
   },
   heroCard: {
-    borderRadius: 28,
-    backgroundColor: '#0f172a',
+    borderRadius: 30,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
     paddingHorizontal: 20,
     paddingVertical: 22,
     gap: 10,
+    shadowColor: '#0f172a',
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
   },
   heroEyebrow: {
-    color: '#93c5fd',
+    color: '#2563eb',
     fontSize: 11,
     fontWeight: '800',
-    letterSpacing: 1.1,
+    letterSpacing: 1,
     textTransform: 'uppercase',
   },
   heroTitle: {
-    color: '#ffffff',
+    color: '#0f172a',
     fontSize: 24,
     fontWeight: '800',
-    lineHeight: 30,
+    lineHeight: 31,
   },
   heroDescription: {
-    color: '#cbd5e1',
+    color: '#64748b',
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 21,
   },
-  heroBadgeRow: {
+  heroSummaryRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
     marginTop: 4,
   },
-  heroBadge: {
+  summaryChip: {
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  heroBadgeText: {
-    color: '#e2e8f0',
+  summaryChipText: {
+    color: '#334155',
     fontSize: 12,
     fontWeight: '700',
   },
-  section: {
-    gap: 10,
+  sectionHeader: {
+    gap: 6,
+    paddingHorizontal: 2,
   },
   sectionTitle: {
     color: '#0f172a',
-    fontSize: 20,
+    fontSize: 21,
     fontWeight: '800',
   },
   sectionDescription: {
@@ -265,72 +204,76 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
   briefingList: {
-    gap: 10,
+    gap: 12,
   },
   briefingCard: {
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: '#dbeafe',
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    gap: 6,
-  },
-  primaryActionList: {
-    gap: 10,
-  },
-  primaryActionCard: {
     borderRadius: 24,
-    backgroundColor: '#eff6ff',
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
     paddingVertical: 18,
-    gap: 6,
-  },
-  quickLinkGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 10,
-  },
-  quickLinkCard: {
-    width: '48.5%',
-    borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    gap: 6,
+    shadowColor: '#0f172a',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 2,
+  },
+  briefingCardPressed: {
+    transform: [{ scale: 0.985 }],
+  },
+  briefingCard_amber: {
+    backgroundColor: '#fffaf0',
+    borderColor: '#fde7b0',
+  },
+  briefingCard_blue: {
+    backgroundColor: '#f6f9ff',
+    borderColor: '#d9e6ff',
+  },
+  briefingCard_mint: {
+    backgroundColor: '#f2fbf8',
+    borderColor: '#cfeee3',
+  },
+  briefingTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
   },
   cardEyebrow: {
-    color: '#2563eb',
+    color: '#475569',
     fontSize: 11,
     fontWeight: '800',
-    letterSpacing: 0.6,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
+  },
+  metaBadge: {
+    borderRadius: 999,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  metaBadgeText: {
+    color: '#334155',
+    fontSize: 11,
+    fontWeight: '700',
   },
   briefingTitle: {
     color: '#0f172a',
-    fontSize: 17,
+    fontSize: 20,
     fontWeight: '800',
+    lineHeight: 26,
   },
-  primaryActionTitle: {
-    color: '#0f172a',
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  quickLinkTitle: {
-    color: '#0f172a',
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  cardDescription: {
+  briefingDescription: {
     color: '#475569',
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 14,
+    lineHeight: 21,
   },
-  quickLinkDescription: {
-    color: '#64748b',
-    fontSize: 12,
-    lineHeight: 18,
+  cardCtaRow: {
+    marginTop: 2,
+  },
+  cardCtaText: {
+    color: '#2563eb',
+    fontSize: 13,
+    fontWeight: '800',
   },
 });

@@ -426,15 +426,18 @@ export const WebViewContainer = forwardRef<
   if (hasError) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorTitle}>웹 화면을 불러오지 못했습니다.</Text>
-        <Text style={styles.errorDescription}>{currentUrl}</Text>
-        <Text style={styles.errorHelper}>{errorMessage}</Text>
-        {webBaseUrlHint ? (
-          <Text style={styles.errorHint}>{webBaseUrlHint}</Text>
-        ) : null}
-        <Pressable onPress={reload} style={styles.retryButton}>
-          <Text style={styles.retryButtonText}>다시 시도</Text>
-        </Pressable>
+        <View style={styles.errorCard}>
+          <Text style={styles.errorEyebrow}>연결 상태 확인</Text>
+          <Text style={styles.errorTitle}>화면을 불러오지 못했습니다.</Text>
+          <Text style={styles.errorDescription}>{currentUrl}</Text>
+          <Text style={styles.errorHelper}>{errorMessage}</Text>
+          {webBaseUrlHint ? (
+            <Text style={styles.errorHint}>{webBaseUrlHint}</Text>
+          ) : null}
+          <Pressable onPress={reload} style={styles.retryButton}>
+            <Text style={styles.retryButtonText}>다시 시도</Text>
+          </Pressable>
+        </View>
       </View>
     );
   }
@@ -530,9 +533,13 @@ export const WebViewContainer = forwardRef<
       />
       {isLoading ? (
         <View pointerEvents='none' style={styles.loadingOverlay}>
-          <ActivityIndicator size='small' color='#2563eb' />
-          <Text style={styles.loadingText}>불러오는 중...</Text>
-          <Text style={styles.loadingSubtext}>네트워크 환경에 따라 조금 더 걸릴 수 있습니다.</Text>
+          <View style={styles.loadingCard}>
+            <ActivityIndicator size='small' color='#2563eb' />
+            <Text style={styles.loadingText}>불러오는 중...</Text>
+            <Text style={styles.loadingSubtext}>
+              네트워크 환경에 따라 조금 더 걸릴 수 있습니다.
+            </Text>
+          </View>
         </View>
       ) : null}
     </View>
@@ -542,30 +549,54 @@ export const WebViewContainer = forwardRef<
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f4f7fb',
   },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-    gap: 10,
+    backgroundColor: '#f4f7fb',
+  },
+  errorCard: {
+    width: '100%',
+    borderRadius: 28,
     backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    gap: 10,
+    shadowColor: '#0f172a',
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    elevation: 4,
+  },
+  errorEyebrow: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: '#2563eb',
   },
   errorTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 22,
+    fontWeight: '800',
     color: '#0f172a',
   },
   errorDescription: {
     fontSize: 13,
     color: '#64748b',
-    textAlign: 'center',
+    lineHeight: 19,
   },
   errorHelper: {
     fontSize: 13,
     color: '#475569',
-    textAlign: 'center',
+    lineHeight: 19,
   },
   errorHint: {
     fontSize: 12,
@@ -577,29 +608,49 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   retryButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    alignSelf: 'flex-start',
+    marginTop: 2,
+    paddingHorizontal: 16,
+    paddingVertical: 11,
     borderRadius: 999,
     backgroundColor: '#2563eb',
   },
   retryButtonText: {
     color: '#ffffff',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(244,247,251,0.82)',
+  },
+  loadingCard: {
+    borderRadius: 24,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.72)',
+    shadowColor: '#0f172a',
+    shadowOpacity: 0.05,
+    shadowRadius: 14,
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    elevation: 3,
   },
   loadingText: {
     fontSize: 13,
     color: '#334155',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   loadingSubtext: {
     fontSize: 12,
     color: '#64748b',
+    textAlign: 'center',
   },
 });
