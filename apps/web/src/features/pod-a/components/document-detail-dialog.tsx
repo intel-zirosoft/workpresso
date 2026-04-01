@@ -82,8 +82,22 @@ export function DocumentDetailDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[calc(100vh-1rem)] max-h-[calc(100vh-1rem)] w-[calc(100vw-1rem)] max-w-7xl flex-row gap-0 overflow-hidden border-none bg-surface p-0 shadow-2xl sm:h-[95vh]">
-        <aside className="flex w-[280px] shrink-0 flex-col border-r border-background/60 bg-background/60 p-8">
+      <DialogContent
+        className={cn(
+          "w-[calc(100vw-1rem)] overflow-hidden border-none bg-surface p-0 shadow-2xl",
+          isMobileAppView
+            ? "flex h-[calc(100vh-1rem)] max-h-[calc(100vh-1rem)] max-w-3xl flex-col"
+            : "flex h-[calc(100vh-1rem)] max-h-[calc(100vh-1rem)] max-w-7xl flex-row gap-0 sm:h-[95vh]",
+        )}
+      >
+        <aside
+          className={cn(
+            "flex shrink-0 flex-col bg-background/60",
+            isMobileAppView
+              ? "max-h-[34vh] w-full border-b border-background/60 px-4 py-5"
+              : "w-[280px] border-r border-background/60 p-8",
+          )}
+        >
           <div className="mb-10">
             <h2 className="mb-1 text-[11px] font-black uppercase tracking-[0.2em] text-primary">
               Detail
@@ -289,7 +303,12 @@ export function DocumentDetailDialog({
             </div>
           ) : null}
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-12 pb-24 pt-16">
+          <div
+            className={cn(
+              "min-h-0 flex-1 overflow-y-auto",
+              isMobileAppView ? "px-4 pb-28 pt-6" : "px-12 pb-24 pt-16",
+            )}
+          >
             {isLoading ? (
               <div className="flex min-h-full items-center justify-center gap-2 text-sm text-text-muted">
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -299,11 +318,16 @@ export function DocumentDetailDialog({
 
             {!isLoading && document ? (
               <div className="mx-auto max-w-5xl">
-                <header className="mb-12">
+                <header className={cn("mb-12", isMobileAppView && "mb-8")}>
                   <div className="mb-4 inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest text-primary shadow-sm ring-1 ring-primary/5">
                     DETAIL VIEW
                   </div>
-                  <h1 className="mb-3 text-4xl font-black tracking-tight text-text">
+                  <h1
+                    className={cn(
+                      "mb-3 font-black tracking-tight text-text",
+                      isMobileAppView ? "text-2xl" : "text-4xl",
+                    )}
+                  >
                     {document.title}
                   </h1>
                   <p className="max-w-2xl text-[15px] font-medium leading-relaxed text-text-muted">
@@ -324,9 +348,28 @@ export function DocumentDetailDialog({
                       </span>
                     ) : null}
                   </div>
+                  {isMobileAppView && document.permissions.canApprove ? (
+                    <div className="mt-5 rounded-[24px] border border-warning/20 bg-warning-soft px-4 py-4">
+                      <div className="text-[11px] font-black uppercase tracking-[0.18em] text-warning">
+                        빠른 결재
+                      </div>
+                      <p className="mt-1 font-headings text-lg font-bold text-text">
+                        지금 이 문서를 승인하거나 반려할 수 있습니다.
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-text-muted">
+                        현재 단계 {document.currentStepLabel ?? "결재 대기"} ·
+                        하단 액션 바에서 바로 처리할 수 있습니다.
+                      </p>
+                    </div>
+                  ) : null}
                 </header>
 
-                <section className="rounded-[32px] border border-background/60 bg-surface p-8 shadow-sm">
+                <section
+                  className={cn(
+                    "rounded-[32px] border border-background/60 bg-surface shadow-sm",
+                    isMobileAppView ? "p-5" : "p-8",
+                  )}
+                >
                   <div className="mb-6 flex items-center gap-2 text-sm font-bold text-text">
                     <FileText className="h-4 w-4 text-primary" />
                     문서 본문
@@ -352,8 +395,15 @@ export function DocumentDetailDialog({
           </div>
 
           {document ? (
-            <div className="z-10 flex h-20 shrink-0 items-center border-t border-background/60 bg-surface px-12">
-              <div className="flex-1">
+            <div
+              className={cn(
+                "z-10 shrink-0 border-t border-background/60 bg-surface",
+                isMobileAppView
+                  ? "px-4 py-4"
+                  : "flex h-20 items-center px-12",
+              )}
+            >
+              <div className={cn("flex-1", isMobileAppView && "mb-3")}>
                 <div className="text-[10px] font-black tracking-wider text-text-muted">
                   DOCUMENT STATUS
                 </div>
@@ -365,7 +415,12 @@ export function DocumentDetailDialog({
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-end gap-2">
+              <div
+                className={cn(
+                  "flex flex-wrap items-center justify-end gap-2",
+                  isMobileAppView && "grid grid-cols-2",
+                )}
+              >
                 {!isMobileAppView && document.permissions.canEdit ? (
                   <Button
                     type="button"
@@ -434,8 +489,11 @@ export function DocumentDetailDialog({
                   <>
                     <Button
                       type="button"
-                      variant="outline"
-                      className="rounded-pill"
+                      variant={isMobileAppView ? "default" : "outline"}
+                      className={cn(
+                        "rounded-pill",
+                        isMobileAppView && "h-12 w-full text-base font-bold",
+                      )}
                       onClick={onApprove}
                       disabled={isActionPending}
                     >
@@ -449,7 +507,10 @@ export function DocumentDetailDialog({
                     <Button
                       type="button"
                       variant="destructive"
-                      className="rounded-pill"
+                      className={cn(
+                        "rounded-pill",
+                        isMobileAppView && "h-12 w-full text-base font-bold",
+                      )}
                       onClick={onReject}
                       disabled={isActionPending}
                     >

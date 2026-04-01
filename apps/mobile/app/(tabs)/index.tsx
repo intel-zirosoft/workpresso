@@ -1,5 +1,5 @@
-import { WebScreen } from '../../src/harness/webview/WebScreen';
+import { MobileHomeHub } from '../../src/features/home/MobileHomeHub';
 
 export default function HomeTabScreen() {
-  return <WebScreen path='/' title='홈' />;
+  return <MobileHomeHub />;
 }

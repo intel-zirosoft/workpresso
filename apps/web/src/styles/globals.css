@@ -140,6 +140,24 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  html[data-workpresso-mobile-app="true"] [data-mobile-app-chrome] {
+    display: none !important;
+  }
+
+  html[data-workpresso-mobile-app="true"] [data-mobile-app-root] {
+    display: block;
+    min-height: 100vh;
+  }
+
+  html[data-workpresso-mobile-app="true"] [data-mobile-app-main] {
+    min-height: 100vh;
+  }
+
+  html[data-workpresso-mobile-app="true"] [data-mobile-app-content] {
+    max-width: none;
+    padding: 12px 12px 24px;
+  }
+
   h1, h2, h3, h4, h5, h6 {
     @apply font-headings;
   }

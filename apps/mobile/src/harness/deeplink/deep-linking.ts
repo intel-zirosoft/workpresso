@@ -44,6 +44,15 @@ function getDeepLinkPath(url: URL) {
   return normalizePath(`${hostPath}${pathname}`);
 }
 
+function getTabRouteFromWebPath(path: string) {
+  try {
+    const url = new URL(path, getWebBaseOrigin());
+    return getTabRoute(normalizePath(url.pathname));
+  } catch {
+    return getTabRoute(normalizePath(path.split(/[?#]/, 1)[0] ?? path));
+  }
+}
+
 export function inferDeepLinkTitle(path: string) {
   const normalizedPath = normalizePath(path);
 
@@ -56,6 +65,29 @@ export function inferDeepLinkTitle(path: string) {
   );
 
   return matchedTitle?.[1] ?? '바로가기';
+}
+
+export function resolveTabHrefForPath(path: string) {
+  return getTabRouteFromWebPath(path);
+}
+
+export function resolveTabHrefForUrl(rawUrl: string) {
+  try {
+    const url = new URL(rawUrl);
+    const scheme = url.protocol.replace(':', '');
+
+    if (scheme === appConfig.deepLinkScheme) {
+      return getTabRoute(getDeepLinkPath(url));
+    }
+
+    if (url.origin !== getWebBaseOrigin()) {
+      return null;
+    }
+
+    return getTabRoute(normalizePath(url.pathname));
+  } catch {
+    return null;
+  }
 }
 
 export function resolveAppDeepLink(rawUrl: string): Href | null {

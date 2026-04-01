@@ -72,6 +72,20 @@ type WebViewContainerProps = {
 };
 
 const LOAD_TIMEOUT_MS = 15000;
+const INLINE_WEBVIEW_PROTOCOLS = new Set(['about', 'blob', 'data', 'javascript']);
+
+function getUrlProtocol(url: string) {
+  try {
+    return new URL(url).protocol.replace(':', '').toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+function isInlineWebViewUrl(url: string) {
+  const protocol = getUrlProtocol(url);
+  return protocol ? INLINE_WEBVIEW_PROTOCOLS.has(protocol) : false;
+}
 
 function isAuthWebUrl(url: string) {
   if (!isInternalWebUrl(url)) {
@@ -288,7 +302,7 @@ export const WebViewContainer = forwardRef<
   }, []);
 
   const openExternalUrl = useCallback(async (url: string) => {
-    if (!url) {
+    if (!url || isInlineWebViewUrl(url)) {
       return;
     }
 
@@ -319,17 +333,23 @@ export const WebViewContainer = forwardRef<
       }
 
       if (isInternalWebUrl(request.url)) {
-        if (onInternalRouteRequest?.(request.url)) {
+        const isSourceNavigation = request.url === sourceUri;
+
+        if (!isSourceNavigation && onInternalRouteRequest?.(request.url)) {
           return false;
         }
 
         return true;
       }
 
+      if (isInlineWebViewUrl(request.url)) {
+        return true;
+      }
+
       void openExternalUrl(request.url).catch(() => undefined);
       return false;
     },
-    [onInternalRouteRequest, openExternalUrl],
+    [onInternalRouteRequest, openExternalUrl, sourceUri],
   );
 
   const handleNavigationStateChange = useCallback(
@@ -499,6 +519,8 @@ export const WebViewContainer = forwardRef<
         onContentProcessDidTerminate={handleContentProcessDidTerminate}
         injectedJavaScriptBeforeContentLoaded={injectedBridgeScript}
         allowsBackForwardNavigationGestures
+        cacheEnabled={!__DEV__}
+        cacheMode={Platform.OS === 'android' ? 'LOAD_NO_CACHE' : undefined}
         domStorageEnabled
         javaScriptEnabled
         setSupportMultipleWindows={false}

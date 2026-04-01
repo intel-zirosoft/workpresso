@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { getDocumentScopeOptions, getDocumentWorkspaceViewConfig } from '@/features/pod-a/services/document-mobile-view';
+import {
+  getDocumentScopeOptions,
+  getDocumentStatusFilterOptions,
+  getDocumentWorkspaceViewConfig,
+} from '@/features/pod-a/services/document-mobile-view';
 
 describe('getDocumentWorkspaceViewConfig', () => {
   it('uses authored/all defaults for web view', () => {
@@ -57,5 +61,26 @@ describe('getDocumentScopeOptions', () => {
 
   it('keeps authored-first ordering for web view', () => {
     expect(getDocumentScopeOptions(false)).toEqual(['authored', 'approvals', 'cc']);
+  });
+});
+
+describe('getDocumentStatusFilterOptions', () => {
+  it('hides draft-first filtering in mobile app view', () => {
+    expect(getDocumentStatusFilterOptions(true)).toEqual([
+      'PENDING',
+      'ALL',
+      'APPROVED',
+      'REJECTED',
+    ]);
+  });
+
+  it('keeps all filters in web view', () => {
+    expect(getDocumentStatusFilterOptions(false)).toEqual([
+      'ALL',
+      'DRAFT',
+      'PENDING',
+      'APPROVED',
+      'REJECTED',
+    ]);
   });
 });

@@ -203,6 +203,61 @@ export function DocumentWorkspace() {
     }
   }, [isDetailOpen, selectedDocumentId]);
 
+  const documents = useMemo(() => {
+    const currentDocuments = documentsQuery.data ?? [];
+
+    if (!viewConfig.isMobileAppView) {
+      return currentDocuments;
+    }
+
+    return [...currentDocuments].sort((left, right) => {
+      const leftNeedsApproval = left.viewerApprovalStatus === "PENDING" ? 1 : 0;
+      const rightNeedsApproval =
+        right.viewerApprovalStatus === "PENDING" ? 1 : 0;
+
+      if (leftNeedsApproval !== rightNeedsApproval) {
+        return rightNeedsApproval - leftNeedsApproval;
+      }
+
+      const leftPending = left.status === "PENDING" ? 1 : 0;
+      const rightPending = right.status === "PENDING" ? 1 : 0;
+
+      if (leftPending !== rightPending) {
+        return rightPending - leftPending;
+      }
+
+      return (
+        new Date(right.updatedAt).getTime() -
+        new Date(left.updatedAt).getTime()
+      );
+    });
+  }, [documentsQuery.data, viewConfig.isMobileAppView]);
+
+  useEffect(() => {
+    if (!viewConfig.isMobileAppView || documentsQuery.isLoading) {
+      return;
+    }
+
+    if (documents.length === 0) {
+      setSelectedDocumentId(null);
+      setIsDetailOpen(false);
+      return;
+    }
+
+    const hasSelectedDocument = documents.some(
+      (document) => document.id === selectedDocumentId,
+    );
+
+    if (!selectedDocumentId || !hasSelectedDocument) {
+      setSelectedDocumentId(documents[0].id);
+    }
+  }, [
+    documents,
+    documentsQuery.isLoading,
+    selectedDocumentId,
+    viewConfig.isMobileAppView,
+  ]);
+
   const queryErrorMessage = useMemo(
     () =>
       getErrorMessage(documentsQuery.error) ??
@@ -969,7 +1024,7 @@ export function DocumentWorkspace() {
         errorMessage={queryErrorMessage}
         scope={scope}
         statusFilter={statusFilter}
-        documents={documentsQuery.data ?? []}
+        documents={documents}
         isDocumentsLoading={documentsQuery.isLoading}
         isDocumentsError={documentsQuery.isError}
         isRefreshing={documentsQuery.isFetching}

@@ -1,5 +1,5 @@
-import { useCallback, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,12 +9,10 @@ import {
   type WebViewContainerHandle,
   type WebViewControlState,
 } from './WebViewContainer';
-import { resolveAppDeepLink } from '../deeplink/deep-linking';
-
-type WebScreenProps = {
-  path: string;
-  title: string;
-};
+import {
+  resolveTabHrefForPath,
+  resolveTabHrefForUrl,
+} from '../deeplink/deep-linking';
 
 const INITIAL_CONTROL_STATE: WebViewControlState = {
   canGoBack: false,
@@ -23,10 +21,70 @@ const INITIAL_CONTROL_STATE: WebViewControlState = {
   isLoading: true,
 };
 
+const APP_MENU_ITEMS = [
+  {
+    description: '오늘 업무 브리핑',
+    href: '/(tabs)',
+    kind: 'tab' as const,
+    label: '홈',
+  },
+  {
+    description: '읽지 않은 채널 확인',
+    href: '/(tabs)/chatter',
+    kind: 'tab' as const,
+    label: '채터',
+  },
+  {
+    description: '승인 대기 문서',
+    href: '/(tabs)/documents',
+    kind: 'tab' as const,
+    label: '문서',
+  },
+  {
+    description: '오늘과 이번 주 일정',
+    href: '/(tabs)/schedules',
+    kind: 'tab' as const,
+    label: '일정',
+  },
+  {
+    description: 'AI 업무 도우미',
+    href: '/(tabs)/chat',
+    kind: 'tab' as const,
+    label: '도우미',
+  },
+  {
+    description: '회의/음성 기록',
+    href: '/(tabs)/voice',
+    kind: 'tab' as const,
+    label: '음성',
+  },
+  {
+    description: '팀 현황 보기',
+    kind: 'web' as const,
+    label: '팀 상태',
+    path: '/teammates?mobile=1',
+    title: '팀 상태',
+  },
+  {
+    description: '앱용 설정 보기',
+    kind: 'web' as const,
+    label: '설정',
+    path: '/mobile-settings?mobile=1',
+    title: '설정',
+  },
+] as const;
+
+type WebScreenProps = {
+  path: string;
+  title: string;
+};
+
 export function WebScreen({ path, title }: WebScreenProps) {
   const router = useRouter();
+  const currentTabHref = useMemo(() => resolveTabHrefForPath(path), [path]);
   const [authWarning, setAuthWarning] = useState<string | null>(null);
   const [isBridgePanelOpen, setIsBridgePanelOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const webViewRef = useRef<WebViewContainerHandle>(null);
   const [bridgeLogs, setBridgeLogs] = useState<BridgeLogEntry[]>([]);
   const [controlState, setControlState] = useState<WebViewControlState>(
@@ -65,14 +123,42 @@ export function WebScreen({ path, title }: WebScreenProps) {
 
   const handleInternalRouteRequest = useCallback(
     (url: string) => {
-      const href = resolveAppDeepLink(url);
+      const tabHref = resolveTabHrefForUrl(url);
 
-      if (!href || typeof href !== 'string' || !href.startsWith('/(tabs)')) {
+      if (
+        !tabHref ||
+        typeof tabHref !== 'string' ||
+        !tabHref.startsWith('/(tabs)')
+      ) {
         return false;
       }
 
-      router.navigate(href);
+      if (tabHref === currentTabHref) {
+        return false;
+      }
+
+      router.navigate(tabHref);
       return true;
+    },
+    [currentTabHref, router],
+  );
+
+  const handleMenuNavigate = useCallback(
+    (item: (typeof APP_MENU_ITEMS)[number]) => {
+      setIsMenuOpen(false);
+
+      if (item.kind === 'tab') {
+        router.navigate(item.href);
+        return;
+      }
+
+      router.push({
+        pathname: '/web',
+        params: {
+          path: item.path,
+          title: item.title,
+        },
+      });
     },
     [router],
   );
@@ -81,15 +167,23 @@ export function WebScreen({ path, title }: WebScreenProps) {
     <View style={styles.container}>
       <SafeAreaView edges={['top']} style={styles.headerSafeArea}>
         <View style={styles.header}>
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.caption}>
-              {controlState.hasError
-                ? '연결 오류'
-                : controlState.isLoading
-                  ? '로딩 중'
-                  : 'Web Harness'}
-            </Text>
+          <View style={styles.leadingGroup}>
+            <Pressable
+              onPress={() => setIsMenuOpen(true)}
+              style={styles.menuButton}
+            >
+              <Text style={styles.menuButtonText}>메뉴</Text>
+            </Pressable>
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.title}>{title}</Text>
+              <Text style={styles.caption}>
+                {controlState.hasError
+                  ? '연결 오류'
+                  : controlState.isLoading
+                    ? '로딩 중'
+                    : '앱 화면'}
+              </Text>
+            </View>
           </View>
           <View style={styles.actions}>
             <Pressable
@@ -186,6 +280,44 @@ export function WebScreen({ path, title }: WebScreenProps) {
           </View>
         ) : null}
       </SafeAreaView>
+      <Modal
+        animationType='fade'
+        onRequestClose={() => setIsMenuOpen(false)}
+        transparent
+        visible={isMenuOpen}
+      >
+        <Pressable
+          onPress={() => setIsMenuOpen(false)}
+          style={styles.menuBackdrop}
+        >
+          <Pressable
+            onPress={(event) => event.stopPropagation()}
+            style={styles.menuSheet}
+          >
+            <View style={styles.menuSheetHeader}>
+              <Text style={styles.menuSheetEyebrow}>WorkPresso</Text>
+              <Text style={styles.menuSheetTitle}>빠른 이동</Text>
+              <Text style={styles.menuSheetDescription}>
+                하단 탭과 함께 자주 쓰는 화면으로 이동하세요.
+              </Text>
+            </View>
+            <View style={styles.menuItems}>
+              {APP_MENU_ITEMS.map((item) => (
+                <Pressable
+                  key={`${item.kind}:${item.label}`}
+                  onPress={() => handleMenuNavigate(item)}
+                  style={styles.menuItem}
+                >
+                  <Text style={styles.menuItemLabel}>{item.label}</Text>
+                  <Text style={styles.menuItemDescription}>
+                    {item.description}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
       <WebViewContainer
         ref={webViewRef}
         onAuthWarningChange={setAuthWarning}
@@ -217,8 +349,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     gap: 12,
   },
+  leadingGroup: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   headerTextContainer: {
     flex: 1,
+  },
+  menuButton: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  menuButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0f172a',
   },
   title: {
     fontSize: 16,
@@ -233,6 +384,68 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: 8,
+  },
+  menuBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.22)',
+    paddingHorizontal: 16,
+    paddingTop: 72,
+  },
+  menuSheet: {
+    width: '100%',
+    maxWidth: 320,
+    borderRadius: 24,
+    backgroundColor: '#ffffff',
+    padding: 16,
+    shadowColor: '#0f172a',
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    elevation: 12,
+  },
+  menuSheetHeader: {
+    gap: 4,
+    paddingBottom: 12,
+  },
+  menuSheetEyebrow: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.1,
+    color: '#2563eb',
+    textTransform: 'uppercase',
+  },
+  menuSheetTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  menuSheetDescription: {
+    fontSize: 13,
+    color: '#64748b',
+  },
+  menuItems: {
+    gap: 8,
+  },
+  menuItem: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 4,
+  },
+  menuItemLabel: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  menuItemDescription: {
+    fontSize: 12,
+    color: '#64748b',
   },
   actionButton: {
     borderRadius: 999,

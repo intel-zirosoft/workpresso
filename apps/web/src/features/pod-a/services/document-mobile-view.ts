@@ -51,3 +51,11 @@ export function getDocumentScopeOptions(isMobileAppView: boolean) {
 
   return ['approvals', 'cc', 'authored'] as const;
 }
+
+export function getDocumentStatusFilterOptions(isMobileAppView: boolean) {
+  if (!isMobileAppView) {
+    return ['ALL', 'DRAFT', 'PENDING', 'APPROVED', 'REJECTED'] as const;
+  }
+
+  return ['PENDING', 'ALL', 'APPROVED', 'REJECTED'] as const;
+}

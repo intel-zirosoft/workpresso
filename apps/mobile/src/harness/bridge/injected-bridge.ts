@@ -10,6 +10,12 @@ export function buildInjectedBridgeScript(webBaseOrigin: string) {
 
   return `
     (function() {
+      try {
+        if (document && document.documentElement) {
+          document.documentElement.setAttribute('data-workpresso-mobile-app', 'true');
+        }
+      } catch (error) {}
+
       if (window.WorkPressoMobile && window.WorkPressoMobile.__initialized) {
         return true;
       }
@@ -35,6 +41,16 @@ export function buildInjectedBridgeScript(webBaseOrigin: string) {
 
         var parsed = safeParseUrl(url);
         return !!parsed && parsed.origin === INTERNAL_ORIGIN;
+      }
+
+      function isInlineUrl(url) {
+        var parsed = safeParseUrl(url);
+
+        if (!parsed) {
+          return false;
+        }
+
+        return ['about:', 'blob:', 'data:', 'javascript:'].indexOf(parsed.protocol) >= 0;
       }
 
       function postMessage(type, payload) {
@@ -119,6 +135,10 @@ export function buildInjectedBridgeScript(webBaseOrigin: string) {
         var targetAttr = (target.getAttribute('target') || '').toLowerCase();
         var shouldExternalize = targetAttr === '_blank' || !isInternalUrl(target.href);
 
+        if (isInlineUrl(target.href)) {
+          return;
+        }
+
         if (!shouldExternalize) {
           return;
         }
@@ -140,6 +160,11 @@ export function buildInjectedBridgeScript(webBaseOrigin: string) {
 
         var parsed = safeParseUrl(String(url));
         if (parsed && isInternalUrl(parsed.toString())) {
+          window.location.href = parsed.toString();
+          return window;
+        }
+
+        if (parsed && isInlineUrl(parsed.toString())) {
           window.location.href = parsed.toString();
           return window;
         }
