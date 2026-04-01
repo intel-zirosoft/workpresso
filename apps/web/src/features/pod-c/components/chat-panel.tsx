@@ -140,29 +140,21 @@ export function ChatPanel({
           : "mx-auto h-[calc(100vh-10rem)] max-w-4xl space-y-4 md:h-[calc(100vh-12rem)] md:space-y-6",
       )}
     >
-      <div
-        className={cn(
-          "flex items-center justify-between px-2",
-          isWidget && "mb-3 border-b border-background/60 px-1 pb-3",
-        )}
-      >
-        <div>
-          <h1
-            className={cn(
-              "font-headings font-bold tracking-tight text-primary",
-              isWidget ? "text-xl" : "text-2xl md:text-4xl",
-            )}
-          >
-            업무 비서
-          </h1>
-          <p className="mt-1 font-body text-xs text-text-muted md:text-base">
-            일정과 문서, 회의록까지 한 번에 찾는 AI 비서입니다.
-          </p>
+      {isWidget && (
+        <div className="mb-3 flex items-center justify-between border-b border-background/60 px-1 pb-3">
+          <div>
+            <h1 className="text-xl font-headings font-bold tracking-tight text-primary">
+              업무 비서
+            </h1>
+            <p className="mt-1 font-body text-xs text-text-muted">
+              AI 비서입니다.
+            </p>
+          </div>
+          <div className="rounded-md bg-secondary/10 p-3 shadow-soft">
+            <Sparkles className="h-5 w-5 text-secondary" />
+          </div>
         </div>
-        <div className="rounded-md bg-secondary/10 p-3 shadow-soft">
-          <Sparkles className="h-5 w-5 text-secondary md:h-6 md:w-6" />
-        </div>
-      </div>
+      )}
 
       <Card
         className={cn(

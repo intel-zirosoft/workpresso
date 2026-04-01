@@ -690,14 +690,14 @@ export function MessengerWorkspace() {
 
         {/* 워크스페이스 헬스 (하단 고정) */}
         <div className="mt-auto p-4">
-          <div className="rounded-2xl bg-surface-dark p-5 shadow-2xl space-y-4 border border-white/5">
-             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Productivity</p>
-             <h5 className="text-sm font-black text-white">Workspace Health</h5>
+          <div className="rounded-2xl bg-surface p-5 shadow-2xl space-y-4 border border-border/10">
+             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted">Productivity</p>
+             <h5 className="text-sm font-black text-text">Workspace Health</h5>
              <div className="space-y-2">
-                <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                   <div className="h-full w-[85%] bg-primary shadow-[0_0_12px_rgba(var(--primary),0.5)]" />
+                <div className="h-1.5 w-full bg-background/50 rounded-full overflow-hidden">
+                   <div className="h-full w-[85%] bg-primary shadow-soft" />
                 </div>
-                <div className="flex justify-between text-[10px] font-bold text-white/40">
+                <div className="flex justify-between text-[10px] font-bold text-text-muted">
                    <p>85% team engagement in the last 7 days.</p>
                 </div>
              </div>

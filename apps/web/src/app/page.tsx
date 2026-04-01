@@ -2,84 +2,73 @@
 
 import Link from "next/link";
 import {
-  ArrowRight,
-  Bot,
-  CalendarDays,
-  CalendarPlus,
   FileText,
+  CalendarPlus,
   MessageSquare,
-  Mic,
-  MoreHorizontal,
+  Users,
   Send,
+  Mic,
+  ArrowUpRight,
+  CircleAlert,
+  Mail,
+  FolderArchive,
   BarChart2,
-  FileSignature
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useMessenger } from "@/features/pod-e/contexts/messenger-context";
 import { HomeCalendarWidget } from "./_components/home-calendar-widget";
 import { UserProgressCard } from "./_components/user-progress-card";
 import { EmbeddedAiWidget } from "./_components/embedded-ai-widget";
 
-// SVG component to simulate the mockup's unique purple team icon
-function UsersIconCustom({ className }: { className?: string }) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none" className={className}>
-      <circle cx="12" cy="7" r="3" />
-      <circle cx="6" cy="15" r="3" />
-      <circle cx="18" cy="15" r="3" />
-    </svg>
-  );
-}
-
-const QUICK_ACTIONS = [
+const DASHBOARD_SHORTCUTS = [
   {
-    title: "문서 초안 만들기",
-    description: "AI가 제안하는 템플릿으로 시작",
+    title: "문서 작성",
+    description: "템플릿으로 빠르게 시작",
     href: "/documents",
     icon: FileText,
     iconArea: "bg-primary/10 text-primary",
   },
   {
-    title: "오늘 일정 정리",
-    description: "나의 하루 스케줄 한눈에 확인",
+    title: "일정 관리",
+    description: "오늘의 스케줄 확인",
     href: "/schedules",
     icon: CalendarPlus,
     iconArea: "bg-secondary/70 text-text-muted",
   },
   {
-    title: "AI에게 물어보기",
-    description: "궁금한 점을 바로 해결하세요",
+    title: "AI 비서",
+    description: "지능형 업무 도우미",
     href: "/chat",
     icon: MessageSquare,
     iconArea: "bg-info/10 text-info",
   },
   {
-    title: "팀 상태 확인",
-    description: "협업 중인 멤버들의 실시간 현황",
+    title: "팀 멤버",
+    description: "실시간 동료 현황",
     href: "/teammates",
-    icon: UsersIconCustom, // Defined below just for custom look
-    iconArea: "bg-pastel-purple text-purple/70", // subtle purple tone as requested by mockup
+    icon: Users,
+    iconArea: "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400",
   },
-];
-
-const COLLABORATION_LINKS = [
   {
-    title: "메신저로 빠르게 공유",
+    title: "메신저",
+    description: "팀원과 빠른 소통",
     href: "/messenger",
     icon: Send,
-    iconStyle: "bg-info/10 text-info",
+    iconArea: "bg-teal-100 text-teal-600",
   },
   {
-    title: "음성 회의록 남기기",
+    title: "음성 회의",
+    description: "회의록 자동 변환",
     href: "/voice",
     icon: Mic,
-    iconStyle: "bg-destructive/10 text-destructive",
+    iconArea: "bg-destructive/10 text-destructive",
   },
   {
     title: "팀 상태 보드 보기",
+    description: "실시간 동료 현황 상세",
     href: "/teammates",
     icon: BarChart2,
-    iconStyle: "bg-success/20 text-success",
+    iconArea: "bg-success/10 text-success",
   },
 ];
 
@@ -87,135 +76,105 @@ export default function HomePage() {
   const { openMessenger } = useMessenger();
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 lg:gap-8">
-      
-      {/* ========================================================= */}
-      {/* ⬅️ LEFT COLUMN (Main Content) - Spans 3 columns           */}
-      {/* ========================================================= */}
-      <div className="xl:col-span-3 space-y-6 lg:space-y-8 flex flex-col h-full">
-        
-        {/* 1. TOP BANNER */}
-        <section className="relative overflow-hidden rounded-[28px] border border-background/60 bg-surface-muted/60 px-6 py-8 md:px-10 md:py-10 shadow-sm flex flex-col gap-6">
-          {/* Subtle wavy graphic decoration approximation */}
-          <div className="absolute top-0 right-0 w-1/2 h-full opacity-30 pointer-events-none" style={{
-            background: 'radial-gradient(ellipse at top right, hsla(var(--primary), 0.15) 0%, transparent 70%)'
-          }} />
-
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 self-start rounded-full bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary shadow-sm border border-primary/10">
-            <CalendarDays className="h-4 w-4" />
-            오늘의 워크스페이스
-          </div>
-
-          {/* Titles & Buttons */}
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <h1 className="text-[26px] font-headings font-bold tracking-tight text-text sm:text-3xl md:text-[32px] lg:leading-tight whitespace-nowrap">
-              오늘의 일정을 한눈에 확인해보세요
-            </h1>
+    <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 lg:gap-12 items-start pb-10">
+      {/* 1. LEFT PANE (75% on Desktop) */}
+      <div className="xl:col-span-3 flex flex-col gap-10 lg:gap-14">
+        {/* DASHBOARD SHORTCUTS GRID (2-Column Layout for wider, premium cards) */}
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+          {DASHBOARD_SHORTCUTS.map((shortcut) => {
+            const isMessenger = shortcut.href === "/messenger";
+            const isSpecial = shortcut.title === "AI 비서"; // Special styling for Curator Pro reference
             
-            <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-              <Button asChild className="h-12 rounded-pill px-6 text-sm font-bold shadow-soft">
-                <Link href="/documents">
-                  <FileSignature className="h-4 w-4 mr-2" />
-                  문서 작성 시작
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="h-12 rounded-pill border-background bg-surface px-6 text-sm font-bold text-text hover:bg-background/80 shadow-sm">
-                <Link href="/chat">
-                  <Bot className="h-4 w-4 mr-2 text-primary" />
-                  AI에게 질문
-                </Link>
-              </Button>
-            </div>
-          </div>
+            return (
+              <Link
+                key={shortcut.title}
+                href={isMessenger ? "#" : shortcut.href}
+                onClick={(e) => {
+                  if (isMessenger) {
+                    e.preventDefault();
+                    openMessenger();
+                  }
+                }}
+                className={cn(
+                  "group relative flex flex-col gap-4 rounded-[24px] p-5 md:p-6 transition-all hover:-translate-y-1",
+                  isSpecial
+                    ? "bg-surface shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-background/60 hover:shadow-md"
+                    : "bg-surface-muted/60 border border-transparent hover:bg-surface-muted"
+                )}
+              >
+                <div className="flex items-start justify-between">
+                  <div
+                    className={cn(
+                      "flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] shadow-sm transition-transform group-hover:scale-110",
+                      shortcut.iconArea
+                    )}
+                  >
+                    <shortcut.icon className="h-5 w-5" />
+                  </div>
+                  
+                  {isSpecial ? (
+                    <div className="bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-md tracking-wider shadow-sm absolute -top-1 right-5 md:top-5 md:-translate-y-1">
+                      인기
+                    </div>
+                  ) : (
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ArrowUpRight className="h-5 w-5 text-text-muted/40 group-hover:text-primary transition-all" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1.5 mt-2">
+                  <h2 className="font-headings text-[17px] font-bold text-text group-hover:text-primary transition-colors leading-tight">
+                    {shortcut.title}
+                  </h2>
+                  <p className="text-[13px] font-medium text-text-muted/70 leading-relaxed min-h-[2.5rem]">
+                    {shortcut.description}
+                  </p>
+                </div>
+              </Link>
+            );
+          })}
         </section>
 
-        {/* 2. QUICK ACTIONS GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-          {QUICK_ACTIONS.map((action) => (
-            <Link
-              key={action.title}
-              href={action.href}
-              className="group flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-[24px] border border-background/60 bg-surface p-5 transition-all hover:-translate-y-1 hover:shadow-soft"
-            >
-              {/* Left Color Block */}
-              <div
-                className={`flex shrink-0 h-14 w-14 items-center justify-center rounded-2xl ${action.iconArea} shadow-inner`}
-              >
-                <action.icon className="h-6 w-6" />
-              </div>
-
-              {/* Text Block */}
-              <div className="flex-1 min-w-0">
-                <h2 className="font-headings text-lg font-bold text-text mb-1 truncate group-hover:text-primary transition-colors">
-                  {action.title}
-                </h2>
-                <p className="text-sm font-medium text-text-muted truncate">
-                  {action.description}
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        {/* 3. HOME CALENDAR WIDGET */}
-        <div className="flex-1 mt-2">
+        {/* MAIN WORKSPACE (Schedules) */}
+        <section>
           <HomeCalendarWidget />
-        </div>
+        </section>
       </div>
 
-      
-      {/* ========================================================= */}
-      {/* ➡️ RIGHT COLUMN (Sidebar Actions) - Spans 1 column        */}
-      {/* ========================================================= */}
-      <aside className="xl:col-span-1 flex flex-col gap-6 lg:gap-8 min-h-full">
-
-        {/* 1. RECOMMENDED TASKS */}
-        <section className="flex flex-col">
-          <div className="flex items-center justify-between mb-4 px-1">
-            <h3 className="font-headings text-lg font-bold text-text">지금 하면 좋은 작업</h3>
-            <button className="text-text-muted hover:text-text p-1 transition-colors">
-              <MoreHorizontal size={20} />
-            </button>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            {COLLABORATION_LINKS.map((item) => {
-              const isMessenger = item.href === "/messenger";
-              
-              return (
-                <Link
-                  key={item.title}
-                  href={isMessenger ? "#" : item.href}
-                  onClick={(e) => {
-                    if (isMessenger) {
-                      e.preventDefault();
-                      openMessenger();
-                    }
-                  }}
-                  className="flex items-center gap-4 rounded-2xl bg-background/50 p-3 pl-4 transition-all hover:bg-surface hover:shadow-sm group border border-transparent hover:border-background/80"
-                >
-                  <div className={`flex shrink-0 h-8 w-8 items-center justify-center rounded-xl ${item.iconStyle}`}>
-                    <item.icon className="h-4 w-4" />
+      {/* 2. RIGHT SIDEBAR PANE (25% on Desktop) */}
+      <div className="xl:col-span-1 flex flex-col gap-10 lg:gap-14">
+        {/* Section: Recommended Tasks (Image 1 Style) */}
+        <div className="flex flex-col gap-6">
+          <h3 className="text-2xl font-headings font-bold text-text px-1">
+            지금 하면 좋은 작업
+          </h3>
+          
+          <div className="flex flex-col gap-4">
+              {[
+                { icon: CircleAlert, title: "대기 중인 편집 검토", desc: "3개의 파일이 승인을 기다리고 있습니다.", color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10" },
+                { icon: Mail, title: "주간 리포트", desc: "팀 활동 요약 정보입니다.", color: "text-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-500/10" },
+                { icon: FolderArchive, title: "프로젝트 알파 아카이브", desc: "14일 전에 완료된 프로젝트입니다.", color: "text-slate-500", bg: "bg-slate-50 dark:bg-slate-500/10" },
+              ].map((task, i) => (
+                <div key={i} className="flex items-start gap-5 py-3 bg-transparent cursor-pointer group">
+                  <div className={cn("h-11 w-11 shrink-0 flex items-center justify-center rounded-full shadow-sm", task.bg)}>
+                    <task.icon className={cn("h-5 w-5", task.color)} />
                   </div>
-                  <span className="font-headings text-sm font-bold text-text/90 group-hover:text-text transition-colors">
-                    {item.title}
-                  </span>
-                </Link>
-              );
-            })}
+                  <div className="min-w-0 pt-0.5">
+                    <h4 className="text-[15px] font-bold text-text group-hover:text-primary transition-colors truncate">{task.title}</h4>
+                    <p className="text-[13px] font-medium text-text-muted mt-0.5 leading-snug">{task.desc}</p>
+                  </div>
+                </div>
+              ))}
           </div>
-        </section>
-
-        {/* 2. USER PROGRESS CARD */}
-        <UserProgressCard />
-
-        {/* 3. PROACTIVE AI WIDGET */}
-        <div className="flex-1">
-          <EmbeddedAiWidget />
         </div>
 
-      </aside>
+        <UserProgressCard />
+        
+        <div className="sticky top-24">
+          <EmbeddedAiWidget />
+        </div>
+      </div>
     </div>
   );
 }

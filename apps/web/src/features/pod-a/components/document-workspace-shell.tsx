@@ -68,11 +68,7 @@ export function DocumentWorkspaceShell({
 }: DocumentWorkspaceShellProps) {
   return (
     <div className="flex h-[calc(100vh-170px)] flex-col space-y-4 overflow-hidden">
-      <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between px-1 flex-shrink-0">
-        <div>
-          <h1 className="text-2xl font-headings font-bold tracking-tight text-text">문서 워크스페이스</h1>
-          <p className="text-xs text-text-muted font-medium mt-0.5">업무의 흐름을 한눈에 파악하고 결재를 진행하세요.</p>
-        </div>
+      <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-end px-1 flex-shrink-0">
         <div className="flex items-center gap-2">
           <Button
             type="button"
