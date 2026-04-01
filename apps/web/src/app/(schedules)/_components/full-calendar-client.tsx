@@ -10,7 +10,7 @@ type FullCalendarClientProps = {
   calendarRef: any;
   events: any[];
   onDateClick: (arg: any) => void;
-  onDatesSet: () => void;
+  onDatesSet: (arg: any) => void;
   onEventClick: (info: any) => void;
   renderEventContent: (eventInfo: any) => React.ReactNode;
 };

@@ -32,6 +32,145 @@ export async function sanitizeJiraDomain(domain: string): Promise<string> {
   }
 }
 
+function getEnvExtensionFallback(extName: string) {
+  if (extName === 'slack') {
+    const webhookUrl = process.env.WORKPRESSO_SLACK_WEBHOOK_URL?.trim() ?? '';
+    const botToken = process.env.WORKPRESSO_SLACK_BOT_TOKEN?.trim() ?? '';
+
+    if (!webhookUrl && !botToken) {
+      return null;
+    }
+
+    return {
+      ext_name: 'slack',
+      is_active: Boolean(webhookUrl),
+      config: { webhookUrl, botToken },
+    };
+  }
+
+  if (extName === 'jira') {
+    const domain = process.env.WORKPRESSO_JIRA_DOMAIN?.trim() ?? '';
+    const email = process.env.WORKPRESSO_JIRA_EMAIL?.trim() ?? '';
+    const projectKey = process.env.WORKPRESSO_JIRA_PROJECT_KEY?.trim() ?? '';
+    const apiToken = process.env.WORKPRESSO_JIRA_API_TOKEN?.trim() ?? '';
+
+    if (!domain && !email && !projectKey && !apiToken) {
+      return null;
+    }
+
+    return {
+      ext_name: 'jira',
+      is_active: Boolean(domain && email && projectKey && apiToken),
+      config: {
+        domain,
+        email,
+        projectKey,
+        apiToken,
+      },
+    };
+  }
+
+  return null;
+}
+
+function mergeExtensionConfig(
+  data: any,
+  fallback: ReturnType<typeof getEnvExtensionFallback>,
+) {
+  if (!data) {
+    return fallback;
+  }
+
+  if (!fallback) {
+    return data;
+  }
+
+  return {
+    ...data,
+    config: {
+      ...(fallback.config ?? {}),
+      ...((data.config as Record<string, unknown> | null) ?? {}),
+    },
+  };
+}
+
+async function getIntegrationConfigForServer(extName: string) {
+  const envFallback = getEnvExtensionFallback(extName);
+
+  if (envFallback?.is_active) {
+    return envFallback;
+  }
+
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient
+    .from('workspace_extensions')
+    .select('*')
+    .eq('ext_name', extName)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return mergeExtensionConfig(data, envFallback);
+}
+
+export type JiraIssueTypeSummary = {
+  id: string;
+  name: string;
+  hierarchyLevel?: number;
+  subtask?: boolean;
+};
+
+export async function getJiraProjectMetadata(projectKeyOverride?: string) {
+  const jira = await getIntegrationConfigForServer('jira');
+
+  if (!jira || !jira.is_active) {
+    throw new Error('Jira 연동이 활성화되어 있지 않습니다. 설정에서 연동을 먼저 완료해주세요.');
+  }
+
+  const { domain, email, apiToken, projectKey: defaultProjectKey } = jira.config as any;
+  const projectKey = projectKeyOverride || defaultProjectKey;
+
+  if (!domain || !email || !apiToken || !projectKey) {
+    throw new Error('Jira 연동 정보(Domain, Email, Token, Project Key)가 누락되었습니다.');
+  }
+
+  try {
+    const auth = Buffer.from(`${email}:${apiToken}`).toString('base64');
+    const response = await fetch(`https://${domain}/rest/api/3/project/${projectKey}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Jira 프로젝트 조회 실패: ${response.status} ${errorData.errorMessages ? errorData.errorMessages[0] : 'Unauthorized'}`);
+    }
+
+    const data = await response.json();
+
+    return {
+      domain,
+      email,
+      apiToken,
+      projectKey,
+      projectName: data.name as string,
+      issueTypes: ((data.issueTypes as any[] | undefined) ?? []).map((issueType) => ({
+        id: issueType.id as string,
+        name: issueType.name as string,
+        hierarchyLevel: typeof issueType.hierarchyLevel === 'number' ? issueType.hierarchyLevel : undefined,
+        subtask: Boolean(issueType.subtask),
+      })) satisfies JiraIssueTypeSummary[],
+    };
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : 'Jira 프로젝트 조회 중 네트워크 오류가 발생했습니다.');
+  }
+}
+
 /**
  * 익스텐션 설정을 내부적으로 조회합니다. (역할 체크 없음)
  * 서버 액션 내부 또는 파드 간 공유용으로만 사용하며, 클라이언트에 민감한 정보를 노출하지 않도록 주의해야 합니다.
@@ -48,7 +187,8 @@ export async function getExtensionInternal(extName: string) {
     // PGRST116 is no rows
     throw new Error(error.message);
   }
-  return data;
+
+  return mergeExtensionConfig(data, getEnvExtensionFallback(extName));
 }
 
 /**
@@ -383,8 +523,10 @@ export async function createJiraIssue(issue: {
   description: string;
   projectKey?: string;
   issueType?: string; // Task, Bug, Story 등
+  issueTypeId?: string;
+  parentKey?: string;
 }) {
-  const jira = await getExtensionInternal("jira");
+  const jira = await getIntegrationConfigForServer('jira');
   if (!jira || !jira.is_active) {
     throw new Error(
       "Jira 연동이 활성화되어 있지 않습니다. 설정에서 연동을 먼저 완료해주세요.",
@@ -440,7 +582,10 @@ export async function createJiraIssue(issue: {
             },
           ],
         },
-        issuetype: { name: issue.issueType || "Task" },
+        issuetype: issue.issueTypeId
+          ? { id: issue.issueTypeId }
+          : { name: issue.issueType || "Task" },
+        ...(issue.parentKey ? { parent: { key: issue.parentKey } } : {}),
       },
     };
 
@@ -475,7 +620,7 @@ export async function createJiraIssue(issue: {
     return {
       success: true,
       issueKey: data.key,
-      issueUrl: `https://${domain}/browse/${data.key}`,
+      issueUrl: `https://${sanitizedDomain}/browse/${data.key}`,
     };
   } catch (error) {
     throw new Error(

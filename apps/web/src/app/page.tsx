@@ -1,207 +1,221 @@
+"use client";
+
 import Link from "next/link";
 import {
   ArrowRight,
   Bot,
   CalendarDays,
   CalendarPlus,
-  CheckCircle2,
   FileText,
-  Sparkles,
+  MessageSquare,
+  Mic,
+  MoreHorizontal,
+  Send,
+  BarChart2,
+  FileSignature
 } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
+import { useMessenger } from "@/features/pod-e/contexts/messenger-context";
+import { HomeCalendarWidget } from "./_components/home-calendar-widget";
+import { UserProgressCard } from "./_components/user-progress-card";
+import { EmbeddedAiWidget } from "./_components/embedded-ai-widget";
 
-const HERO_PROMPTS = [
-  { label: "오늘 일정 요약", href: "/chat" },
-  { label: "회의록 3줄 요약", href: "/chat" },
-  { label: "사내 규약 검색", href: "/chat" },
-];
-
-const SUMMARY_CARDS = [
-  {
-    title: "오늘 일정",
-    value: "확인",
-    href: "/schedules",
-    icon: CalendarDays,
-    tone: "bg-primary/10 text-primary",
-  },
-  {
-    title: "문서 작업",
-    value: "이동",
-    href: "/documents",
-    icon: FileText,
-    tone: "bg-amber-100 text-amber-600",
-  },
-  {
-    title: "AI 시작",
-    value: "질문",
-    href: "/chat",
-    icon: Bot,
-    tone: "bg-violet-100 text-violet-600",
-  },
-] as const;
-
-const PRIORITY_ITEMS = [
-  "오늘 일정 먼저 점검",
-  "문서/대화 분리 운영",
-  "AI로 시작 비용 줄이기",
-] as const;
+// SVG component to simulate the mockup's unique purple team icon
+function UsersIconCustom({ className }: { className?: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none" className={className}>
+      <circle cx="12" cy="7" r="3" />
+      <circle cx="6" cy="15" r="3" />
+      <circle cx="18" cy="15" r="3" />
+    </svg>
+  );
+}
 
 const QUICK_ACTIONS = [
   {
-    title: "문서 작성",
+    title: "문서 초안 만들기",
+    description: "AI가 제안하는 템플릿으로 시작",
     href: "/documents",
     icon: FileText,
+    iconArea: "bg-primary/10 text-primary",
   },
   {
-    title: "일정 추가",
+    title: "오늘 일정 정리",
+    description: "나의 하루 스케줄 한눈에 확인",
     href: "/schedules",
     icon: CalendarPlus,
+    iconArea: "bg-secondary/20 text-secondary-foreground",
   },
   {
-    title: "AI 질문",
+    title: "AI에게 물어보기",
+    description: "궁금한 점을 바로 해결하세요",
     href: "/chat",
-    icon: Bot,
+    icon: MessageSquare,
+    iconArea: "bg-info/10 text-info",
   },
-] as const;
+  {
+    title: "팀 상태 확인",
+    description: "협업 중인 멤버들의 실시간 현황",
+    href: "/teammates",
+    icon: UsersIconCustom, // Defined below just for custom look
+    iconArea: "bg-[#EAE4F5] text-[#7E57C2]", // subtle purple tone as requested by mockup
+  },
+];
+
+const COLLABORATION_LINKS = [
+  {
+    title: "메신저로 빠르게 공유",
+    href: "/messenger",
+    icon: Send,
+    iconStyle: "bg-info/10 text-info",
+  },
+  {
+    title: "음성 회의록 남기기",
+    href: "/voice",
+    icon: Mic,
+    iconStyle: "bg-destructive/10 text-destructive",
+  },
+  {
+    title: "팀 상태 보드 보기",
+    href: "/teammates",
+    icon: BarChart2,
+    iconStyle: "bg-success/20 text-success-foreground",
+  },
+];
 
 export default function HomePage() {
+  const { openMessenger } = useMessenger();
+
   return (
-    <div className="space-y-4 md:space-y-5">
-      <header className="overflow-hidden rounded-[24px] border border-background/60 bg-surface px-4 py-4 shadow-soft md:px-5 md:py-5">
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.9fr)] xl:items-center">
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-              <Sparkles className="h-3.5 w-3.5" />
-              WorkPresso
-            </div>
-            <h1 className="text-xl font-headings font-bold tracking-tight text-text md:text-3xl">
-              바로 시작하세요.
+    <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 lg:gap-8">
+      
+      {/* ========================================================= */}
+      {/* ⬅️ LEFT COLUMN (Main Content) - Spans 3 columns           */}
+      {/* ========================================================= */}
+      <div className="xl:col-span-3 space-y-6 lg:space-y-8 flex flex-col h-full">
+        
+        {/* 1. TOP BANNER */}
+        <section className="relative overflow-hidden rounded-[28px] border border-background/60 bg-surface-muted/60 px-6 py-8 md:px-10 md:py-10 shadow-sm flex flex-col gap-6">
+          {/* Subtle wavy graphic decoration approximation */}
+          <div className="absolute top-0 right-0 w-1/2 h-full opacity-30 pointer-events-none" style={{
+            background: 'radial-gradient(ellipse at top right, hsla(var(--primary), 0.15) 0%, transparent 70%)'
+          }} />
+
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 self-start rounded-full bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary shadow-sm border border-primary/10">
+            <CalendarDays className="h-4 w-4" />
+            오늘의 워크스페이스
+          </div>
+
+          {/* Titles & Buttons */}
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <h1 className="text-[26px] font-headings font-bold tracking-tight text-text sm:text-3xl md:text-[32px] lg:leading-tight whitespace-nowrap">
+              오늘의 일정을 한눈에 확인해보세요
             </h1>
-          </div>
-
-          <div className="rounded-[20px] border border-background/60 bg-background/40 p-3 md:p-4">
-            <Link
-              href="/chat"
-              className="flex min-h-12 items-center justify-between rounded-[18px] border border-background/70 bg-white px-4 py-3 transition-all hover:-translate-y-0.5 hover:shadow-soft"
-            >
-              <p className="text-sm font-bold text-text">AI에게 물어보기</p>
-              <ArrowRight className="h-4 w-4 text-primary" />
-            </Link>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {HERO_PROMPTS.map((prompt) => (
-                <Button
-                  key={prompt.label}
-                  asChild
-                  variant="outline"
-                  className="h-8 rounded-pill border-background/70 bg-white px-3 text-[11px] font-bold text-text hover:bg-background"
-                >
-                  <Link href={prompt.href}>{prompt.label}</Link>
-                </Button>
-              ))}
+            
+            <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+              <Button asChild className="h-12 rounded-pill px-6 text-sm font-bold shadow-soft">
+                <Link href="/documents">
+                  <FileSignature className="h-4 w-4 mr-2" />
+                  문서 작성 시작
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="h-12 rounded-pill border-background bg-surface px-6 text-sm font-bold text-text hover:bg-background/80 shadow-sm">
+                <Link href="/chat">
+                  <Bot className="h-4 w-4 mr-2 text-primary" />
+                  AI에게 질문
+                </Link>
+              </Button>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="mt-4 grid gap-2 md:grid-cols-3">
-          {SUMMARY_CARDS.map((card) => (
+        {/* 2. QUICK ACTIONS GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+          {QUICK_ACTIONS.map((action) => (
             <Link
-              key={card.title}
-              href={card.href}
-              className="group rounded-[18px] border border-background/60 bg-background/40 p-3 transition-all hover:-translate-y-1 hover:bg-white hover:shadow-soft"
+              key={action.title}
+              href={action.href}
+              className="group flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-[24px] border border-background/60 bg-surface p-5 transition-all hover:-translate-y-1 hover:shadow-soft"
             >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`inline-flex h-9 w-9 items-center justify-center rounded-xl ${card.tone}`}
-                >
-                  <card.icon className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-headings text-sm font-bold text-text">
-                    {card.title}
-                  </p>
-                  <p className="text-xs font-bold text-text/70">{card.value}</p>
-                </div>
-                <ArrowRight className="h-4 w-4 shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+              {/* Left Color Block */}
+              <div
+                className={`flex shrink-0 h-14 w-14 items-center justify-center rounded-2xl ${action.iconArea} shadow-inner`}
+              >
+                <action.icon className="h-6 w-6" />
+              </div>
+
+              {/* Text Block */}
+              <div className="flex-1 min-w-0">
+                <h2 className="font-headings text-lg font-bold text-text mb-1 truncate group-hover:text-primary transition-colors">
+                  {action.title}
+                </h2>
+                <p className="text-sm font-medium text-text-muted truncate">
+                  {action.description}
+                </p>
               </div>
             </Link>
           ))}
         </div>
-      </header>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <section className="rounded-[24px] border border-background/60 bg-surface p-4 shadow-soft">
-          <div className="mb-3">
-            <p className="text-xs font-bold text-primary">오늘 우선</p>
-            <h2 className="mt-1 font-headings text-lg font-bold text-text">
-              핵심만 확인하세요.
-            </h2>
+        {/* 3. HOME CALENDAR WIDGET */}
+        <div className="flex-1 mt-2">
+          <HomeCalendarWidget />
+        </div>
+      </div>
+
+      
+      {/* ========================================================= */}
+      {/* ➡️ RIGHT COLUMN (Sidebar Actions) - Spans 1 column        */}
+      {/* ========================================================= */}
+      <aside className="xl:col-span-1 flex flex-col gap-6 lg:gap-8 min-h-full">
+
+        {/* 1. RECOMMENDED TASKS */}
+        <section className="flex flex-col">
+          <div className="flex items-center justify-between mb-4 px-1">
+            <h3 className="font-headings text-lg font-bold text-text">지금 하면 좋은 작업</h3>
+            <button className="text-text-muted hover:text-text p-1 transition-colors">
+              <MoreHorizontal size={20} />
+            </button>
           </div>
 
-          <div className="grid gap-2 md:grid-cols-3">
-            {PRIORITY_ITEMS.map((title, index) => (
-              <div key={title} className="rounded-[18px] bg-background/50 px-3 py-3">
-                <div className="flex items-center gap-3">
-                  <div className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs font-black text-primary shadow-sm">
-                    {index + 1}
+          <div className="flex flex-col gap-3">
+            {COLLABORATION_LINKS.map((item) => {
+              const isMessenger = item.href === "/messenger";
+              
+              return (
+                <Link
+                  key={item.title}
+                  href={isMessenger ? "#" : item.href}
+                  onClick={(e) => {
+                    if (isMessenger) {
+                      e.preventDefault();
+                      openMessenger();
+                    }
+                  }}
+                  className="flex items-center gap-4 rounded-2xl bg-background/50 p-3 pl-4 transition-all hover:bg-surface hover:shadow-sm group border border-transparent hover:border-background/80"
+                >
+                  <div className={`flex shrink-0 h-8 w-8 items-center justify-center rounded-xl ${item.iconStyle}`}>
+                    <item.icon className="h-4 w-4" />
                   </div>
-                  <h3 className="font-headings text-sm font-bold text-text">{title}</h3>
-                </div>
-              </div>
-            ))}
+                  <span className="font-headings text-sm font-bold text-text/90 group-hover:text-text transition-colors">
+                    {item.title}
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </section>
 
-        <div className="space-y-4">
-          <section className="rounded-[24px] border border-background/60 bg-surface p-4 shadow-soft">
-            <div className="mb-3">
-              <h2 className="font-headings text-lg font-bold text-text">빠른 실행</h2>
-            </div>
-            <div className="space-y-2">
-              {QUICK_ACTIONS.map((action) => (
-                <Link
-                  key={action.title}
-                  href={action.href}
-                  className="group block rounded-[16px] border border-background/60 bg-background/35 px-3 py-3 transition-all hover:bg-white hover:shadow-soft"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <action.icon className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-headings text-sm font-bold text-text">
-                        {action.title}
-                      </h3>
-                    </div>
-                    <ArrowRight className="h-4 w-4 shrink-0 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
+        {/* 2. USER PROGRESS CARD */}
+        <UserProgressCard />
 
-          <section className="rounded-[24px] border border-success/20 bg-success/10 p-4 shadow-sm">
-            <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/70 px-3 py-1 text-[11px] font-bold text-text">
-              <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-              AI
-            </div>
-            <h2 className="font-headings text-base font-bold text-text">바로 시작</h2>
-            <ul className="mt-2 space-y-1.5 text-sm leading-5 text-text/80">
-              <li>• 오늘 일정 기준으로 우선순위를 정리해줘</li>
-              <li>• 회의록 초안을 3줄로 요약해줘</li>
-              <li>• 공유용 문서 목차를 먼저 만들어줘</li>
-            </ul>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button asChild className="h-9 rounded-pill px-4 text-sm font-bold shadow-soft">
-                <Link href="/chat">
-                  <Bot className="h-4 w-4" />
-                  AI 채팅 열기
-                </Link>
-              </Button>
-            </div>
-          </section>
+        {/* 3. PROACTIVE AI WIDGET */}
+        <div className="flex-1">
+          <EmbeddedAiWidget />
         </div>
-      </div>
+
+      </aside>
     </div>
   );
 }

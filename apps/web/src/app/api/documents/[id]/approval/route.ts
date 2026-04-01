@@ -4,7 +4,10 @@ import {
   approvalActionInputSchema,
   documentResponseSchema,
 } from "@/features/pod-a/services/document-schema";
-import { actOnWorkflowDocument } from "@/features/pod-a/services/document-server";
+import {
+  actOnWorkflowDocument,
+  processPendingDocumentSideEffectJobs,
+} from "@/features/pod-a/services/document-server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -41,6 +44,12 @@ export async function POST(
 
   if (authError || !user) {
     return unauthorizedResponse();
+  }
+
+  try {
+    await processPendingDocumentSideEffectJobs({ adminSupabase });
+  } catch (jobError) {
+    console.error("document side effect flush failed:", jobError);
   }
 
   try {

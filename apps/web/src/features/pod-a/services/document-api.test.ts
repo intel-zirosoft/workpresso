@@ -8,6 +8,7 @@ import {
   DocumentApiError,
   fetchDocuments,
   submitDocument,
+  syncDocumentToJira,
 } from "@/features/pod-a/services/document-api";
 
 const mockFetch = vi.fn();
@@ -135,12 +136,14 @@ describe("document-api", () => {
             viewerApprovalStatus: null,
             approvalSteps: [],
             ccRecipients: [],
+            jiraLinks: [],
             permissions: {
               canEdit: false,
               canSubmit: false,
               canApprove: false,
               canReject: false,
               canDelete: false,
+              canSyncJira: false,
             },
           },
         }),
@@ -187,12 +190,14 @@ describe("document-api", () => {
             viewerApprovalStatus: null,
             approvalSteps: [],
             ccRecipients: [],
+            jiraLinks: [],
             permissions: {
               canEdit: false,
               canSubmit: false,
               canApprove: false,
               canReject: false,
               canDelete: false,
+              canSyncJira: false,
             },
           },
         }),
@@ -231,5 +236,67 @@ describe("document-api", () => {
         method: "DELETE",
       },
     );
+  });
+
+  it("sends Jira sync requests to the dedicated endpoint", async () => {
+    mockFetch.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          document: {
+            id: "00000000-0000-4000-8000-000000000001",
+            authorId: "00000000-0000-4000-8000-000000000002",
+            author: {
+              id: "00000000-0000-4000-8000-000000000002",
+              name: "작성자",
+              department: "운영",
+            },
+            title: "운영 계획",
+            content: "본문",
+            status: "APPROVED",
+            submittedAt: "2026-03-26T02:00:00.000Z",
+            finalApprovedAt: "2026-03-26T03:00:00.000Z",
+            createdAt: "2026-03-26T00:00:00.000Z",
+            updatedAt: "2026-03-26T03:00:00.000Z",
+            currentStepLabel: null,
+            currentApprover: null,
+            approvalStepCount: 3,
+            ccRecipientCount: 0,
+            approvalSteps: [],
+            ccRecipients: [],
+            jiraLinks: [
+              {
+                id: "00000000-0000-4000-8000-000000000301",
+                issueKey: "KAN-1",
+                issueUrl: "https://workpresso.atlassian.net/browse/KAN-1",
+                issueType: "에픽",
+                summary: "운영 계획",
+                status: "할 일",
+                syncedAt: "2026-03-30T01:00:00.000Z",
+              },
+            ],
+            permissions: {
+              canEdit: false,
+              canSubmit: false,
+              canApprove: false,
+              canReject: false,
+              canSyncJira: true,
+            },
+          },
+        }),
+        { status: 200 },
+      ),
+    );
+
+    const document = await syncDocumentToJira(
+      "00000000-0000-4000-8000-000000000001",
+    );
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      "/api/documents/00000000-0000-4000-8000-000000000001/jira",
+      {
+        method: "POST",
+      },
+    );
+    expect(document.jiraLinks).toHaveLength(1);
   });
 });

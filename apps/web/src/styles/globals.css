@@ -127,6 +127,7 @@
   }
 
   html {
+    @apply scrollbar-hide;
     background-color: hsl(var(--background));
   }
 
@@ -214,4 +215,26 @@
   color: hsl(var(--calendar-sunday)) !important;
   z-index: 30 !important;
   position: relative !important;
+}
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .scrollbar-hover-show::-webkit-scrollbar-thumb {
+    background: transparent;
+  }
+  .scrollbar-hover-show:hover::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted) / 0.5);
+  }
+  .scrollbar-hover-show::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scrollbar-hover-show::-webkit-scrollbar-track {
+    background: transparent;
+  }
 }

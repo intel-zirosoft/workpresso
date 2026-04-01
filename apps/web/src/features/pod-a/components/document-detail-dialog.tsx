@@ -2,11 +2,13 @@
 
 import {
   CheckCheck,
+  ExternalLink,
   FileText,
   GitBranch,
   Loader2,
   PencilLine,
   Send,
+  Ticket,
   Trash2,
   UserPlus,
   XCircle,
@@ -49,10 +51,15 @@ type DocumentDetailDialogProps = {
   onApprove: () => void;
   onReject: () => void;
   onDelete: () => void;
+<<<<<<< HEAD
   isMobileAppView?: boolean;
+=======
+  onSyncToJira: () => void;
+>>>>>>> develop
   submitPending: boolean;
   approvalPending: boolean;
   deletePending: boolean;
+  jiraSyncPending: boolean;
 };
 
 export function DocumentDetailDialog({
@@ -66,12 +73,18 @@ export function DocumentDetailDialog({
   onApprove,
   onReject,
   onDelete,
+<<<<<<< HEAD
   isMobileAppView = false,
+=======
+  onSyncToJira,
+>>>>>>> develop
   submitPending,
   approvalPending,
   deletePending,
+  jiraSyncPending,
 }: DocumentDetailDialogProps) {
-  const isActionPending = submitPending || approvalPending || deletePending;
+  const isActionPending =
+    submitPending || approvalPending || deletePending || jiraSyncPending;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -201,6 +214,77 @@ export function DocumentDetailDialog({
                 )}
               </div>
             </section>
+
+            <section className="rounded-3xl border border-background/60 bg-surface p-5 shadow-sm">
+              <div className="mb-4 flex items-center gap-2 text-sm font-bold text-text">
+                <Ticket className="h-4 w-4 text-primary" />
+                Jira 연동
+              </div>
+              {document?.jiraLinks.length ? (
+                <div className="space-y-3">
+                  {document.jiraLinks.map((link) => (
+                    <div
+                      key={link.id}
+                      className="rounded-2xl border border-background/60 bg-background/70 p-4"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">
+                          {link.issueKey}
+                        </span>
+                        <span className="text-[11px] font-medium text-text-muted">
+                          {link.issueType}
+                        </span>
+                        <span className="text-[11px] font-medium text-text-muted">
+                          {link.status}
+                        </span>
+                      </div>
+                      <div className="mt-2 text-sm font-semibold text-text">
+                        {link.summary}
+                      </div>
+                      <div className="mt-1 text-[11px] font-medium text-text-muted">
+                        최근 동기화 {formatDate(link.syncedAt)}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="mt-3 rounded-pill"
+                        asChild
+                      >
+                        <a
+                          href={link.issueUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          Jira 열기
+                        </a>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="text-sm text-text-muted">
+                    아직 연결된 Jira 이슈가 없습니다.
+                  </div>
+                  {document?.permissions.canSyncJira ? (
+                    <Button
+                      type="button"
+                      className="w-full rounded-pill"
+                      onClick={onSyncToJira}
+                      disabled={isActionPending}
+                    >
+                      {jiraSyncPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Ticket className="h-4 w-4" />
+                      )}
+                      Jira 이슈 생성
+                    </Button>
+                  ) : null}
+                </div>
+              )}
+            </section>
           </div>
         </aside>
 
@@ -318,7 +402,29 @@ export function DocumentDetailDialog({
                   </Button>
                 ) : null}
 
+<<<<<<< HEAD
                 {!isMobileAppView && document.permissions.canSubmit ? (
+=======
+                {document.permissions.canSyncJira &&
+                document.jiraLinks.length === 0 ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="rounded-pill"
+                    onClick={onSyncToJira}
+                    disabled={isActionPending}
+                  >
+                    {jiraSyncPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Ticket className="h-4 w-4" />
+                    )}
+                    Jira 이슈 생성
+                  </Button>
+                ) : null}
+
+                {document.permissions.canSubmit ? (
+>>>>>>> develop
                   <Button
                     type="button"
                     className="rounded-pill"
