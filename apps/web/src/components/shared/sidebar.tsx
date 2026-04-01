@@ -148,7 +148,6 @@ export function SidebarContent({
         ) : null}
       </div>
 
-<<<<<<< HEAD
       <nav
         className={cn(
           "flex-1",
@@ -249,10 +248,6 @@ export function SidebarContent({
             </div>
           </>
         ) : APP_NAV_ITEMS.map((item: AppNavItem) => {
-          const isActive = isActivePath(pathname, item.href);
-=======
-      <nav className={cn("flex-1", mobile ? "space-y-1 px-3 py-4" : "space-y-2 px-4")}>
-        {APP_NAV_ITEMS.map((item: AppNavItem) => {
           const isMessenger = item.name === "메신저";
           const isSchedule = item.name === "일정";
           
@@ -264,8 +259,7 @@ export function SidebarContent({
           } else {
             isActive = isActivePath(pathname, item.href);
           }
-          
->>>>>>> develop
+
           return (
             <Link
               key={item.name}
@@ -291,7 +285,6 @@ export function SidebarContent({
                     : "rounded-2xl px-4 py-3.5"
                   : "rounded-pill px-4 py-3",
                 isActive
-<<<<<<< HEAD
                   ? appShell
                     ? "border-primary/10 bg-primary/8 text-primary shadow-soft"
                     : "bg-primary text-primary-foreground shadow-soft"
@@ -398,63 +391,3 @@ export function Sidebar() {
     </aside>
   );
 }
-=======
-                   ? "bg-primary text-primary-foreground shadow-soft"
-                   : "text-text-muted hover:bg-background hover:text-text"
-               )}
-             >
-               <item.icon
-                 size={20}
-                 className={cn(isActive ? "text-primary-foreground" : "text-text-muted group-hover:text-text")}
-               />
-               <span className="font-headings font-medium">{item.name}</span>
-             </Link>
-           );
-         })}
-       </nav>
- 
-       <div className={cn("mt-auto border-t border-background/50 space-y-2", mobile ? "p-3" : "p-6")}>
-         {isAdmin && ADMIN_NAV_ITEMS.map((item: AppNavItem) => {
-           const isActive = isActivePath(pathname, item.href);
-           return (
-             <Link
-               key={item.name}
-               href={item.href}
-               onClick={onNavigate}
-               className={cn(
-                 "group flex items-center gap-3 transition-all duration-200",
-                 mobile ? "rounded-2xl px-4 py-3.5" : "rounded-pill px-4 py-3",
-                 isActive
-                   ? "bg-primary/10 text-primary border border-primary/20"
-                   : "text-text-muted hover:bg-background hover:text-text"
-               )}
-             >
-               <item.icon
-                 size={20}
-                 className={cn(isActive ? "text-primary" : "text-text-muted group-hover:text-text")}
-               />
-               <span className="font-headings font-medium">{item.name}</span>
-             </Link>
-           );
-         })}
- 
-         <button
-           onClick={handleSignOut}
-           className="flex w-full items-center gap-3 rounded-pill px-4 py-3 text-text-muted transition-all duration-200 hover:bg-destructive/10 hover:text-destructive group"
-         >
-           <LogOut size={20} />
-           <span className="font-headings font-medium">로그아웃</span>
-         </button>
-       </div>
-     </>
-   );
- }
- 
- export function Sidebar() {
-   return (
-     <aside className="w-[260px] h-screen sticky top-0 bg-surface border-r border-transparent shadow-soft flex flex-col z-40">
-       <SidebarContent />
-     </aside>
-   );
- }
->>>>>>> develop
